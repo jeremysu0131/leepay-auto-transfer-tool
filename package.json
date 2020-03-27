@@ -1,16 +1,14 @@
 {
-  "name": "vue-typescript-admin-template",
+  "name": "bank-internal-fund-transfer-tool",
   "version": "0.1.0",
   "private": true,
-  "author": "Chong Guo <armourcy@gmail.com>",
+  "author": "Jeremy Su <jeremy.s@tc-gaming.com>",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "build": "vue-cli-service electron:build",
+    "serve": "vue-cli-service electron:serve",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
-    "lint": "vue-cli-service lint",
-    "electron:build": "vue-cli-service electron:build",
-    "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "svg": "vsvg -s ./src/icons/svg -t ./src/icons/components --ext ts --es6"
