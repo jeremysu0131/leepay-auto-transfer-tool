@@ -98,32 +98,32 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue } from "vue-property-decorator";
 
 @Component({
-  name: 'Form'
+  name: "Form"
 })
 export default class extends Vue {
   private form = {
-    name: '',
-    region: '',
-    date1: '',
-    date2: '',
+    name: "",
+    region: "",
+    date1: "",
+    date2: "",
     delivery: false,
     type: [],
-    resource: '',
-    desc: ''
+    resource: "",
+    desc: ""
   };
 
   private onSubmit() {
-    this.$message('submit!')
+    this.$message("submit!");
   }
 
   private onCancel() {
     this.$message({
-      message: 'cancel!',
-      type: 'warning'
-    })
+      message: "cancel!",
+      type: "warning"
+    });
   }
 }
 </script>
