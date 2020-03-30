@@ -1,44 +1,45 @@
 <template>
-  <div
-    :class="classObj"
-    class="app-wrapper"
-  >
-    <div
-      v-if="classObj.mobile && sidebar.opened"
-      class="drawer-bg"
-      @click="handleClickOutside"
-    />
-    <sidebar class="sidebar-container" />
-    <div class="main-container">
-      <navbar />
-      <app-main />
-    </div>
+  <div>
+    <top-header />
+    <task-panel />
   </div>
 </template>
 
 <script lang="ts">
-import { Component } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { DeviceType, AppModule } from "@/store/modules/app";
-import { AppMain, Navbar, Sidebar } from "./components";
+import { TopHeader } from "./components";
+import AccountPanel from "@/views/accountPanel/index.vue";
+import TaskPanel from "@/views/taskPanel/index.vue";
 import ResizeMixin from "./mixin/resize";
+import { TaskModule } from "../store/modules/task";
 
 @Component({
   name: "Layout",
   components: {
-    AppMain,
-    Navbar,
-    Sidebar
+    TaskPanel,
+    TopHeader
   }
 })
 export default class extends mixins(ResizeMixin) {
-  get classObj() {
-    return {
-      hideSidebar: !this.sidebar.opened,
-      openSidebar: this.sidebar.opened,
-      withoutAnimation: this.sidebar.withoutAnimation,
-      mobile: this.device === DeviceType.Mobile
-    };
+  private taskPanelLabel="Task";
+  get showingTab() {
+    return AppModule.showingTab;
+  }
+  get task() {
+    return TaskModule;
+  }
+  @Watch("task.list")
+  onTaskListChanged() {
+    this.$nextTick(() => {
+      if (this.task.list) {
+        const totalTasks = this.task.list.length;
+        // const processingTasks = this.task.list.filter(task => task.toolStatus === "processing").length;
+        // this.taskPanelLabel = `Tasks ( total: ${totalTasks} / processing: ${processingTasks} )`;
+        this.taskPanelLabel = `Tasks ( total: ${totalTasks} )`;
+      }
+    });
   }
 
   private handleClickOutside() {
@@ -67,7 +68,7 @@ export default class extends mixins(ResizeMixin) {
 
 .main-container {
   min-height: 100%;
-  transition: margin-left .28s;
+  transition: margin-left 0.28s;
   margin-left: $sideBarWidth;
   position: relative;
 }
@@ -102,7 +103,7 @@ export default class extends mixins(ResizeMixin) {
   }
 
   .sidebar-container {
-    transition: transform .28s;
+    transition: transform 0.28s;
     width: $sideBarWidth !important;
   }
 
