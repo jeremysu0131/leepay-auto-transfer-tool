@@ -22,18 +22,20 @@ router.beforeEach(async(to: Route, _: Route, next: any) => {
     } else {
       // Check whether the user has obtained his permission roles
       if (UserModule.roles.length === 0) {
-        try {
-          // Get user info, including roles
-          await UserModule.GetUserInfo();
-          // Set the replace: true, so the navigation will not leave a history record
-          next({ ...to, replace: true });
-        } catch (err) {
-          // Remove token and redirect to login page
-          UserModule.ResetToken();
-          Message.error(err || "Has Error");
-          next(`/login?redirect=${to.path}`);
-          NProgress.done();
-        }
+        // try {
+        //   // Get user info, including roles
+        //   // await UserModule.GetUserInfo();
+        //   // Set the replace: true, so the navigation will not leave a history record
+        //   next({ ...to, replace: true });
+        // } catch (err) {
+        //   // Remove token and redirect to login page
+        //   UserModule.ResetToken();
+        //   Message.error(err || "Has Error");
+        //   next(`/login?redirect=${to.path}`);
+        //   NProgress.done();
+        // }
+
+        next();
       } else {
         next();
       }
