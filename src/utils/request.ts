@@ -16,7 +16,7 @@ service.interceptors.request.use(
   (config) => {
     // Add X-Access-Token header to every request, you can add other custom headers here
     if (UserModule.token) {
-      config.headers["Cookie"] = UserModule.token;
+      config.headers["Set-Cookie"] = UserModule.token;
     }
     return config;
   },
@@ -38,30 +38,30 @@ service.interceptors.response.use(
     // You can change this part for your own usage.
     const res = response.data;
 
-    if (res.code !== 1) {
-      Message({
-        message: res.message || "Error",
-        type: "error",
-        duration: 5 * 1000
-      });
-      // if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
-      //   MessageBox.confirm(
-      //     "You have been logged out, try to login again.",
-      //     "Log out",
-      //     {
-      //       confirmButtonText: "Relogin",
-      //       cancelButtonText: "Cancel",
-      //       type: "warning"
-      //     }
-      //   ).then(() => {
-      //     UserModule.ResetToken();
-      //     location.reload(); // To prevent bugs from vue-router
-      //   });
-      // }
-      return Promise.reject(new Error(res.message || "Error"));
-    } else {
-      return response.data;
-    }
+    // if (res.code !== 1) {
+    //   Message({
+    //     message: res.message || "Error",
+    //     type: "error",
+    //     duration: 5 * 1000
+    //   });
+    // if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
+    //   MessageBox.confirm(
+    //     "You have been logged out, try to login again.",
+    //     "Log out",
+    //     {
+    //       confirmButtonText: "Relogin",
+    //       cancelButtonText: "Cancel",
+    //       type: "warning"
+    //     }
+    //   ).then(() => {
+    //     UserModule.ResetToken();
+    //     location.reload(); // To prevent bugs from vue-router
+    //   });
+    // }
+    // return Promise.reject(new Error(res.message || "Error"));
+    // } else {
+    return response.data;
+    // }
   },
   (error) => {
     Message({

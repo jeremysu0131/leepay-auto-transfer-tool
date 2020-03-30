@@ -56,6 +56,13 @@ class Log extends VuexModule implements ILogState {
     this.UNSET_LOG();
     this.UNSET_CONSOLE();
   }
+
+  @Action
+  public SetLog(logInfo: LogEntry) {
+    let { level, message } = logInfo;
+    message = message.toString();
+    this.SET_LOG(logInfo);
+  }
   @Action
   public SetConsole(logInfo: LogEntry) {
     // this.HANDLE_TASK_AUTO_PROCESS(false);
@@ -83,3 +90,5 @@ class Log extends VuexModule implements ILogState {
     });
   }
 }
+
+export const LogModule = getModule(Log);

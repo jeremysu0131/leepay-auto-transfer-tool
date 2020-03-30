@@ -1,30 +1,15 @@
 import dayjs from "dayjs";
 import request from "@/utils/request";
 
-export function getAllTasks(cardId: number) {
+export function getAll() {
   return request({
-    url: "/ps-ops-console/api/withdraw/searchWithdrawForVendorView",
-    method: "POST",
+    url: "/adminWF!listPaymentTask.do",
+    method: "GET",
     params: {
-      pageSize: 50,
-      pageNo: 1,
-      sortOrder: ""
-    },
-    data: {
-      bankAcctId: cardId,
-      dateType: "requestDate",
-      dateFrom: +dayjs()
-        .startOf("day")
-        .subtract(1, "hour"),
-      dateTo: +dayjs().endOf("day"),
-      durationFrom: null,
-      durationTo: null,
-      remarks: "",
-      payeeName: "",
-      processBy: "",
-      requestAmtFrom: null,
-      requestAmtTo: null,
-      status: "I"
+      "wfs[]": "WP",
+      page: 1,
+      start: 0,
+      limit: 500
     }
   });
 }

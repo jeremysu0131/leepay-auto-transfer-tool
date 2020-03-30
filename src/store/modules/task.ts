@@ -6,21 +6,16 @@ import {
   getModule
 } from "vuex-module-decorators";
 import store from "@/store";
-import {
-  getAllTasks,
-  lockTask,
-  unlockTask,
-  getTaskDetail,
-  markTaskSuccess,
-  markTaskFail
-} from "@/api/task";
+import { getAll } from "@/api/task";
 import { selectTaskStatus } from "@/utils/persistentState";
 import { asyncForEach } from "@/utils/asyncForEach";
+import { AppModule } from "./app";
+import TaskModel from "../../models/taskModel";
 
 export interface ITaskState {
-  list: any[];
+  list: TaskModel[];
   lastSelected: {};
-  selected: {};
+  selected: TaskModel;
   selectedDataForAPI: {}; // this is use for send the api of mark success
   dataForAPI: {}; // this is use for send the api of mark success
 }
@@ -29,56 +24,52 @@ export interface ITaskState {
 class Task extends VuexModule implements ITaskState {
   public list = [];
   public lastSelected = {};
-  public selected:any = {};
+  public selected = new TaskModel();
   public selectedDataForAPI = {}; // this is use for send the api of mark success
   public dataForAPI = {}; // this is use for send the api of mark success
 
   @Mutation
-  private SET_TASK_LIST(tasks: []) {
+  public SET_TASK_LIST(tasks: []) {
     this.list = tasks;
   }
   @Mutation
-  private SET_LAST_SELECTED_DATA(task: object) {
+  public SET_LAST_SELECTED_DATA(task: object) {
     this.lastSelected = task;
   }
   @Mutation
-  private SET_SELECTED_DATA(task: object) {
+  public SET_SELECTED_DATA(task: TaskModel) {
     this.selected = task;
   }
   @Mutation
   // This for intergrate with weird api of leepay
-  private SET_DATA_FOR_API(data: object) {
+  public SET_DATA_FOR_API(data: object) {
     this.dataForAPI = data;
   }
   @Mutation
-  private SET_SELECTED_DATA_FOR_API(data: object) {
+  public SET_SELECTED_DATA_FOR_API(data: object) {
     this.selectedDataForAPI = data;
   }
+  // actions: {
+  @Action
+  public async GetAll() {
+    AppModule.HANDLE_TASK_FETCHING(true);
+    try {
+      var response = await getAll();
+      console.log(response);
+
+      this.SET_TASK_LIST(response.data);
+      // this.SET_TASK_LIST();
+      // commit("SET_LOG", {
+      //   level: "debug",
+      //   message: "Fetch data success"
+      // });
+    } catch (error) {
+      throw new Error("Get all tasks fail");
+    } finally {
+      AppModule.HANDLE_TASK_FETCHING(false);
+    }
+  }
 }
-// actions: {
-//   async GetAllTasks({ commit, getters }) {
-//     commit("HANDLE_TASK_FETCHING", true);
-//     try {
-//       var result = await getAllTasks(getters.card.current.id);
-//       await asyncForEach(result.data.value, async task  {
-//         var taskInformation = await getTaskFromToolByID(
-//           task.id,
-//           getters.app.platform
-//         );
-//         task.toolID = taskInformation.data.id || "";
-//         task.toolStatus = taskInformation.data.status || "to-process";
-//       });
-//       commit("SET_TASK_LIST", result.data.value);
-//       commit("SET_LOG", {
-//         level: "debug",
-//         message: "Fetch data success"
-//       });
-//     } catch (error) {
-//       throw new Error("Get all tasks fail");
-//     } finally {
-//       commit("HANDLE_TASK_FETCHING", false);
-//     }
-//   }
 //   async SetTaskInfomationToTool({ commit, getters }) {
 //     const taskID = getters.task.dataForAPI.id;
 //     const platform = getters.app.platform;

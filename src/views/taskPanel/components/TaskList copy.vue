@@ -56,56 +56,52 @@
           align="center"
         />
         <el-table-column
-          prop="priority"
+          prop="id"
           label="Priority"
           align="center"
         />
         <el-table-column
-          prop="time"
+          prop="id"
           label="Request Time"
           align="center"
         />
         <el-table-column
-          prop="pendingTime"
+          prop="id"
           label="Pending(min.)"
           align="center"
         />
         <el-table-column
-          prop="workflow"
+          prop="id"
           label="Workflow"
           align="center"
         />
         <el-table-column
           prop="id"
-          label="customer"
+          label="Customer"
           align="center"
         />
         <el-table-column
-          prop="merchantName"
+          prop="id"
           label="Merchant Name"
           align="center"
         />
-        <!-- FIXME -->
         <el-table-column
           prop="id"
           label="Merchant Group"
           align="center"
         />
-        <!-- FIXME -->
         <el-table-column
           prop="id"
           label="Bank"
           align="center"
         />
-        <!-- FIXME to check if this field correctlly -->
         <el-table-column
-          prop="field8"
+          prop="id"
           label="From Account"
           align="center"
         />
-        <!-- FIXME to check if this field correctlly -->
         <el-table-column
-          prop="field5"
+          prop="amount"
           label="Amount"
           width="100"
           header-align="center"
@@ -114,12 +110,11 @@
           <template
             slot-scope="scope"
           >
-            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.field5) }}
+            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format( scope.row.amount) }}
           </template>
         </el-table-column>
-        <!-- FIXME to check if this field correctlly -->
         <el-table-column
-          prop="field6"
+          prop="amount"
           label="Bank Charge"
           width="100"
           header-align="center"
@@ -128,20 +123,19 @@
           <template
             slot-scope="scope"
           >
-            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.field6) }}
+            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format( scope.row.amount) }}
           </template>
         </el-table-column>
         <el-table-column
-          prop="asignee"
+          prop="id"
           label="Asignee"
           align="center"
         />
         <el-table-column
-          prop="remarks"
+          prop="id"
           label="Remark"
           align="center"
         />
-        <!-- TODO -->
         <el-table-column
           prop="id"
           label="Member Group"
@@ -263,7 +257,7 @@
       </el-table>
     </div>
     <!-- <TaskSuccessDialog /> -->
-    <TaskFailDialog />
+    <!-- <TaskFailDialog /> -->
     <!-- <TaskProcessDialog /> -->
   </div>
 </template>
@@ -372,7 +366,6 @@ export default class extends Mixins(TaskOperationMixin) {
   get tableHeight() {
     // top header, tab margin, tab content, info header, task detail, others
     return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 100;
-    // return window.innerHeight - 300;
   }
   get balanceInSystem() {
     if (this.card.currentDetail.balanceInSystem) {
@@ -707,7 +700,7 @@ export default class extends Mixins(TaskOperationMixin) {
     }
 
     &-body {
-      margin: 8px 8px 0;
+      margin-top: 8px;
       .task-operator__button {
         padding: 6px 8px;
         margin: 0;
