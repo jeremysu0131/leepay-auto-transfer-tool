@@ -22,14 +22,14 @@ export interface ITaskState {
 
 @Module({ dynamic: true, store, name: "task" })
 class Task extends VuexModule implements ITaskState {
-  public list = [];
+  public list = [] as TaskModel[];
   public lastSelected = {};
   public selected = new TaskModel();
   public selectedDataForAPI = {}; // this is use for send the api of mark success
   public dataForAPI = {}; // this is use for send the api of mark success
 
   @Mutation
-  public SET_TASK_LIST(tasks: []) {
+  public SET_TASK_LIST(tasks: TaskModel[]) {
     this.list = tasks;
   }
   @Mutation
@@ -53,12 +53,33 @@ class Task extends VuexModule implements ITaskState {
   @Action
   public async GetAll() {
     AppModule.HANDLE_TASK_FETCHING(true);
+    var tasks: TaskModel[] = [];
     try {
       var response = await getAll();
-      console.log(response);
-
-      this.SET_TASK_LIST(response.data);
-      // this.SET_TASK_LIST();
+      response.data.forEach((task: any) => {
+        tasks.push({
+          id: task.id,
+          amount: task.field5,
+          asignee: task.asignee,
+          asigneeId: task.asigneeId,
+          assignedAt: task.asigneeAt,
+          remitterAccount: task.field7,
+          payeeAccount: task.toAcct,
+          merchant: {
+            id: task.merchantId,
+            name: task.merchantName
+          },
+          pendingTime: task.pendingTime,
+          remark: task.remarks,
+          createdAt: task.createdAt,
+          createdBy: task.createdBy,
+          transferFee: task.field6 || 0,
+          updatedAt: task.updatedAt,
+          updatedBy: task.updatedBy,
+          workflow: task.workflow
+        });
+      });
+      this.SET_TASK_LIST(tasks);
       // commit("SET_LOG", {
       //   level: "debug",
       //   message: "Fetch data success"

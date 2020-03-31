@@ -1,36 +1,20 @@
+import MerchantModel from "./merchantModel";
+
 export default class TaskModel {
+  id = 0;
+  amount = 0;
   asignee = "";
-  asigneeId = "";
+  asigneeId = 0;
   assignedAt = Date;
-  assignedTo = 0;
+  transferFee = 0;
+  remitterAccount = "";
+  payeeAccount = "";
+  merchant = new MerchantModel();
+  pendingTime = 0;
+  remark = "";
   createdAt = Date;
   createdBy = 0;
-  customer = "";
-  // fcAsignee= "";
-  // field1= "-";
-  // field2= "Processed By jeremy.s";
-  // field4= "中国农业银行";
-  // field5= "1";
-  // field6= "1";
-  // field7= "ABC.001";
-  // field8= "5.ABC.192";
-  id = 0;
-  merchantId = "";
-  merchantName = "";
-  // param1= "1";
-  // param2= "1";
-  // param3= "ABC.001";
-  pendingTime = 0;
-  priority = 0;
-  ref = "";
-  remarks = "";
-  requestor = "";
-  // state= { id= -121 };
-  // task= "FT-P";
-  time = Date;
-  toAcct = "";
   updatedAt = Date;
   updatedBy = 0;
-  // version= 1;
   workflow = "";
 }

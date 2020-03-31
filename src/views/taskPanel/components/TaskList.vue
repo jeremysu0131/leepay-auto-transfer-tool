@@ -52,74 +52,51 @@
         <el-table-column
           prop="id"
           label="ID"
-          width="70"
+          width="90"
           align="center"
         />
         <el-table-column
-          prop="priority"
-          label="Priority"
-          align="center"
-        />
-        <el-table-column
-          prop="time"
+          prop="createdAt"
           label="Request Time"
+          width="140"
           align="center"
         />
         <el-table-column
           prop="pendingTime"
           label="Pending(min.)"
           align="center"
+          width="110"
         />
         <el-table-column
           prop="workflow"
           label="Workflow"
           align="center"
-        />
-        <el-table-column
-          prop="id"
-          label="customer"
-          align="center"
-        />
-        <el-table-column
-          prop="merchantName"
-          label="Merchant Name"
-          align="center"
-        />
-        <!-- FIXME -->
-        <el-table-column
-          prop="id"
-          label="Merchant Group"
-          align="center"
-        />
-        <!-- FIXME -->
-        <el-table-column
-          prop="id"
-          label="Bank"
-          align="center"
+          width="120"
         />
         <!-- FIXME to check if this field correctlly -->
         <el-table-column
-          prop="field8"
+          prop="remitterAccount"
           label="From Account"
           align="center"
+          width="120"
         />
         <!-- FIXME to check if this field correctlly -->
         <el-table-column
-          prop="field5"
+          prop="amount"
           label="Amount"
-          width="100"
+          width="90"
           header-align="center"
           align="right"
         >
           <template
             slot-scope="scope"
           >
-            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.field5) }}
+            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.amount) }}
           </template>
         </el-table-column>
         <!-- FIXME to check if this field correctlly -->
         <el-table-column
-          prop="field6"
+          prop="transferFee"
           label="Bank Charge"
           width="100"
           header-align="center"
@@ -128,7 +105,7 @@
           <template
             slot-scope="scope"
           >
-            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.field6) }}
+            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.transferFee) }}
           </template>
         </el-table-column>
         <el-table-column
@@ -137,20 +114,9 @@
           align="center"
         />
         <el-table-column
-          prop="remarks"
-          label="Remark"
-          align="center"
-        />
-        <!-- TODO -->
-        <el-table-column
-          prop="id"
-          label="Member Group"
-          align="center"
-        />
-        <el-table-column
           label="Actions"
-          width="160"
           align="center"
+          width="140"
           fixed="right"
         >
           <template slot-scope="scope">
