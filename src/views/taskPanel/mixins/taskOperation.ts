@@ -1,6 +1,38 @@
 import { Component, Vue } from "vue-property-decorator";
+import { TaskModule } from "@/store/modules/task";
 @Component
 export default class TaskOperationMixin extends Vue {
+  public async getTasks() {
+    // let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
+    await TaskModule.GetAll();
+    // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
+  }
+  public async startTask() {
+    // try {
+    //   if (
+    //     this.card.current.accountCode.indexOf("ABC") > 0 ||
+    //     this.card.current.accountCode.indexOf("ICBC") > 0
+    //   ) {
+    //     var isProcessSuccess = await this.$store.dispatch(
+    //       "RunAutoTransferFlows"
+    //     );
+
+    //     if (isProcessSuccess) {
+    //       this.$store.commit("HANDLE_TASK_PROCESSING", false);
+    //     } else {
+    //       new Audio(require("@/assets/sounds/alarm.mp3")).play();
+    //       this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
+    //     }
+    //   } else {
+    //     await this.$store.dispatch("RunManualTransferFlows");
+    //   }
+    // } catch (error) {
+    //   this.$store.dispatch("SetConsole", {
+    //     message: error.message,
+    //     level: "error"
+    //   });
+    // }
+  }
   public async unlockTask(task:any) {
     // try {
     //   await this.$store.dispatch("UnlockSelectedTask", task.taskId);

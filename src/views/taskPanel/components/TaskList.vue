@@ -1,243 +1,200 @@
 <template>
-  <div class="task-list__container">
-    <div class="task-list__container-header">
-      <div class="current-account">
-        <span>Current Account:</span>
-        <span style="font-weight: bold;">{{ card.currentDetail.accountCode || "" }}</span>
-      </div>
-
-      <div class="bo-balance">
-        <span>BO Balance:</span>
-        <span style="font-weight: bold;">{{ balanceInSystem }}</span>
-        <span
-          v-if="isFetchBoBalanceFail"
-          style="color:#F56C6C"
-        >
-          <svg-icon icon-class="error" />Update Fail
-        </span>
-      </div>
-      <div class="bo-balance">
-        <span>Bank Balance:</span>
-        <span style="font-weight: bold;">{{ balanceInOnlineBank }}</span>
-      </div>
-      <div class="bo-balance">
-        <span>Bank Sign-In:</span>
-        <span style="font-weight: bold;">{{ signInSuccessAt }}</span>
-      </div>
-      <div class="fetch-task">
-        <el-button
-          size="mini"
-          :icon="fetchButton.icon"
-          :type="fetchButton.type"
-          :loading="app.task.isFetching"
-          :disabled="!app.task.isFetchable"
-          @click="handleFetch"
-        >
-          {{ app.task.fetchTimer }}s
-        </el-button>
-      </div>
-    </div>
-    <div class="task-list__container-body">
-      <el-table
-        ref="taskTable"
-        v-loading="app.task.isFetching"
-        :data="task.list"
-        style="width: 100%"
-        :height="tableHeight"
-        size="mini"
-        :stripe="true"
-        :border="true"
-        :row-class-name="selectedRowClass"
+  <div class="task-list__container-body">
+    <el-table
+      ref="taskTable"
+      v-loading="app.task.isFetching"
+      :data="task.list"
+      style="width: 100%"
+      :height="tableHeight"
+      size="mini"
+      :stripe="true"
+      :border="true"
+      :row-class-name="selectedRowClass"
+    >
+      <el-table-column
+        prop="id"
+        label="ID"
+        width="90"
+        align="center"
+      />
+      <el-table-column
+        prop="createdAt"
+        label="Request Time"
+        width="140"
+        align="center"
+      />
+      <el-table-column
+        prop="pendingTime"
+        label="Pending(min.)"
+        align="center"
+        width="110"
+      />
+      <el-table-column
+        prop="workflow"
+        label="Workflow"
+        align="center"
+        width="120"
+      />
+      <!-- FIXME to check if this field correctlly -->
+      <el-table-column
+        prop="remitterAccount"
+        label="From Account"
+        align="center"
+        width="120"
+      />
+      <!-- FIXME to check if this field correctlly -->
+      <el-table-column
+        prop="amount"
+        label="Amount"
+        width="90"
+        header-align="center"
+        align="right"
       >
-        <el-table-column
-          prop="id"
-          label="ID"
-          width="90"
-          align="center"
-        />
-        <el-table-column
-          prop="createdAt"
-          label="Request Time"
-          width="140"
-          align="center"
-        />
-        <el-table-column
-          prop="pendingTime"
-          label="Pending(min.)"
-          align="center"
-          width="110"
-        />
-        <el-table-column
-          prop="workflow"
-          label="Workflow"
-          align="center"
-          width="120"
-        />
-        <!-- FIXME to check if this field correctlly -->
-        <el-table-column
-          prop="remitterAccount"
-          label="From Account"
-          align="center"
-          width="120"
-        />
-        <!-- FIXME to check if this field correctlly -->
-        <el-table-column
-          prop="amount"
-          label="Amount"
-          width="90"
-          header-align="center"
-          align="right"
+        <template
+          slot-scope="scope"
         >
-          <template
-            slot-scope="scope"
-          >
-            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.amount) }}
-          </template>
-        </el-table-column>
-        <!-- FIXME to check if this field correctlly -->
-        <el-table-column
-          prop="transferFee"
-          label="Bank Charge"
-          width="100"
-          header-align="center"
-          align="right"
+          {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.amount) }}
+        </template>
+      </el-table-column>
+      <!-- FIXME to check if this field correctlly -->
+      <el-table-column
+        prop="transferFee"
+        label="Bank Charge"
+        width="100"
+        header-align="center"
+        align="right"
+      >
+        <template
+          slot-scope="scope"
         >
-          <template
-            slot-scope="scope"
-          >
-            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.transferFee) }}
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="asignee"
-          label="Asignee"
-          align="center"
-        />
-        <el-table-column
-          label="Actions"
-          align="center"
-          width="140"
-          fixed="right"
-        >
-          <template slot-scope="scope">
-            <div style="display: flex; justify-content: space-around">
-              <div>
-                <el-button
-                  v-if="scope.row.toolStatus !== 'to-confirm'"
-                  class="task-operator__button"
-                  style="width:80px"
-                  size="mini"
-                  :disabled="isProcessButtonDisabled(scope.row)"
-                  @click="handleRowSelect(scope.row)"
-                >
-                  {{ scope.row.toolStatus === "processing" ? "Reprocess" : "Process" }}
-                </el-button>
-                <el-button
-                  v-if="scope.row.toolStatus === 'to-confirm'"
-                  class="task-operator__button"
-                  style="width:80px"
-                  size="mini"
-                  type="success"
-                  :disabled="isSuccessButtonDisabled(scope.row)"
-                  @click="markAsSuccess(scope.row)"
-                >
-                  Success
-                </el-button>
-              </div>
-              <div>
-                <el-popover
-                  :disabled="isMoreButtonDisabled(scope.row)"
-                  trigger="click"
-                  placement="left"
-                  width="180"
-                >
-                  <el-row class="el-row--popover">
-                    <el-col
-                      v-if="isSuccessButtonVisible(scope.row)"
-                      :span="24"
-                      class="el-row--popover__el-col"
-                    >
-                      <el-button
-                        class="el-row--popover__el-button"
-                        @click="markAsSuccess(scope.row)"
-                      >
-                        <svg-icon
-                          icon-class="check"
-                          class="el-row--popover__el-button--icon"
-                        />Success
-                      </el-button>
-                    </el-col>
-                    <el-col
-                      v-if="isFailButtonVisible(scope.row)"
-                      :span="24"
-                      class="el-row--popover__el-col"
-                    >
-                      <el-button
-                        class="el-row--popover__el-button"
-                        @click="markAsFail(false, scope.row)"
-                      >
-                        <svg-icon
-                          icon-class="error"
-                          class="el-row--popover__el-button--icon"
-                        />Fail
-                      </el-button>
-                    </el-col>
-                    <el-col
-                      v-show="isToConfirmButtonVisible(scope.row)"
-                      :span="24"
-                      class="el-row--popover__el-col"
-                    >
-                      <el-button
-                        class="el-row--popover__el-button"
-                        @click="markAsToConfirm(false, scope.row)"
-                      >
-                        <svg-icon
-                          icon-class="check-circle"
-                          class="el-row--popover__el-button--icon"
-                        />To Confirm
-                      </el-button>
-                    </el-col>
-                    <el-col
-                      v-if="isReassignButtonVisible(scope.row)"
-                      :span="24"
-                      class="el-row--popover__el-col"
-                    >
-                      <el-button
-                        class="el-row--popover__el-button"
-                        @click="markAsReassign(false, scope.row)"
-                      >
-                        <svg-icon
-                          icon-class="unlock"
-                          class="el-row--popover__el-button--icon"
-                        />Re-assign
-                      </el-button>
-                    </el-col>
-                  </el-row>
-                  <el-button
-                    slot="reference"
-                    :disabled="isMoreButtonDisabled(scope.row)"
-                    class="task-operator__button"
-                    size="mini"
-                  >
-                    More
-                  </el-button>
-                </el-popover>
-              </div>
+          {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.transferFee) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="asignee"
+        label="Asignee"
+        align="center"
+      />
+      <el-table-column
+        label="Actions"
+        align="center"
+        width="140"
+        fixed="right"
+      >
+        <template slot-scope="scope">
+          <div style="display: flex; justify-content: space-around">
+            <div>
+              <el-button
+                v-if="scope.row.toolStatus !== 'to-confirm'"
+                class="task-operator__button"
+                style="width:80px"
+                size="mini"
+                :disabled="isProcessButtonDisabled(scope.row)"
+                @click="handleRowSelect(scope.row)"
+              >
+                {{ scope.row.toolStatus === "processing" ? "Reprocess" : "Process" }}
+              </el-button>
+              <el-button
+                v-if="scope.row.toolStatus === 'to-confirm'"
+                class="task-operator__button"
+                style="width:80px"
+                size="mini"
+                type="success"
+                :disabled="isSuccessButtonDisabled(scope.row)"
+                @click="markAsSuccess(scope.row)"
+              >
+                Success
+              </el-button>
             </div>
-          </template>
-        </el-table-column>
-      </el-table>
-    </div>
-    <!-- <TaskSuccessDialog /> -->
-    <TaskFailDialog />
-    <!-- <TaskProcessDialog /> -->
+            <div>
+              <el-popover
+                :disabled="isMoreButtonDisabled(scope.row)"
+                trigger="click"
+                placement="left"
+                width="180"
+              >
+                <el-row class="el-row--popover">
+                  <el-col
+                    v-if="isSuccessButtonVisible(scope.row)"
+                    :span="24"
+                    class="el-row--popover__el-col"
+                  >
+                    <el-button
+                      class="el-row--popover__el-button"
+                      @click="markAsSuccess(scope.row)"
+                    >
+                      <svg-icon
+                        icon-class="check"
+                        class="el-row--popover__el-button--icon"
+                      />Success
+                    </el-button>
+                  </el-col>
+                  <el-col
+                    v-if="isFailButtonVisible(scope.row)"
+                    :span="24"
+                    class="el-row--popover__el-col"
+                  >
+                    <el-button
+                      class="el-row--popover__el-button"
+                      @click="markAsFail(false, scope.row)"
+                    >
+                      <svg-icon
+                        icon-class="error"
+                        class="el-row--popover__el-button--icon"
+                      />Fail
+                    </el-button>
+                  </el-col>
+                  <el-col
+                    v-show="isToConfirmButtonVisible(scope.row)"
+                    :span="24"
+                    class="el-row--popover__el-col"
+                  >
+                    <el-button
+                      class="el-row--popover__el-button"
+                      @click="markAsToConfirm(false, scope.row)"
+                    >
+                      <svg-icon
+                        icon-class="check-circle"
+                        class="el-row--popover__el-button--icon"
+                      />To Confirm
+                    </el-button>
+                  </el-col>
+                  <el-col
+                    v-if="isReassignButtonVisible(scope.row)"
+                    :span="24"
+                    class="el-row--popover__el-col"
+                  >
+                    <el-button
+                      class="el-row--popover__el-button"
+                      @click="markAsReassign(false, scope.row)"
+                    >
+                      <svg-icon
+                        icon-class="unlock"
+                        class="el-row--popover__el-button--icon"
+                      />Re-assign
+                    </el-button>
+                  </el-col>
+                </el-row>
+                <el-button
+                  slot="reference"
+                  :disabled="isMoreButtonDisabled(scope.row)"
+                  class="task-operator__button"
+                  size="mini"
+                >
+                  More
+                </el-button>
+              </el-popover>
+            </div>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch, Mixins } from "vue-property-decorator";
 import dayjs from "dayjs";
-import { TaskFailDialog, TaskProcessDialog, TaskSuccessDialog } from ".";
 import { saveTaskStatus } from "../../../utils/persistentState";
 import { CardModule } from "../../../store/modules/card";
 import { TaskModule } from "../../../store/modules/task";
@@ -246,16 +203,10 @@ import { MessageBox } from "element-ui";
 import { AppModule } from "@/store/modules/app";
 import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
-// import { getAccountCodeListInSkypay } from "../../../api/card";
 
 @Component({
   name: "TaskList",
-  mixins: [TaskOperationMixin],
-  components: {
-    TaskSuccessDialog,
-    TaskFailDialog,
-    TaskProcessDialog
-  }
+  mixins: [TaskOperationMixin]
 })
 export default class extends Mixins(TaskOperationMixin) {
   private fetchButton = {
@@ -268,56 +219,6 @@ export default class extends Mixins(TaskOperationMixin) {
   private taskDialogVisible = false;
   private isFetchBoBalanceFail = false;
   private isWarnedBankTokenExpire = false;
-
-  async beforeMount() {
-    var refreshPageCounter = 0;
-    var lastTime = +dayjs() / 1000;
-    this.fetchInvervalID = setInterval(async() => {
-      /// Start check if interval delay
-      var nowTime = +dayjs() / 1000;
-      if (lastTime < nowTime - 2) {
-        LogModule.SetLog({
-          level: "error",
-          message: `Interval delay, last: ${lastTime}, now: ${nowTime}`
-        });
-      }
-      lastTime = nowTime;
-      /// End check if interval delay
-
-      if (this.app.task.isFetchable && !this.app.account.isProcessingSignIn) {
-        // Refresh task list
-        if (this.app.task.fetchTimer === 0) {
-          await this.handleFetch();
-          refreshPageCounter++;
-
-          // Get bank balance each 30s
-          if (
-            refreshPageCounter >= 3 &&
-            !this.app.task.isProcessing &&
-            this.app.account.isSignInSuccess
-          ) {
-            // This for keep skypay session
-            // getAccountCodeListInSkypay();
-            await this.getBankBalance();
-            refreshPageCounter = 0;
-          }
-        } else {
-          // this.$store.commit("MINUS_TASK_FETCH_TIMER");
-          if (this.checkBankCookieExpired()) {
-            if (!this.app.task.isProcessing) {
-              this.handleCookieExpired();
-            }
-          } else {
-            // Check if run auto process
-            this.handleAutoRowSelect();
-          }
-        }
-      }
-    }, 1 * 1000);
-  }
-  beforeDestroy() {
-    clearInterval(this.fetchInvervalID);
-  }
 
   get app() {
     return AppModule;
@@ -340,83 +241,6 @@ export default class extends Mixins(TaskOperationMixin) {
     return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 100;
     // return window.innerHeight - 300;
   }
-  get balanceInSystem() {
-    if (this.card.currentDetail.balanceInSystem) {
-      return new Intl.NumberFormat("zh-CN", {
-        style: "currency",
-        currency: "CNY"
-      }).format(this.card.currentDetail.balanceInSystem);
-    }
-    return "-";
-  }
-  get balanceInOnlineBank() {
-    if (this.card.currentDetail.balanceInOnlineBank) {
-      return new Intl.NumberFormat("zh-CN", {
-        style: "currency",
-        currency: "CNY"
-      }).format(this.card.currentDetail.balanceInOnlineBank);
-    }
-    return "-";
-  }
-  get signInSuccessAt() {
-    return dayjs(this.app.account.signInSuccessAt).format("HH:mm:ss");
-  }
-
-  @Watch("app.showingTab")
-  onShowingTabChanged() {
-    if (this.app.showingTab === "tasks") {
-      if (this.app.task.isFetchable && !this.app.task.isTaskHandling) {
-        this.handleFetch();
-      }
-    }
-  }
-  private handleAutoRowSelect() {
-    if (this.app.task.isAutoProcess) {
-      var taskLength = this.task.list.length;
-      if (taskLength !== 0 && !this.app.task.isProcessing) {
-        for (let index = taskLength - 1; index >= 0; index--) {
-          const task = this.task.list[index];
-          // if (task.toolStatus === "to-process" || task.toolStatus === "processing") {
-          //   this.handleRowSelect(task);
-          //   break;
-          // }
-        }
-      }
-    }
-  }
-  private async reloginToBank() {
-    await this.$store.dispatch("CloseSelenium");
-    await this.$store.dispatch("RunAutoReloginFlows");
-  }
-  private checkBankCookieExpired() {
-    if (this.isWarnedBankTokenExpire) return;
-    if (this.card.current.accountCode.indexOf("ABC") === -1) return;
-
-    return (
-      dayjs().subtract(30, "minute") > dayjs(this.app.account.signInSuccessAt)
-    );
-  }
-  private handleCookieExpired() {
-    if (this.app.task.isAutoProcess) {
-      this.$store.commit("HANDLE_TASK_FETCHABLE", false);
-      this.reloginToBank();
-    } else {
-      this.isWarnedBankTokenExpire = true;
-      var audio = new Audio(require("@/assets/sounds/notification.mp3"));
-      audio.play();
-      this.$alert(
-        "You will be log out from the bank website, please prepare to re-login the bank",
-        "Title",
-        {
-          type: "warning",
-          confirmButtonText: "OK",
-          callback: action => {
-            audio.pause();
-          }
-        }
-      );
-    }
-  }
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {
       if (this.selectedTask.id === row.id) {
@@ -424,40 +248,6 @@ export default class extends Mixins(TaskOperationMixin) {
       }
     }
     return "";
-  }
-  private async handleFetch() {
-    try {
-      await this.getTasks();
-      // await Promise.all([this.getBoBalance(), this.getTasks()]);
-      this.fetchButton.type = "success";
-    } catch (error) {
-      this.fetchButton.type = "danger";
-      LogModule.SetConsole({ level: "error", message: error });
-      TaskModule.SET_TASK_LIST([]);
-    } finally {
-      AppModule.RESET_TASK_FETCH_TIMER(9);
-    }
-  }
-  private async getBoBalance() {
-    try {
-      await this.$store.dispatch("GetCurrentCardBoBalance");
-    } catch (error) {
-      this.isFetchBoBalanceFail = true;
-      throw error;
-    }
-  }
-  private async getBankBalance() {
-    try {
-      this.$store.commit("HANDLE_TASK_PROCESSING", true);
-      await this.$store.dispatch("GetBankBalance");
-    } finally {
-      this.$store.commit("HANDLE_TASK_PROCESSING", false);
-    }
-  }
-  private async getTasks() {
-    let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
-    await TaskModule.GetAll();
-    (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
   private async handleRowSelect(val: any) {
     try {
@@ -516,54 +306,6 @@ export default class extends Mixins(TaskOperationMixin) {
       this.$store.dispatch("SetConsole", { level: "error", message: error });
     }
   }
-  // private async unlockTask(task: any) {
-  //   try {
-  //     await this.$store.dispatch("UnlockSelectedTask", task.taskId);
-  //     this.$message({
-  //       message: "Task has been unlocked",
-  //       type: "success"
-  //     });
-  //     this.$store.dispatch("SetConsole", {
-  //       message: "Task has been unlocked",
-  //       level: "info"
-  //     });
-  //   } catch (error) {
-  //     this.$message({
-  //       message: error.message,
-  //       type: "error"
-  //     });
-  //     this.$store.dispatch("SetConsole", {
-  //       message: error.message,
-  //       level: "error"
-  //     });
-  //   }
-  // }
-  private async startTask() {
-    try {
-      if (
-        this.card.current.accountCode.indexOf("ABC") > 0 ||
-        this.card.current.accountCode.indexOf("ICBC") > 0
-      ) {
-        var isProcessSuccess = await this.$store.dispatch(
-          "RunAutoTransferFlows"
-        );
-
-        if (isProcessSuccess) {
-          this.$store.commit("HANDLE_TASK_PROCESSING", false);
-        } else {
-          new Audio(require("@/assets/sounds/alarm.mp3")).play();
-          this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
-        }
-      } else {
-        await this.$store.dispatch("RunManualTransferFlows");
-      }
-    } catch (error) {
-      this.$store.dispatch("SetConsole", {
-        message: error.message,
-        level: "error"
-      });
-    }
-  }
   private confirmExecution(taskID: number, executedTasks: any) {
     var message = "Previous executed record:" + "<br>";
     executedTasks.forEach((executedTask: any, index: number) => {
@@ -595,15 +337,6 @@ export default class extends Mixins(TaskOperationMixin) {
         return false;
       });
   }
-  // private async recordExecutingTask(
-  //   taskID: number,
-  //   platform: string,
-  //   reason: string,
-  //   operator: string
-  // ) {
-  //   await saveTaskStatus(taskID, platform, reason, operator);
-  //   await this.$store.dispatch("CreateTaskExecuteRecord", reason);
-  // }
   private isMoreButtonDisabled(row: any) {
     if (row.status !== "I") return true;
     return false;
@@ -643,62 +376,3 @@ export default class extends Mixins(TaskOperationMixin) {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-@import "../../../styles/variables.scss";
-
-.task-list {
-  &__container {
-    &-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 50px;
-      margin-bottom: 15px;
-      padding: 8px 16px;
-      background-color: #f2f2f2;
-      border-radius: 4px;
-
-      .current-account {
-        font-size: $fontBase;
-      }
-
-      .bo-balance {
-        font-size: $fontBase;
-      }
-
-      .fetch-task {
-        text-align: right;
-      }
-    }
-
-    &-body {
-      margin: 8px 8px 0;
-      .task-operator__button {
-        padding: 6px 8px;
-        margin: 0;
-      }
-    }
-  }
-}
-.el-row--popover {
-  &__el-col {
-    &:not(:last-child) {
-      margin-bottom: 8px;
-    }
-  }
-  &__el-button {
-    width: 155px;
-    text-align: left;
-    &--icon {
-      margin-right: 8px;
-    }
-  }
-}
-</style>
-
-<style lang="scss">
-.el-table .executing-row > td {
-  background: rgb(240, 249, 235) !important;
-}
-</style>
