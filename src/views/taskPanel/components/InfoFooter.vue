@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex"
+import { mapGetters } from "vuex";
 
 export default {
   computed: {
@@ -62,12 +62,12 @@ export default {
   watch: {
     "log.console"() {
       this.$nextTick(() => {
-        var consoleBox = this.$refs["console-box"]
-        consoleBox.scrollTop = consoleBox.scrollHeight
-      })
+        var consoleBox = this.$refs["console-box"];
+        consoleBox.scrollTop = consoleBox.scrollHeight;
+      });
     }
   }
-}
+};
 </script>
 
 <style lang="scss">
@@ -89,4 +89,3 @@ export default {
   }
 }
 </style>
-

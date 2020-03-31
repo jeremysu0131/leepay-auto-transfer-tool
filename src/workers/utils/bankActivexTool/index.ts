@@ -4,13 +4,13 @@ const cwd =
     ? process.resourcesPath + "/bankActivexTool"
     : "bankActivexTool";
 
-export async function execute(bankCode, command, params) {
+export async function execute(bankCode:string, command:string, params:string) {
   return new Promise((resolve, reject) => {
     var child = exec(`BankActivexTool.exe "${bankCode}" "${command}" "${JSON.stringify(params)}"`, {
       shell: false,
-      cwd,
+      cwd
     });
-    child.on("error", err => reject(err));
-    child.on("exit", data => resolve(data));
+    child.on("error", (err: any) => reject(err));
+    child.on("exit", (data: unknown) => resolve(data));
   });
 }

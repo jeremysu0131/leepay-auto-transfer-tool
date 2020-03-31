@@ -89,12 +89,12 @@ import { IArticleData } from "@/api/types";
   }
 })
 export default class extends Vue {
-  private list: IArticleData[] = []
-  private listLoading = true
+  private list: IArticleData[] = [];
+  private listLoading = true;
   private listQuery = {
     page: 1,
     limit: 20
-  }
+  };
 
   created() {
     this.getList();

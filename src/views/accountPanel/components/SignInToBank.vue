@@ -1,6 +1,8 @@
 <template>
   <div class="sign-in-to-bank__container">
-    <div class="sign-in-to-bank__title">Account: {{ card.selected.accountCode }}</div>
+    <div class="sign-in-to-bank__title">
+      Account: {{ card.selected.accountCode }}
+    </div>
     <div class="sign-in-to-bank__message">
       <span>Please wait for the initialization to complete and then manually login</span>
     </div>
@@ -26,25 +28,31 @@
       </table>
     </div>
     <div class="sign-in-to-bank__message">
-      <span :style="{color:checkResult.type==='error'?'#F56C6C':''}">{{ checkResult.message }}</span>
+      <span :style="{color: checkResult.type==='error'?'#F56C6C':''}">{{ checkResult.message }}</span>
     </div>
     <div class="sign-in-to-bank__operator-buttons">
       <el-button
         size="small"
         :loading="isChecking"
-        :style="{display:app.isManualLogin?'':'none'}"
+        :style="{display: app.isManualLogin?'':'none'}"
         @click="checkIsSignedIn"
-      >{{ isFirstTimeCheck?'Confirm Logged In':'Check again' }}</el-button>
+      >
+        {{ isFirstTimeCheck?'Confirm Logged In':'Check again' }}
+      </el-button>
       <el-button
         v-if="!isFirstTimeCheck"
         size="small"
         @click="ignoreCheck"
-      >Skip checking, I have logged in</el-button>
+      >
+        Skip checking, I have logged in
+      </el-button>
       <el-button
         size="small"
         :disabled="app.account.isProcessingSignIn"
         @click="cancel"
-      >Cancel</el-button>
+      >
+        Cancel
+      </el-button>
     </div>
   </div>
 </template>
@@ -58,17 +66,17 @@ export default {
     return {
       checkResult: {
         type: "",
-        message: "Please click confirm button below after login",
+        message: "Please click confirm button below after login"
       },
       isFirstTimeCheck: true,
-      isChecking: false,
+      isChecking: false
     };
   },
   computed: {
     ...mapGetters(["app", "card", "worker"]),
     tableHeight() {
       return window.innerHeight - 60 - 60 - 60 - 120 - 2;
-    },
+    }
   },
   async mounted() {},
   methods: {
@@ -115,7 +123,7 @@ export default {
       this.$confirm("This will ignore the checking method. Continue?", "Warning", {
         confirmButtonText: "OK",
         cancelButtonText: "Cancel",
-        type: "warning",
+        type: "warning"
       })
         .then(() => {
           this.handleSignInSuccess();
@@ -137,16 +145,15 @@ export default {
     },
     async handleRowClick(val) {
       try {
-        if (process.env.NODE_ENV === "development")
-          this.$store.dispatch("RunSelectedFlow", val.name);
+        if (process.env.NODE_ENV === "development") { this.$store.dispatch("RunSelectedFlow", val.name); }
       } catch (error) {
         this.$store.dispatch("SetConsole", {
           message: error.toString(),
-          level: "debug",
+          level: "debug"
         });
       }
-    },
-  },
+    }
+  }
 };
 </script>
 

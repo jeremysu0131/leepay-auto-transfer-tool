@@ -1,4 +1,4 @@
-import { By, ThenableWebDriver, until } from "selenium-webdriver";
+import { Builder, By, ThenableWebDriver, until } from "selenium-webdriver";
 import cheerio from "cheerio";
 import * as KeySender from "./utils/keySender";
 import * as UsbTrigger from "./utils/usbTrigger";
@@ -9,29 +9,33 @@ import {
   waitPageLoad,
   getElementValue,
   waitUtilGetText,
-  sendKeysV2,
+  sendKeysV2
 } from "./utils/seleniumHelper";
-import {
-  getCurrentCardDetail,
-  getSelectedTaskDetail,
-  setBankBalance,
-  setLog,
-  getSelectedCardDetail,
-} from "./utils/storeHelper";
-import { OperationalError } from "./utils/workerErrorHandler";
 import * as ScreenshotHelper from "./utils/screenshotHelper";
 import * as WindowFocusTool from "./utils/windowFocusTool";
-import moment from "moment";
+import IWorkerFactory from "./IWorkerFactory";
+import TaskModel from "../models/taskModel";
+import { Data } from "electron";
+import { LogModule } from "../store/modules/log";
+import { CardModule } from "../store/modules/card";
+import { TaskModule } from "../store/modules/task";
+import dayjs, { Dayjs } from "dayjs";
 
-export default class {
+export default class implements IWorkerFactory {
+  private driver:ThenableWebDriver;
+  private bankUrl:string;
+  private card:any;
+  private task:TaskModel;
+  private charge:string;
+  private transactionTime:Dayjs;
+  private bankMappingList:any;
   constructor() {
-    /** @type { ThenableWebDriver } */
-    this.driver = null;
-    this.bankURL = "https://perbank.abchina.com/EbankSite/startup.do";
+    this.driver = new Builder().build();
+    this.bankUrl = "https://perbank.abchina.com/EbankSite/startup.do";
     this.card = {};
-    this.task = "";
-    this.charge = 0;
-    this.transactionTime = null;
+    this.task = new TaskModel();
+    this.charge = "";
+    this.transactionTime = dayjs();
     this.bankMappingList = {
       中国工商银行: "中国工商银行",
       中国农业银行: "中国农业银行",
@@ -54,12 +58,12 @@ export default class {
       浙商银行: "浙商银行",
       南京银行: "南京银行",
       广州发展银行: "广州发展银行",
-      浦发银行: "浦东发展银行",
+      浦发银行: "浦东发展银行"
     };
   }
 
   async launchSelenium() {
-    await this.driver.get(this.bankURL);
+    await this.driver.get(this.bankUrl);
   }
 
   async inputSignInInformation() {
@@ -72,7 +76,7 @@ export default class {
         await this.deletePassword();
 
         if (retryTimes === 0) {
-          throw new OperationalError("Send login password fail, please retry to login");
+          throw new Error("Send login password fail, please retry to login");
         }
       } finally {
         retryTimes--;
@@ -84,7 +88,7 @@ export default class {
     await executeJavaScript(
       this.driver,
       "focus password box ",
-      "document.getElementById('PowerEnterDiv_powerpass_2').focus();",
+      "document.getElementById('PowerEnterDiv_powerpass_2').focus();"
     );
   }
   async inputPassword() {
@@ -103,9 +107,9 @@ export default class {
       .wait(until.elementLocated(By.id("PowerEnterDiv_powerpass_2_Msg")), 2 * 1000)
       .getText();
     if (passwordMessage) {
-      setLog({
+      LogModule.SetLog({
         level: "warn",
-        message: "Login password sent length incorrectly. Message on bank: " + passwordMessage,
+        message: "Login password sent length incorrectly. Message on bank: " + passwordMessage
       });
       return false;
     }
@@ -120,12 +124,7 @@ export default class {
 
   async sendUSBKey() {}
 
-  /**
-   *
-   * @param {Object} globalState
-   * @param {Boolean} globalStore.isManualLogin
-   */
-  async checkIfLoginSuccess(globalState) {
+  async checkIfLoginSuccess(globalState:{isManualLogin:boolean}) {
     try {
       const element = until.elementLocated(By.id("contentFrame"));
       if (globalState.isManualLogin) {
@@ -134,11 +133,11 @@ export default class {
         await this.driver.wait(element, 30 * 1000);
         await waitPageLoad(this.driver);
       }
-      setLog({ message: "Signed in.", level: "info" });
+      LogModule.SetLog({ message: "Signed in.", level: "info" });
       return true;
     } catch (error) {
       if (error.name === "TimeoutError") {
-        setLog({ message: "Sign in fail.", level: "info" });
+        LogModule.SetLog({ message: "Sign in fail.", level: "info" });
         return false;
       }
       throw error;
@@ -146,13 +145,13 @@ export default class {
   }
 
   async getCookie() {
-    const cookie = await this.driver.executeScript("return document.cookie");
+    const cookie:string = await this.driver.executeScript("return document.cookie");
     if (!cookie || cookie.length === 0) throw new Error("get cookie failure!");
     return { cookie, session: null };
   }
   resetVariables() {
-    this.charge = 0;
-    this.transactionTime = null;
+    this.charge = "0";
+    this.transactionTime = dayjs();
   }
   async goTransferPage() {
     this.resetVariables();
@@ -164,23 +163,24 @@ export default class {
         this.driver,
         "switch to transfer page",
         "document.querySelector('#menuNav > ul > li:nth-child(4) > ul > li').click();",
-        500,
+        500
       );
       // This wait until transfer page load
-      await this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000);
       // Switch to iframe
-      await this.driver.switchTo().frame("contentFrame");
-      await this.driver.wait(
-        until.elementIsVisible(
-          await this.driver.wait(until.elementLocated(By.id("fromAcctBalance")), 60 * 1000),
-        ),
-        60 * 1000,
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
       );
       await this.driver.wait(
         until.elementIsVisible(
-          await this.driver.wait(until.elementLocated(By.id("toAcctNo")), 60 * 1000),
+          await this.driver.wait(until.elementLocated(By.id("fromAcctBalance")), 60 * 1000)
         ),
-        60 * 1000,
+        60 * 1000
+      );
+      await this.driver.wait(
+        until.elementIsVisible(
+          await this.driver.wait(until.elementLocated(By.id("toAcctNo")), 60 * 1000)
+        ),
+        60 * 1000
       );
     } finally {
       await this.driver.switchTo().defaultContent();
@@ -189,36 +189,41 @@ export default class {
 
   async fillTransferFrom() {
     try {
-      this.card = getCurrentCardDetail();
-      this.task = getSelectedTaskDetail();
-      await this.driver.switchTo().frame("contentFrame");
+      this.card = CardModule.currentDetail;
+      this.task = TaskModule.selected;
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
 
       // account
       await sendKeysV2(
         this.driver,
-        this.driver.wait(until.elementLocated(By.id("toAcctNo"), 5 * 1000)),
+        this.driver.wait(until.elementLocated(By.id("toAcctNo")), 5 * 1000),
         {
-          text: this.task.bank.cardNumber,
-        },
+          // text: this.task.payeeAccount
+          text: ""
+        }
       );
 
       // name
       await sendKeysV2(
         this.driver,
-        this.driver.wait(until.elementLocated(By.id("toAcctNameKey"), 5 * 1000)),
+        this.driver.wait(until.elementLocated(By.id("toAcctNameKey")), 5 * 1000),
         {
-          text: this.task.receiverName,
-        },
+          // text: this.task.receiverName
+          text: ""
+        }
       );
 
       // amount
       await sendKeysV2(
         this.driver,
-        this.driver.wait(until.elementLocated(By.id("transAmt"), 5 * 1000)),
+        this.driver.wait(until.elementLocated(By.id("transAmt")), 5 * 1000),
         {
-          text: FormatHelper.amount(this.task.requestAmount),
-          replaceRule: /,/g,
-        },
+          // text: FormatHelper.amount(this.task.requestAmount),
+          text: "",
+          replaceRule: /,/g
+        }
       );
 
       await this.waitUntilBankSelected();
@@ -227,9 +232,9 @@ export default class {
         this.driver,
         "click submit button",
         "document.getElementById('transferNext').click()",
-        0,
+        0
       );
-      await this.driver.wait(until.elementLocated(By.id("agreeBtn"), 30 * 1000));
+      await this.driver.wait(until.elementLocated(By.id("agreeBtn")), 30 * 1000);
       await this.checkSubmittedValue();
     } finally {
       await this.driver.switchTo().defaultContent();
@@ -242,9 +247,9 @@ export default class {
       try {
         if (retryTimes === 0) {
           const errorMessage = "wait until bank selected fail";
-          setLog({
+          LogModule.SetLog({
             level: "error",
-            message: errorMessage,
+            message: errorMessage
           });
           throw new Error(errorMessage);
         }
@@ -252,25 +257,26 @@ export default class {
         var isBankSelected = await getElementValue(bankField);
         // this field  have value mean choose bank successful
         if (isBankSelected.trim()) {
-          setLog({ level: "info", message: "Bank selected success" });
+          LogModule.SetLog({ level: "info", message: "Bank selected success" });
           break;
         }
-        var bankName =
-          this.bankMappingList[this.task.bank.chineseName] || this.task.bank.chineseName;
+        // FIXME
+        var bankName = "";
+        // this.bankMappingList[this.task.bank.chineseName] || this.task.bank.chineseName;
 
         await sendKeysV2(this.driver, bankField, { text: bankName });
         await executeJavaScript(
           this.driver,
           "choose bank",
           "if(document.querySelectorAll('#bankRst>table>tbody>tr>td').length)  document.querySelector('#bankRst>table>tbody>tr>td').click()",
-          0,
+          0
         );
         await this.driver.sleep(100);
       } catch (error) {
         if (error.name === "OperationalError" || error.name === "JavascriptError") {
-          setLog({
+          LogModule.SetLog({
             level: "warn",
-            message: `wait until bank selected fail, ${retryTimes} times, Error: ${error}`,
+            message: `wait until bank selected fail, ${retryTimes} times, Error: ${error}`
           });
           continue;
         }
@@ -286,18 +292,18 @@ export default class {
     var nameCardLine = await this.driver
       .wait(
         until.elementLocated(
-          By.css("table.table.table-centre>tbody>tr:nth-child(2)>td:nth-child(2)"),
+          By.css("table.table.table-centre>tbody>tr:nth-child(2)>td:nth-child(2)")
         ),
-        1 * 1000,
+        1 * 1000
       )
       .getText();
 
     var thirdLine = await this.driver
       .wait(
         until.elementLocated(
-          By.css("table.table.table-centre>tbody>tr:nth-child(3)>td:nth-child(2)"),
+          By.css("table.table.table-centre>tbody>tr:nth-child(3)>td:nth-child(2)")
         ),
-        1 * 1000,
+        1 * 1000
       )
       .getText();
 
@@ -306,28 +312,28 @@ export default class {
       amountLine = await this.driver
         .wait(
           until.elementLocated(
-            By.css("table.table.table-centre>tbody>tr:nth-child(4)>td:nth-child(2)"),
+            By.css("table.table.table-centre>tbody>tr:nth-child(4)>td:nth-child(2)")
           ),
-          1 * 1000,
+          1 * 1000
         )
         .getText();
     }
 
     var amount = amountLine.replace(/[^0-9.]/gi, "").trim();
     amount = amount.replace(/,/g, "");
-    if (parseFloat(amount) != parseFloat(this.task.requestAmount)) {
-      throw new Error("Amount is not right!");
-    }
+    // if (parseFloat(amount) !== parseFloat(this.task.requestAmount)) {
+    //   throw new Error("Amount is not right!");
+    // }
 
-    var name = nameCardLine.split("/")[0];
-    if (name != this.task.receiverName) {
-      throw new Error("Receiver name is not right!");
-    }
+    // var name = nameCardLine.split("/")[0];
+    // if (name != this.task.receiverName) {
+    //   throw new Error("Receiver name is not right!");
+    // }
 
-    var card = nameCardLine.split("/")[1];
-    if (card != this.task.bank.cardNumber) {
-      throw new Error("Card number is not right!");
-    }
+    // var card = nameCardLine.split("/")[1];
+    // if (card != this.task.bank.cardNumber) {
+    //   throw new Error("Card number is not right!");
+    // }
   }
 
   async fillNote() {}
@@ -335,7 +341,10 @@ export default class {
   async confirmTransaction() {
     try {
       ScreenshotHelper.capture("ABC-" + this.task.id + "-confirmTransaction");
-      await this.driver.switchTo().frame("contentFrame");
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
+
       await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
       // TODO: Get transfer fee here
 
@@ -359,7 +368,7 @@ export default class {
         await executeJavaScript(
           this.driver,
           "Focus password box",
-          "document.getElementById('agreeBtn').click();",
+          "document.getElementById('agreeBtn').click();"
         );
         await KeySender.sendText(this.card.queryPassword);
         await KeySender.sendKey(KeySender.KeyEnum.RETURN, 1000);
@@ -371,7 +380,7 @@ export default class {
           for (let index = 0; index < 10; index++) {
             await KeySender.sendKey(KeySender.KeyEnum.BACKSPACE, 100);
           }
-          setLog({ level: "warn", message: "Query password sent length incorrectly" });
+          LogModule.SetLog({ level: "warn", message: "Query password sent length incorrectly" });
         } else {
           await this.confirmSameTransaction();
           break;
@@ -379,8 +388,8 @@ export default class {
       } catch (error) {
         // this means usb password showed, so the password input correctly
         if (error.name === "UnexpectedAlertOpenError") {
-          // setLog({ level: "warn", message: "Catch dialog popup" });
-          setLog({ level: "info", message: "Query password sent" });
+          // LogModule.SetLog({ level: "warn", message: "Catch dialog popup" });
+          LogModule.SetLog({ level: "info", message: "Query password sent" });
           break;
         }
         throw error;
@@ -399,19 +408,19 @@ export default class {
       await executeJavaScript(
         this.driver,
         "focus passwprd box ",
-        "document.getElementById('powerpass_ie').focus();",
+        "document.getElementById('powerpass_ie').focus();"
       );
 
       // Press enter to send usb password
       await KeySender.sendKey(KeySender.KeyEnum.RETURN, 1000);
 
-      setLog({
+      LogModule.SetLog({
         level: "info",
-        message: "Detected confirm prompt and confirm it",
+        message: "Detected confirm prompt and confirm it"
       });
     } catch (error) {
       if (error.name === "TimeoutError") {
-        return setLog({ level: "info", message: "Not detected confirm prompt'" });
+        return LogModule.SetLog({ level: "info", message: "Not detected confirm prompt'" });
       }
       throw error;
     }
@@ -424,9 +433,9 @@ export default class {
   async sendUSBPasswordForTransfer() {
     await KeySender.sendText(this.card.usbPassword, 3 * 3000);
     await KeySender.sendKey(KeySender.KeyEnum.RETURN);
-    setLog({
+    LogModule.SetLog({
       level: "info",
-      message: "Send USB password success",
+      message: "Send USB password success"
     });
   }
 
@@ -444,18 +453,18 @@ export default class {
         var message = await this.driver.wait(until.elementLocated(By.id("trnTips")), 10 * 1000);
 
         if (message) {
-          setLog({ level: "info", message: "USB pressed" });
+          LogModule.SetLog({ level: "info", message: "USB pressed" });
           break;
         }
       } catch (error) {
         if (error.name === "UnexpectedAlertOpenError") {
-          setLog({
+          LogModule.SetLog({
             level: "warn",
-            message: `Waiting for usb press, remaining times: ${retryTimes}`,
+            message: `Waiting for usb press, remaining times: ${retryTimes}`
           });
           continue;
         } else if (error.name === "TimeoutError") {
-          setLog({ level: "warn", message: "Can't get the element 'trnTips'" });
+          LogModule.SetLog({ level: "warn", message: "Can't get the element 'trnTips'" });
           break;
         } else throw error;
       } finally {
@@ -488,8 +497,9 @@ export default class {
       await this.queryTransferRecord();
       // 检查转账记录
       if (await this.checkTransferRecord()) return true;
+      return false;
     } catch (error) {
-      setLog({ level: "error", message: error });
+      LogModule.SetLog({ level: "error", message: error });
       return false;
     } finally {
       await this.driver.switchTo().defaultContent();
@@ -498,21 +508,24 @@ export default class {
 
   async getTransactionTime() {
     try {
-      this.transactionTime = moment();
-      await this.driver.switchTo().frame("contentFrame");
-      //回单时间与交易时间会不同
+      this.transactionTime = dayjs();
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
+
+      // 回单时间与交易时间会不同
       const transactionTime = await this.driver
         .wait(
           until.elementLocated(
-            By.css("#trnSuccess > .m-serialnumberbox > .m-serialnumberright > span"),
+            By.css("#trnSuccess > .m-serialnumberbox > .m-serialnumberright > span")
           ),
-          5 * 1000,
+          5 * 1000
         )
         .getText();
-      this.transactionTime = moment(transactionTime, "YYYY/MM/DD HH:mm:ss");
+      this.transactionTime = dayjs(transactionTime, "YYYY/MM/DD HH:mm:ss");
     } catch (error) {
       if (error.name === "TimeoutError") {
-        return setLog({ level: "warn", message: "Get the transaction time fail" });
+        return LogModule.SetLog({ level: "warn", message: "Get the transaction time fail" });
       }
       throw error;
     } finally {
@@ -523,25 +536,28 @@ export default class {
   // 跳转到打印回单页面
   async goCustomerAdvice() {
     try {
-      await this.driver.switchTo().frame("contentFrame");
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
+
       await this.driver.wait(until.elementLocated(By.id("printBtn")), 20 * 1000);
       await executeJavaScript(
         this.driver,
         "change page to print table  ",
         "document.querySelector('#printBtn').click()",
-        0,
+        0
       );
       await this.driver.wait(
         until.elementIsVisible(
-          await this.driver.wait(until.elementLocated(By.css("table.printTable")), 20 * 1000),
+          await this.driver.wait(until.elementLocated(By.css("table.printTable")), 20 * 1000)
         ),
-        20 * 1000,
+        20 * 1000
       );
-      setLog({ level: "info", message: "Go customer advice success" });
+      LogModule.SetLog({ level: "info", message: "Go customer advice success" });
       return true;
     } catch (error) {
       if (error.name === "TimeoutError") {
-        setLog({ level: "warn", message: "Go customer advice error" });
+        LogModule.SetLog({ level: "warn", message: "Go customer advice error" });
         return false;
       }
       throw error;
@@ -556,26 +572,28 @@ export default class {
       ScreenshotHelper.capture("ABC-" + this.task.id + "-checkCustomerAdvice");
 
       await this.driver.wait(until.elementLocated(By.id("contentFrame")), 10 * 1000);
-      await this.driver.switchTo().frame("contentFrame");
+
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
 
       var adviceTitle = await this.driver
         .wait(until.elementLocated(By.css("table.printTable>thead>tr>td")), 1 * 1000)
         .getText();
 
-      this.transactionTime = await this.driver
+      const transactionTime = await this.driver
         .wait(
           until.elementLocated(By.css("table.printTable>tbody>tr:nth-child(1)>td>span")),
-          1 * 1000,
+          1 * 1000
         )
         .getText();
 
-      this.transactionTime = this.transactionTime.replace("交易时间：", "");
-      this.transactionTime = moment(this.transactionTime, "YYYY/MM/DD HH:mm:ss");
+      this.transactionTime = dayjs(transactionTime.replace("交易时间：", ""));
 
       var amount = await this.driver
         .wait(
           until.elementLocated(By.css("table.printTable>tbody>tr:nth-child(5)>td:nth-child(2)")),
-          1 * 1000,
+          1 * 1000
         )
         .getText();
       amount = FormatHelper.amount(amount);
@@ -583,21 +601,21 @@ export default class {
       this.charge = await this.driver
         .wait(
           until.elementLocated(By.css("table.printTable>tbody>tr:nth-child(5)>td:nth-child(4)")),
-          1 * 1000,
+          1 * 1000
         )
         .getText();
       this.charge = FormatHelper.amount(this.charge);
 
-      setLog({
+      LogModule.SetLog({
         level: "info",
         message: `Customer advice - status: ${adviceTitle}, amount: ${amount}, charge: ${
           this.charge
-        }, time: ${this.transactionTime.format("HH:mm:ss")}`,
+        }, time: ${this.transactionTime.format("HH:mm:ss")}`
       });
       // If the result shows success, than stop doing following job
       if (adviceTitle.indexOf("成功") !== -1) return true;
       else {
-        setLog({ level: "warn", message: "Fail to check if task success in advice" });
+        LogModule.SetLog({ level: "warn", message: "Fail to check if task success in advice" });
         return false;
       }
     } finally {
@@ -611,22 +629,25 @@ export default class {
         this.driver,
         "change page to transfer ",
         "document.querySelector('#menuNav > ul > li:nth-child(4) > ul > li').click();",
-        500,
+        500
       );
 
       await this.driver.sleep(1000);
       await waitPageLoad(this.driver);
       await this.driver.wait(until.elementLocated(By.id("contentFrame")), 30 * 1000);
-      await this.driver.switchTo().frame("contentFrame");
+
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
 
       await this.driver.wait(
         until.elementLocated(By.css(".tabs-head>li:nth-child(3)>a")),
-        5 * 1000,
+        5 * 1000
       );
 
       await this.waitUntilTransactionPageLoaded();
 
-      setLog({ level: "info", message: "Go transfer record page success" });
+      LogModule.SetLog({ level: "info", message: "Go transfer record page success" });
     } finally {
       await this.driver.switchTo().defaultContent();
     }
@@ -643,7 +664,7 @@ export default class {
             this.driver,
             "Go transfer record page",
             "document.querySelector('.tabs-head>li:nth-child(3)>a').click()",
-            0,
+            0
           );
           await this.driver.sleep(1000);
           await waitPageLoad(this.driver);
@@ -655,7 +676,7 @@ export default class {
         var [startDate, endDate] = await Promise.all([
           getElementValue(startDateField),
           getElementValue(endDateField),
-          queryButton,
+          queryButton
         ]);
 
         if (
@@ -667,15 +688,15 @@ export default class {
           break;
         }
 
-        setLog({
+        LogModule.SetLog({
           level: "warn",
-          message: `Go transfer record page fail, ${retryTimes} times, No error.`,
+          message: `Go transfer record page fail, ${retryTimes} times, No error.`
         });
       } catch (error) {
         if (error.name === "TimeoutError") {
-          setLog({
+          LogModule.SetLog({
             level: "warn",
-            message: `Go transfer record page fail, ${retryTimes} times, Error: ${error}`,
+            message: `Go transfer record page fail, ${retryTimes} times, Error: ${error}`
           });
           continue;
         }
@@ -689,10 +710,13 @@ export default class {
   async queryTransferRecord() {
     try {
       await this.driver.wait(until.elementLocated(By.id("contentFrame")), 10 * 1000);
-      await this.driver.switchTo().frame("contentFrame");
+
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
       await this.waitUntilTransactionDetailLoaded();
 
-      setLog({ level: "info", message: "Query transfer record success" });
+      LogModule.SetLog({ level: "info", message: "Query transfer record success" });
     } finally {
       await this.driver.switchTo().defaultContent();
     }
@@ -710,7 +734,7 @@ export default class {
             this.driver,
             "click qryTrnDetail button ",
             "document.querySelector('#qryTrnDetail').click()",
-            0,
+            0
           );
           await this.driver.sleep(1000);
           await waitPageLoad(this.driver);
@@ -718,14 +742,14 @@ export default class {
 
         await this.driver.wait(
           until.elementLocated(By.css("table.table.table-striped.table-hover>tbody")),
-          1 * 1000,
+          1 * 1000
         );
         return;
       } catch (error) {
         if (error.name === "TimeoutError") {
-          setLog({
+          LogModule.SetLog({
             level: "warn",
-            message: `Queried search detail fail, ${retryTimes} times.`,
+            message: `Queried search detail fail, ${retryTimes} times.`
           });
           continue;
         }
@@ -741,15 +765,18 @@ export default class {
       ScreenshotHelper.capture("ABC-" + this.task.id + "-checkTransferHistory");
 
       await this.driver.wait(until.elementLocated(By.id("contentFrame")), 10 * 1000);
-      await this.driver.switchTo().frame("contentFrame");
+
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
       var tableElement = await this.driver.wait(
         until.elementLocated(By.css("table.table.table-striped.table-hover>tbody")),
-        10 * 1000,
+        10 * 1000
       );
       var tableHtml = await tableElement.getAttribute("outerHTML");
 
       const $ = cheerio.load(tableHtml, {
-        xmlMode: true,
+        xmlMode: true
       });
 
       const transactions = $("tbody > tr");
@@ -758,41 +785,47 @@ export default class {
       transactions.each((_, transaction) => {
         const date = transaction.children[0].children[0].children[0].data;
         const time = transaction.children[0].children[1].children[0].data;
-        const startTime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm:ss").subtract(10, "seconds");
-        const endTime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm:ss").add(10, "seconds");
+        const startTime = dayjs(`${date} ${time}`, "YYYY-MM-DD HH:mm:ss").subtract(10, "second");
+        const endTime = dayjs(`${date} ${time}`, "YYYY-MM-DD HH:mm:ss").add(10, "second");
 
         const receiverInfo = transaction.children[2].children[0].children[0].data;
-        const receiverName = receiverInfo.split("/")[0];
-        const receiverAccount = receiverInfo.split("/")[1];
 
-        let amount = transaction.children[3].children[0].data;
+        let receiverName = "";
+        let receiverAccount = "";
+        if (receiverInfo) {
+          receiverName = receiverInfo.split("/")[0];
+          receiverAccount = receiverInfo.split("/")[1];
+        }
+
+        let amount = transaction.children[3].children[0].data || "";
         amount = FormatHelper.amount(amount);
 
         const status = transaction.children[5].children[0].data;
 
         if (
-          this.transactionTime.isBetween(startTime, endTime) &&
-          receiverName === this.task.receiverName &&
-          receiverAccount === this.task.bank.cardNumber &&
-          amount === FormatHelper.amount(this.task.requestAmount) &&
+          this.transactionTime.isAfter(startTime) &&
+         this.transactionTime.isBefore(endTime) &&
+          // receiverName === this.task.receiverName &&
+          // receiverAccount === this.task.bank.cardNumber &&
+          // amount === FormatHelper.amount(this.task.requestAmount) &&
           status === "成功"
         ) {
-          setLog({
+          LogModule.SetLog({
             level: "info",
             message:
               `Transfer Record - status: ${status}, amount: ${amount}, ` +
-              `time: ${this.transactionTime.format("HH:mm:ss")}`,
+              `time: ${this.transactionTime.format("HH:mm:ss")}`
           });
           isTransferSuccess = true;
         }
       });
       if (isTransferSuccess) return true;
       else {
-        setLog({
+        LogModule.SetLog({
           level: "info",
           message:
-            `Transfer record match fail, request amount: ${this.task.requestAmount}, ` +
-            `transaction time: ${this.transactionTime.format("HH:mm:ss")}`,
+            // `Transfer record match fail, request amount: ${this.task.requestAmount}, ` +
+            `transaction time: ${this.transactionTime.format("HH:mm:ss")}`
         });
 
         throw new Error("Check transfer record fail");
@@ -808,16 +841,19 @@ export default class {
         this.driver,
         "查询余额",
         "document.getElementById('menuNav').getElementsByTagName('li')[0].click()",
-        0,
+        0
       );
       await this.driver.sleep(3 * 1000);
 
       await this.driver.wait(until.elementLocated(By.id("contentFrame")), 10 * 1000);
-      await this.driver.switchTo().frame("contentFrame");
+
+      await this.driver.switchTo().frame(
+        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      );
 
       var balance = await waitUtilGetText(this.driver, until.elementLocated(By.id("dnormal")));
 
-      setBankBalance(FormatHelper.amount(balance));
+      CardModule.SET_BANK_BALANCE(+FormatHelper.amount(balance));
     } finally {
       await this.driver.switchTo().defaultContent();
     }

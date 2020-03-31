@@ -1,5 +1,5 @@
 import { execSync } from "child_process";
-import { setLog } from "../storeHelper";
+import { LogModule } from "../../../store/modules/log";
 
 export function focusAndCheckIE() {
   run();
@@ -7,14 +7,14 @@ export function focusAndCheckIE() {
 
 function run() {
   try {
-    execSync(`WindowFocusTool.exe`, {
-      shell: false,
+    execSync("WindowFocusTool.exe", {
+      // shell: false,
       cwd:
         process.env.NODE_ENV === "production"
           ? process.resourcesPath + "/windowFocusTool"
-          : "windowFocusTool",
+          : "windowFocusTool"
     });
   } catch (error) {
-    return setLog({ level: "error", message: error });
+    return LogModule.SetLog({ level: "error", message: error });
   }
 }

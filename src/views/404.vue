@@ -57,7 +57,7 @@ import { Component, Vue } from "vue-property-decorator";
   name: "Page404"
 })
 export default class extends Vue {
-  private message = "404 Page Not Found"
+  private message = "404 Page Not Found";
 }
 </script>
 

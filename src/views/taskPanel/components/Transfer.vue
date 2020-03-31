@@ -175,10 +175,10 @@ import TaskOperationMixin from "../mixins/taskOperation";
   mixins: [TaskOperationMixin]
 })
 export default class extends Mixins(TaskOperationMixin) {
- private isHandlingSuccess= false
- private isHandlingFail= false
- private isHandlingToConfirm=false
- private isHandlingReassign= false
+ private isHandlingSuccess= false;
+ private isHandlingFail= false;
+ private isHandlingToConfirm=false;
+ private isHandlingReassign= false;
 
  get card() {
    return CardModule;

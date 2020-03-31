@@ -69,10 +69,10 @@ import SidebarItemLink from "./SidebarItemLink.vue";
   }
 })
 export default class extends Vue {
-  @Prop({ required: true }) private item!: RouteConfig
-  @Prop({ default: false }) private isCollapse!: boolean
-  @Prop({ default: true }) private isFirstLevel!: boolean
-  @Prop({ default: "" }) private basePath!: string
+  @Prop({ required: true }) private item!: RouteConfig;
+  @Prop({ default: false }) private isCollapse!: boolean;
+  @Prop({ default: true }) private isFirstLevel!: boolean;
+  @Prop({ default: "" }) private basePath!: string;
 
   get showingChildNumber() {
     if (this.item.children) {

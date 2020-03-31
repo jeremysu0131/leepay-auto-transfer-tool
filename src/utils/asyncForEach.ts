@@ -1,4 +1,4 @@
-export async function asyncForEach(array:[], callback:Function) {
+export async function asyncForEach(array:string[], callback:Function) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }

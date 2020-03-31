@@ -1,9 +1,5 @@
-/**
- *
- * @param {number|string} amount
- */
-export function amount(amount) {
-  if (!amount) amount = 0;
+export function amount(amount:string) :string {
+  if (!amount) amount = "0.00";
 
   if (typeof amount !== "string" && typeof amount !== "number") {
     throw new TypeError("Amount must be string or number");
@@ -14,5 +10,5 @@ export function amount(amount) {
   }
 
   var parsedAmount = Number.parseFloat(amount).toFixed(2);
-  return isNaN(parsedAmount) ? "0.00" : parsedAmount;
+  return isNaN(+parsedAmount) ? "0.00" : parsedAmount;
 }

@@ -92,11 +92,11 @@ export default class extends Vue {
 
    private isSearchingCard= false;
    private isSigningInBank= false;
-   private selectedBankCard= ""
-   private tableData= []
+   private selectedBankCard= "";
+   private tableData= [];
    private form= {
      accountCode: process.env.NODE_ENV === "development" ? "L.ICBC.329" : ""
-   }
+   };
 
    // ...mapGetters(["app", "card", "worker"]),
    get app() { return AppModule; }

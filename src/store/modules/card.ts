@@ -17,20 +17,20 @@ export interface ICardState {
 
 @Module({ dynamic: true, store, name: "card" })
 class Card extends VuexModule implements ICardState {
-public selected= {
-  id: "",
-  accountCode: "",
-  bankCode: "",
-  balanceInSystem: 0,
-  balanceInOnlineBank: 0,
-  accountName: "",
-  accountPassword: "",
-  queryPassword: "",
-  usbPassword: "",
-  proxy: "",
-  cookie: "",
-  session: ""
-};
+  public selected = {
+    id: "",
+    accountCode: "",
+    bankCode: "",
+    balanceInSystem: 0,
+    balanceInOnlineBank: 0,
+    accountName: "",
+    accountPassword: "",
+    queryPassword: "",
+    usbPassword: "",
+    proxy: "",
+    cookie: "",
+    session: ""
+  };
   public selectedDetail = {
     id: 0,
     accountCode: "",
@@ -44,7 +44,7 @@ public selected= {
     queryPassword: "",
     proxy: ""
   };
-  public current= {
+  public current = {
     id: "",
     accountCode: "",
     bankCode: "",
@@ -57,22 +57,25 @@ public selected= {
     proxy: "",
     cookie: "",
     session: ""
+  };
+  public currentDetail = {
+    id: 0,
+    accountCode: "",
+    bankCode: "",
+    balanceInSystem: 0,
+    balanceInOnlineBank: 0,
+    channelGroup: "",
+    accountName: "",
+    accountPassword: "",
+    usbPassword: "",
+    queryPassword: "",
+    proxy: ""
+  };
+
+  @Mutation
+  SET_BANK_BALANCE(balance: number) {
+    this.currentDetail.balanceInOnlineBank = balance;
   }
-   public currentDetail= {
-
-     id: 0,
-     accountCode: "",
-     bankCode: "",
-     balanceInSystem: 0,
-     balanceInOnlineBank: 0,
-     channelGroup: "",
-     accountName: "",
-     accountPassword: "",
-     usbPassword: "",
-     queryPassword: "",
-     proxy: ""
-   }
-
   //   @Mutation
   // private   SET_SELECTED_CARD( account:object)  {
   //       this.selected.id = account.id;
@@ -117,9 +120,6 @@ public selected= {
   //     }
   //     SET_CURRENT_CARD_BO_BALANCE( boBalance)  {
   //       this.currentDetail.balanceInSystem = boBalance;
-  //     }
-  //     SET_BANK_BALANCE( balance)  {
-  //       this.currentDetail.balanceInOnlineBank = balance;
   //     }
   //     UNSET_CURRENT_CARD: this. {
   //       this.current = {
@@ -216,17 +216,17 @@ public selected= {
   //       }
   //     }
 
-//     var accountDetail = await getAccountDetailInSkypay(accountID);
-//     var data = accountDetail.data.data;
-//     return {
-//       username: data.acctUsername,
-//       password: data.acctPassword,
-//       usbPassword: data.acctUSBPass,
-//       queryPassword: data.acctQueryPass
-//     };
-//   } catch (error) {
-//     throw new Error("Get account sign in info fail. Error: " + error);
-//   }
+  //     var accountDetail = await getAccountDetailInSkypay(accountID);
+  //     var data = accountDetail.data.data;
+  //     return {
+  //       username: data.acctUsername,
+  //       password: data.acctPassword,
+  //       usbPassword: data.acctUSBPass,
+  //       queryPassword: data.acctQueryPass
+  //     };
+  //   } catch (error) {
+  //     throw new Error("Get account sign in info fail. Error: " + error);
+  //   }
 }
 
 export const CardModule = getModule(Card);

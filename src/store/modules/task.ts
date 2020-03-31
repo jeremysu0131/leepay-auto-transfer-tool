@@ -90,6 +90,31 @@ class Task extends VuexModule implements ITaskState {
       AppModule.HANDLE_TASK_FETCHING(false);
     }
   }
+
+  @Action
+  public async GetSelectedTaskDetail(data: { id:number, withdraw: any, amount:number, merchantNameString:string, requestTimeStr: any }) {
+    // const taskId = data.id;
+    // const withdrawId = withdraw.id;
+    // var result = await getTaskDetail(taskId, withdrawId);
+    // const data = result.data.value;
+
+    // var taskDetail = {
+    //   id: taskId,
+    //   merchantName: merchantNameString,
+    //   requestAmount: amount,
+    //   requestTime: requestTimeStr,
+    //   receiverName: data.cardName,
+    //   bank: {
+    //     chineseName: data.offeredBank.bankChName,
+    //     englishName: data.offeredBank.bankEnName,
+    //     branch: data.cardBranch,
+    //     province: data.cardProvince,
+    //     city: data.cardCity,
+    //     cardNumber: data.cardNum
+    //   }
+    // };
+    // commit("SET_SELECTED_DATA", taskDetail);
+  }
 }
 //   async SetTaskInfomationToTool({ commit, getters }) {
 //     const taskID = getters.task.dataForAPI.id;
@@ -111,32 +136,6 @@ class Task extends VuexModule implements ITaskState {
 //       });
 //     }
 //     commit("SET_TOOL_INFORMATION_TO_SELECTED_DATA", taskInformation.data);
-//   }
-//   async GetAndSetSelectedTaskDetail(
-//     { commit }
-//     { id, withdraw, amount, merchantNameString, requestTimeStr }
-//   ) {
-//     const taskId = id;
-//     const withdrawId = withdraw.id;
-//     var result = await getTaskDetail(taskId, withdrawId);
-//     const data = result.data.value;
-
-//     var taskDetail = {
-//       id: taskId,
-//       merchantName: merchantNameString,
-//       requestAmount: amount,
-//       requestTime: requestTimeStr,
-//       receiverName: data.cardName,
-//       bank: {
-//         chineseName: data.offeredBank.bankChName,
-//         englishName: data.offeredBank.bankEnName,
-//         branch: data.cardBranch,
-//         province: data.cardProvince,
-//         city: data.cardCity,
-//         cardNumber: data.cardNum
-//       }
-//     };
-//     commit("SET_SELECTED_DATA", taskDetail);
 //   }
 //   async LockSelectedTask({ commit } taskId) {
 //     try {

@@ -98,7 +98,7 @@ export default class extends Vue {
   private loginForm = {
     username: "jeremy.s",
     password: "123456"
-  }
+  };
   private loginRules = {
     username: [{ validator: this.validateUsername, trigger: "blur" }],
     password: [{ validator: this.validatePassword, trigger: "blur" }]

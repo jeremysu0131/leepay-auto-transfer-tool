@@ -11,7 +11,9 @@
           <span>{{ selectedCard.accountCode|| '' }}</span>
         </div>
         <div class="reselect-card__body">
-          <div style="color:#f56c6c">Login again with this current account will close previous IE window.</div>
+          <div style="color:#f56c6c">
+            Login again with this current account will close previous IE window.
+          </div>
           <div>Please choose the method of Login.</div>
           <div>Login process will open a new IE window, please do not close it.</div>
         </div>
@@ -37,15 +39,21 @@
         <el-button
           size="small"
           @click="handleManualLogin"
-        >Manual Login</el-button>
+        >
+          Manual Login
+        </el-button>
         <el-button
           size="small"
           @click="handleAutoLogin"
-        >Auto Login</el-button>
+        >
+          Auto Login
+        </el-button>
         <el-button
           size="small"
           @click="handleCancel"
-        >Cancel</el-button>
+        >
+          Cancel
+        </el-button>
       </div>
     </div>
   </div>
@@ -68,7 +76,7 @@ export default {
     },
     accountStatus() {
       return this.app.account;
-    },
+    }
   },
   methods: {
     async handleManualLogin() {
@@ -91,8 +99,8 @@ export default {
     async resetAccountStatus() {
       this.$store.commit("HANDLE_TASK_FETCHABLE", false);
       this.$store.commit("HANDLE_ACCOUNT_SIGN_IN_SUCCESS", false);
-    },
-  },
+    }
+  }
 };
 </script>
 

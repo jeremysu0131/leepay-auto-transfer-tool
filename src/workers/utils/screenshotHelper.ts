@@ -1,5 +1,5 @@
-import moment from "moment";
-import { setLog } from "./storeHelper";
+import dayjs from "dayjs";
+import { LogModule } from "../../store/modules/log";
 
 const electron = require("electron");
 const desktopCapturer = electron.desktopCapturer;
@@ -14,7 +14,7 @@ function getScreenSize() {
   return electronScreen.getPrimaryDisplay().workAreaSize;
 }
 
-function capture(filename) {
+function capture(filename: string) {
   if (!fs.existsSync(folderPath)) {
     fs.mkdirSync(folderPath);
   }
@@ -22,20 +22,20 @@ function capture(filename) {
   desktopCapturer.getSources(
     { types: ["screen"], thumbnailSize: getScreenSize() },
     (error, sources) => {
-      if (error) setLog({ level: "error", message: error.toString() });
+      if (error)LogModule.SetLog({ level: "error", message: error.toString() });
 
       sources.forEach(function(source) {
         if (source.name === "Entire screen" || source.name === "Screen 1") {
           fs.writeFile(
-            `${folderPath}/${moment().format("YYYYMMDDHHmmss")}-${filename}.png`,
-            source.thumbnail.toPng(),
-            error => {
-              if (error) setLog({ level: "error", message: error.toString() });
-            },
+            `${folderPath}/${dayjs().format("YYYYMMDDHHmmss")}-${filename}.png`,
+            source.thumbnail.toPNG(),
+            (error: { toString: () => any }) => {
+              if (error) LogModule.SetLog({ level: "error", message: error.toString() });
+            }
           );
         }
       });
-    },
+    }
   );
 }
 
@@ -45,11 +45,11 @@ function capture(filename) {
  * @param {number} day
  */
 // TODO: Test it
-function clearOldScreenshots(folderPath, day = 7) {
-  const result = [];
+function clearOldScreenshots(folderPath: any, day = 7) {
+  const result: never[] = [];
   const diffTime = day * 24 * 60 * 60 * 1000;
   const files = fs.readdirSync(folderPath);
-  files.forEach(file => {
+  files.forEach((file: any) => {
     const filePath = path.join(folderPath, file);
     const fileStat = fs.statSync(filePath);
 

@@ -15,8 +15,8 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@types/qs": "^6.9.1",
     "axios": "^0.19.0",
+    "cheerio": "^1.0.0-rc.3",
     "dayjs": "^1.8.23",
     "element-ui": "^2.12.0",
     "js-cookie": "^2.2.1",
@@ -24,7 +24,9 @@
     "nprogress": "^0.2.0",
     "path-to-regexp": "^3.0.0",
     "qs": "^6.9.3",
+    "regedit": "^3.0.3",
     "register-service-worker": "^1.6.2",
+    "selenium-webdriver": "^3.6.0",
     "sqlite3": "^4.1.1",
     "vue": "^2.6.10",
     "vue-class-component": "^7.1.0",
@@ -38,10 +40,13 @@
     "winston-daily-rotate-file": "^4.4.2"
   },
   "devDependencies": {
+    "@types/cheerio": "^0.22.17",
     "@types/jest": "^24.0.18",
     "@types/js-cookie": "^2.2.2",
     "@types/node": "~12.12.23",
     "@types/nprogress": "^0.2.0",
+    "@types/qs": "^6.9.1",
+    "@types/selenium-webdriver": "^4.0.9",
     "@types/webpack-env": "^1.14.0",
     "@vue/cli-plugin-babel": "^3.11.0",
     "@vue/cli-plugin-e2e-cypress": "^3.11.0",

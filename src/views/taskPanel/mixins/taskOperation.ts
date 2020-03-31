@@ -55,9 +55,6 @@ export default class TaskOperationMixin extends Vue {
     //   });
     // }
   }
-  /**
-     * @param {Object} task - If task is null, means it was trigger by current task
-     */
   public async markAsSuccess(task:any) {
     // this.$store.commit("HANDLE_TASK_HANDLING", true);
     // if (task) {

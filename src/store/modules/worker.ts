@@ -1,4 +1,4 @@
-// import WorkerFactory from "@/workers/index";
+import WorkerFactory from "@/workers/WorkerFactory";
 // import {
 //   workflowEnum,
 //   signInWorkflowEnum
@@ -16,53 +16,65 @@ import {
   getModule
 } from "vuex-module-decorators";
 import store from "@/store";
+import { CardModule } from "./card";
+import IWorkerFactory from "../../workers/IWorkerFactory";
+import { signInWorkflowEnum } from "../../workers/utils/workflowHelper";
 
 export interface IWorkerState {
+  worker: any;
   workflow: any[];
 }
 
 @Module({ dynamic: true, store, name: "worker" })
 class Worker extends VuexModule implements IWorkerState {
-  public workflow = [];
+  public workflow = []as any[];
+  public signInWorkflow = [] as any[];
+  public worker = {};
+
+  @Mutation
+  SET_WORKER(worker: IWorkerFactory) {
+    this.worker = worker;
+  }
+  @Mutation
+  SET_SIGN_IN_WORKFLOW(isManualSignIn: boolean) {
+    this.signInWorkflow = signInWorkflowEnum(isManualSignIn);
+  }
+  // UPDATE_FLOW_STATUS(data: { name: any; status: any }) {
+  //   this.signInWorkflow.forEach(flow => {
+  //     if (flow.name === data.name) {
+  //       flow.status = data.status;
+  //     }
+  //   });
+  //   var signInWorkflow = this.signInWorkflow;
+  //   this.signInWorkflow = [];
+  //   this.signInWorkflow = signInWorkflow;
+  // }
+  @Mutation
+  UPDATE_FLOW_STATUS(data: { name: any; status: any; }) {
+    this.workflow.forEach(flow => {
+      if (flow.name === data.name) flow.status = data.status;
+    });
+    var workflow = this.workflow;
+    this.workflow = [];
+    this.workflow = workflow;
+  }
+
+  // SET_WORKFLOW: (state, bankCode) => {
+  //   state.workflow = workflowEnum(bankCode);
+  // },
+  @Action
+  public async SetWorker() {
+    this.SET_WORKER(new WorkerFactory(CardModule.selected));
+    // commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);
+  }
 }
 export const WorkerModule = getModule(Worker);
 // const worker = {
 //   state: { runner: null, workflow: [], signInWorkflow: [] },
 
 //   mutations: {
-//     SET_WORKER: (state, runner) => {
-//       state.runner = runner;
-//     },
-//     SET_SIGN_IN_WORKFLOW: (state, isManualSignIn) => {
-//       state.signInWorkflow = signInWorkflowEnum(isManualSignIn);
-//     },
 //     // data: name, status
-//     UPDATE_SIGN_IN_FLOW_STATUS: (state, data) => {
-//       state.signInWorkflow.forEach(flow => {
-//         if (flow.name === data.name) {
-//           flow.status = data.status;
-//         }
-//       });
-//       var signInWorkflow = state.signInWorkflow;
-//       state.signInWorkflow = [];
-//       state.signInWorkflow = signInWorkflow;
-//     },
-//     SET_WORKFLOW: (state, bankCode) => {
-//       state.workflow = workflowEnum(bankCode);
-//     },
 //     // data: name, status
-//     UPDATE_FLOW_STATUS: (state, data) => {
-//       state.workflow.forEach(flow => {
-//         if (flow.name === data.name) {
-//           flow.status = data.status;
-//         }
-//       });
-//       var workflow = state.workflow;
-//       state.workflow = [];
-//       state.workflow = workflow;
-//     }
-//   },
-
 //   actions: {
 //     async RunManualLoginFlows({ dispatch, commit }) {
 //       commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", true);
@@ -134,10 +146,6 @@ export const WorkerModule = getModule(Worker);
 //       } catch (error) {
 //         return dispatch("SetConsole", { message: error, level: "error" });
 //       }
-//     },
-//     async SetWorker({ commit, getters }) {
-//       commit("SET_WORKER", new WorkerFactory(getters.card.selectedDetail));
-//       commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);
 //     },
 //     async UnsetWorker({ commit, dispatch }) {
 //       await dispatch("CloseSelenium");

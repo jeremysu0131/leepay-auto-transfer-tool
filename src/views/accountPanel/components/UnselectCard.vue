@@ -16,11 +16,15 @@
         <el-button
           size="small"
           @click="handleUnselect"
-        >Yes, unselect it</el-button>
+        >
+          Yes, unselect it
+        </el-button>
         <el-button
           size="small"
           @click="handleCancel"
-        >Cancel</el-button>
+        >
+          Cancel
+        </el-button>
       </div>
     </div>
 
@@ -40,15 +44,21 @@
         <el-button
           size="small"
           @click="handleManualLogin"
-        >Manual Login</el-button>
+        >
+          Manual Login
+        </el-button>
         <el-button
           size="small"
           :disabled="true"
-        >Auto Login</el-button>
+        >
+          Auto Login
+        </el-button>
         <el-button
           size="small"
           @click="handleCancelInConfirm"
-        >Cancel</el-button>
+        >
+          Cancel
+        </el-button>
       </div>
     </div>
   </div>
@@ -59,7 +69,7 @@ import { mapGetters } from "vuex";
 export default {
   data() {
     return {
-      isShowConfirmBlock: false,
+      isShowConfirmBlock: false
     };
   },
   computed: {
@@ -69,7 +79,7 @@ export default {
     },
     accountStatus() {
       return this.app.account;
-    },
+    }
   },
   methods: {
     async handleUnselect() {
@@ -82,13 +92,13 @@ export default {
       this.$store.commit("UNSET_CURRENT_CARD_DETAIL");
       await Promise.all([
         this.$store.dispatch("UnsetWorker"),
-        this.$store.dispatch("UnsetCurrentCard"),
+        this.$store.dispatch("UnsetCurrentCard")
       ]);
     },
     handleCancel() {
       this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "bank-card-search");
-    },
-  },
+    }
+  }
 };
 </script>
 

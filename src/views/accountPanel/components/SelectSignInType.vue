@@ -5,25 +5,35 @@
     </div>
     <div class="select-sign-in-type__body">
       <div class="select-sign-in-type__body-prompt">
-        <span>Balance:{{ card.selectedDetail.balanceInSystem? new Intl.NumberFormat('zh-CN', { style:'currency' ,currency: 'CNY' }).format(card.selectedDetail.balanceInSystem) :'-' }},</span>
+        <span>Balance:{{ card.selectedDetail.balanceInSystem? new Intl.NumberFormat('zh-CN', {style: 'currency' ,currency: 'CNY'}).format(card.selectedDetail.balanceInSystem) :'-' }},</span>
         <span>Channel Group: {{ card.selectedDetail.channelGroup||'N/A' }}</span>
       </div>
-      <div class="select-sign-in-type__body-prompt">Please confirm account selected and choose the method of Login.</div>
-      <div class="select-sign-in-type__body-prompt">Login process will open a new IE window,please do not close it.</div>
+      <div class="select-sign-in-type__body-prompt">
+        Please confirm account selected and choose the method of Login.
+      </div>
+      <div class="select-sign-in-type__body-prompt">
+        Login process will open a new IE window,please do not close it.
+      </div>
     </div>
     <div class="select-sign-in-type__button-group">
       <el-button
         size="small"
         @click="signInManually"
-      >Manual Login</el-button>
+      >
+        Manual Login
+      </el-button>
       <el-button
         size="small"
         @click="signInAutomatically"
-      >Auto Login</el-button>
+      >
+        Auto Login
+      </el-button>
       <el-button
         size="small"
         @click="cancel"
-      >Cancel</el-button>
+      >
+        Cancel
+      </el-button>
     </div>
   </div>
 </template>
@@ -38,14 +48,14 @@ export default {
     return {};
   },
   computed: {
-    ...mapGetters(["app", "card", "worker"]),
+    ...mapGetters(["app", "card", "worker"])
   },
   mounted() {},
   methods: {
     cancel() {
       this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "bank-card-search");
-    },
-  },
+    }
+  }
 };
 </script>
 
