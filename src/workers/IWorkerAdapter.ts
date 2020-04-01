@@ -1,8 +1,16 @@
-export default interface IWorkerFactory {
+import { ThenableWebDriver } from 'selenium-webdriver';
+
+/**
+ * 此介面僅提供銀行網頁互動
+ */
+export interface IWorkerAdapter {
   // setIEEnviroment(): Promise<boolean>;
   // setProxy(): Promise<boolean>;
   // unsetProxy(): void;
   // closeSelenium(): void;
+
+  getDriver(): ThenableWebDriver;
+  setDriver(driver: ThenableWebDriver): void;
 
   /**
    * 進入銀行登入頁面

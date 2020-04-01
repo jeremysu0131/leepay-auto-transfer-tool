@@ -1,34 +1,37 @@
 import { Builder, By, ThenableWebDriver, until } from "selenium-webdriver";
 import cheerio from "cheerio";
-import * as KeySender from "./utils/keySender";
-import * as UsbTrigger from "./utils/usbTrigger";
-import * as RegexHelper from "./utils/regexHelper";
-import * as FormatHelper from "./utils/formatHelper";
+import * as KeySender from "../utils/keySender";
+import * as UsbTrigger from "../utils/usbTrigger";
+import * as RegexHelper from "../utils/regexHelper";
+import * as FormatHelper from "../utils/formatHelper";
 import {
   executeJavaScript,
   waitPageLoad,
   getElementValue,
   waitUtilGetText,
   sendKeysV2
-} from "./utils/seleniumHelper";
-import * as ScreenshotHelper from "./utils/screenshotHelper";
-import * as WindowFocusTool from "./utils/windowFocusTool";
-import IWorkerFactory from "./IWorkerFactory";
-import TaskModel from "../models/taskModel";
+} from "../utils/seleniumHelper";
+import * as ScreenshotHelper from "../utils/screenshotHelper";
+import * as WindowFocusTool from "../utils/windowFocusTool";
+import { IWorkerAdapter } from "../IWorkerAdapter";
+import TaskModel from "../../models/taskModel";
 import { Data } from "electron";
-import { LogModule } from "../store/modules/log";
-import { CardModule } from "../store/modules/card";
-import { TaskModule } from "../store/modules/task";
+import { LogModule } from "../../store/modules/log";
+import { CardModule } from "../../store/modules/card";
+import { TaskModule } from "../../store/modules/task";
 import dayjs, { Dayjs } from "dayjs";
 
-export default class implements IWorkerFactory {
-  private driver:ThenableWebDriver;
-  private bankUrl:string;
-  private card:any;
-  private task:TaskModel;
-  private charge:string;
-  private transactionTime:Dayjs;
-  private bankMappingList:any;
+/**
+ * ABC 銀行 Woker Adapter
+ */
+export class ABCWorkerAdapter implements IWorkerAdapter {
+  private driver: ThenableWebDriver;
+  private bankUrl: string;
+  private card: any;
+  private task: TaskModel;
+  private charge: string;
+  private transactionTime: Dayjs;
+  private bankMappingList: any;
   constructor() {
     this.driver = new Builder().build();
     this.bankUrl = "https://perbank.abchina.com/EbankSite/startup.do";
@@ -60,6 +63,13 @@ export default class implements IWorkerFactory {
       广州发展银行: "广州发展银行",
       浦发银行: "浦东发展银行"
     };
+  }
+
+  public getDriver(): ThenableWebDriver {
+    return this.driver;
+  }
+  public setDriver(driver: ThenableWebDriver): void {
+    this.driver = driver;
   }
 
   async launchSelenium() {

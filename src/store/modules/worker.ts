@@ -1,4 +1,4 @@
-import WorkerFactory from "@/workers/WorkerFactory";
+import BankWorker from "@/workers/BankWorker";
 // import {
 //   workflowEnum,
 //   signInWorkflowEnum
@@ -17,7 +17,6 @@ import {
 } from "vuex-module-decorators";
 import store from "@/store";
 import { CardModule } from "./card";
-import IWorkerFactory from "../../workers/IWorkerFactory";
 import { signInWorkflowEnum } from "../../workers/utils/workflowHelper";
 
 export interface IWorkerState {
@@ -26,13 +25,13 @@ export interface IWorkerState {
 }
 
 @Module({ dynamic: true, store, name: "worker" })
-class Worker extends VuexModule implements IWorkerState {
+class WorkerModuleStatic extends VuexModule implements IWorkerState {
   public workflow = []as any[];
   public signInWorkflow = [] as any[];
   public worker = {};
 
   @Mutation
-  SET_WORKER(worker: IWorkerFactory) {
+  SET_WORKER(worker: BankWorker) {
     this.worker = worker;
   }
   @Mutation
@@ -64,11 +63,11 @@ class Worker extends VuexModule implements IWorkerState {
   // },
   @Action
   public async SetWorker() {
-    this.SET_WORKER(new WorkerFactory(CardModule.selected));
+    this.SET_WORKER(new BankWorker(CardModule.selected));
     // commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);
   }
 }
-export const WorkerModule = getModule(Worker);
+export const WorkerModule = getModule(WorkerModuleStatic);
 // const worker = {
 //   state: { runner: null, workflow: [], signInWorkflow: [] },
 

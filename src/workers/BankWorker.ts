@@ -1,28 +1,21 @@
-import IWorkerFactory from "./IWorkerFactory";
 import { screen } from "electron";
-import { Builder } from "selenium-webdriver";
+import { Builder, ThenableWebDriver } from "selenium-webdriver";
 import { setProxy, unsetProxy, setIEEnviroment } from "./utils/regeditTool";
 import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
-import ABCWorker from "./ABCWorker";
-// import BCMWorker from "./BCMWorker";
-// import BOCWorker from "./BOCWorker";
-// import CCBWorker from "./CCBWorker";
-// import CITICWorker from "./CITICWorker";
-// import CMBCWorker from "./CMBCWorker";
-// import ICBCWorker from "./ICBCWorker";
-// import JZBWorker from "./JZBWorker";
-// import PSBCWorker from "./PSBCWorker";
-// import HRBBWorker from "./HRBBWorker";
-// import PINGANWorker from "./PINGANWorker";
-// import BOBWorker from "./BOBWorker";
 import { LogModule } from "../store/modules/log";
 import { CardModule } from "../store/modules/card";
 import { WorkerModule } from "../store/modules/worker";
 import { TaskModule } from "../store/modules/task";
+import { WorkerAdapterFactory } from './WorkerAdapterFactory';
+import { IWorkerAdapter } from './IWorkerAdapter';
 
-export default class WorkerFactory implements IWorkerFactory {
+/**
+ * Bank Worker
+ * 提供各種銀行操作功能
+ */
+export default class BankWorker {
   private taskStartAt: Date;
-  private instance: any;
+  private instance: IWorkerAdapter;
   private card: any;
 
   constructor(data: {
@@ -34,23 +27,8 @@ export default class WorkerFactory implements IWorkerFactory {
     proxy: string;
   }) {
     this.taskStartAt = new Date();
-    this.instance = this.createWorker(data.accountCode);
+    this.instance = WorkerAdapterFactory.createWorkerAdapter(data.accountCode);
     this.card = CardModule.selectedDetail;
-  }
-  private createWorker(accountCode: string) {
-    if (accountCode.indexOf("ABC") !== -1) return new ABCWorker();
-    // else if (accountCode.indexOf("BCM") !== -1) return new BCMWorker();
-    // else if (accountCode.indexOf("BOB") !== -1) return new BOBWorker();
-    // else if (accountCode.indexOf("BOC") !== -1) return new BOCWorker();
-    // else if (accountCode.indexOf("CCB") !== -1) return new CCBWorker();
-    // else if (accountCode.indexOf("CITIC") !== -1) return new CITICWorker();
-    // else if (accountCode.indexOf("CMBC") !== -1) return new CMBCWorker();
-    // else if (accountCode.indexOf("HRBB") !== -1) return new HRBBWorker();
-    // else if (accountCode.indexOf("ICBC") !== -1) return new ICBCWorker();
-    // else if (accountCode.indexOf("JZB") !== -1) return new JZBWorker();
-    // else if (accountCode.indexOf("PINGAN") !== -1) return new PINGANWorker();
-    // else if (accountCode.indexOf("PSBC") !== -1) return new PSBCWorker();
-    else throw new Error("No such bank rule");
   }
 
   async setIEEnviroment() {
@@ -105,20 +83,22 @@ export default class WorkerFactory implements IWorkerFactory {
         status: WorkflowStatusEnum.RUNNING
       });
 
-      this.instance.driver = await new Builder()
+      const driver = await new Builder()
         .withCapabilities({
           ignoreZoomSetting: true
           // requireWindowFocus: true
         })
         .forBrowser("ie")
-        .build();
+        .build() as ThenableWebDriver;
+        
+      this.instance.setDriver(driver);
 
       const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-      await this.instance.driver
+      await this.instance.getDriver()
         .manage()
         .window()
         .setSize(width * (1 / 2), height);
-      await this.instance.driver
+      await this.instance.getDriver()
         .manage()
         .window()
         .setPosition(0, 0);
@@ -140,7 +120,7 @@ export default class WorkerFactory implements IWorkerFactory {
   }
 
   async closeSelenium() {
-    if (this.instance.driver) await this.instance.driver.quit();
+    if (this.instance.getDriver()) await this.instance.getDriver().quit();
 
     LogModule.SetLog({ message: "Selenium closed", level: "info" });
   }
