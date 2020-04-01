@@ -4,10 +4,10 @@ import { setProxy, unsetProxy, setIEEnviroment } from "./utils/regeditTool";
 import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
 import { LogModule } from "../store/modules/log";
 import { WorkerModule } from "../store/modules/worker";
-import { WorkerAdapterFactory } from './WorkerAdapterFactory';
-import { IWorkerAdapter } from './IWorkerAdapter';
+import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
+import { IWorkerAdapter } from "./IWorkerAdapter";
 import TaskDetailModel from "../models/taskDetailModel";
-import { AccountModule } from '../store/modules/account';
+import { AccountModule } from "../store/modules/account";
 
 /**
  * Bank Worker

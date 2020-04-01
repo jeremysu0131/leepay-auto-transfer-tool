@@ -1,5 +1,5 @@
 import { IWorkerAdapter } from "./IWorkerAdapter";
-import { ABCWorkerAdapter } from './bankAdapters';
+import { ABCWorkerAdapter } from "./bankAdapters";
 
 /**
  * Worker Adapter Factory

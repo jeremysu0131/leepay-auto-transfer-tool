@@ -15,10 +15,10 @@ import * as ScreenshotHelper from "../utils/screenshotHelper";
 import * as WindowFocusTool from "../utils/windowFocusTool";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import dayjs, { Dayjs } from "dayjs";
-import TaskDetailModel from '../../models/taskDetailModel';
-import { LogModule } from '../../store/modules/log';
-import { AccountModule } from '../../store/modules/account';
-import { TaskModule } from '../../store/modules/task';
+import TaskDetailModel from "../../models/taskDetailModel";
+import { LogModule } from "../../store/modules/log";
+import { AccountModule } from "../../store/modules/account";
+import { TaskModule } from "../../store/modules/task";
 
 /**
  * ABC 銀行 Woker Adapter
