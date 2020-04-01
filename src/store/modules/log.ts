@@ -7,66 +7,44 @@ import {
 } from "vuex-module-decorators";
 import store from "@/store";
 import { MessageBox } from "element-ui";
-import { LogEntry } from "winston";
 import logger from "../../utils/logger";
-// Log level
-// {
-//   error: 0,
-//   warn: 1,
-//   info: 2,
-//   verbose: 3,
-//   debug: 4,
-//   silly: 5
-// }
+import ILog from "../../models/logModel";
 
 export interface ILogState {
   log: any[];
-  console: any[];
 }
 
 @Module({ dynamic: true, store, name: "log" })
 class Log extends VuexModule implements ILogState {
   public log = [];
-  public console = [];
 
   // Record log
-  @Mutation private SET_LOG(logInfo: LogEntry) {
+  @Mutation private SET_LOG(logInfo: ILog) {
     const { level, message } = logInfo;
-    logger.log({ level, message: message.toString() });
+    logger.log({ level: "error", message: message.toString() });
     // this.log.push({ level, message: message.toString() });
   }
   @Mutation
   private UNSET_LOG() {
     this.log = [];
   }
-  // Show on application and record log
-  @Mutation
-  private SET_CONSOLE(logInfo: LogEntry) {
-    const { level, message } = logInfo;
-    logger.log({ level, message: message.toString() });
-    // this.console.push({ level, message });
-  }
-  @Mutation
-  private UNSET_CONSOLE() {
-    this.console = [];
-  }
 
   @Action
   public UnsetLog() {
     this.UNSET_LOG();
-    this.UNSET_CONSOLE();
   }
 
   @Action
-  public SetLog(logInfo: LogEntry) {
+  public SetLog(logInfo: ILog) {
     let { level, message } = logInfo;
     message = message.toString();
     this.SET_LOG(logInfo);
   }
   @Action
-  public SetConsole(logInfo: LogEntry) {
+  // Show on application and record log
+  public SetConsole(logInfo: ILog) {
     // this.HANDLE_TASK_AUTO_PROCESS(false);
-    this.SET_CONSOLE(logInfo);
+    this.SET_LOG(logInfo);
 
     var audio = new Audio(require("@/assets/sounds/alarm.mp3"));
     var transferTime = 0;

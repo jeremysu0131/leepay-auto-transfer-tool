@@ -96,7 +96,7 @@ export default class extends Vue {
     }
   };
   private loginForm = {
-    username: "jeremy.s",
+    username: "js",
     password: "123456"
   };
   private loginRules = {

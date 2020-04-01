@@ -4,41 +4,26 @@ import { Builder } from "selenium-webdriver";
 import { setProxy, unsetProxy, setIEEnviroment } from "./utils/regeditTool";
 import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
 import ABCWorker from "./ABCWorker";
-// import BCMWorker from "./BCMWorker";
-// import BOCWorker from "./BOCWorker";
-// import CCBWorker from "./CCBWorker";
-// import CITICWorker from "./CITICWorker";
-// import CMBCWorker from "./CMBCWorker";
-// import ICBCWorker from "./ICBCWorker";
-// import JZBWorker from "./JZBWorker";
-// import PSBCWorker from "./PSBCWorker";
-// import HRBBWorker from "./HRBBWorker";
-// import PINGANWorker from "./PINGANWorker";
-// import BOBWorker from "./BOBWorker";
 import { LogModule } from "../store/modules/log";
-import { CardModule } from "../store/modules/card";
+import { AccountModule } from "../store/modules/account";
 import { WorkerModule } from "../store/modules/worker";
-import { TaskModule } from "../store/modules/task";
+import TaskDetailModel from "../models/taskDetailModel";
 
 export default class WorkerFactory implements IWorkerFactory {
   private taskStartAt: Date;
   private instance: any;
   private card: any;
+  private taskDetail: TaskDetailModel;
 
-  constructor(data: {
-    accountCode: string;
-    bankCode: string;
-    accountName: string;
-    accountPassword: string;
-    usbPassword: string;
-    proxy: string;
-  }) {
+  constructor(taskDetail: TaskDetailModel) {
     this.taskStartAt = new Date();
-    this.instance = this.createWorker(data.accountCode);
-    this.card = CardModule.selectedDetail;
+    this.instance = this.createWorker(taskDetail.remitterAccount.code);
+    this.taskDetail = taskDetail;
+    this.card = AccountModule.selectedDetail;
   }
   private createWorker(accountCode: string) {
-    if (accountCode.indexOf("ABC") !== -1) return new ABCWorker();
+    if (accountCode.indexOf("ICBC") !== -1) return new ABCWorker();
+    // if (accountCode.indexOf("ABC") !== -1) return new ABCWorker();
     // else if (accountCode.indexOf("BCM") !== -1) return new BCMWorker();
     // else if (accountCode.indexOf("BOB") !== -1) return new BOBWorker();
     // else if (accountCode.indexOf("BOC") !== -1) return new BOCWorker();
@@ -100,6 +85,7 @@ export default class WorkerFactory implements IWorkerFactory {
 
   async launchSelenium() {
     try {
+      console.log("call");
       WorkerModule.UPDATE_FLOW_STATUS({
         name: WorkflowEnum.LAUNCH_SELENIUM,
         status: WorkflowStatusEnum.RUNNING
@@ -303,8 +289,9 @@ export default class WorkerFactory implements IWorkerFactory {
       status: WorkflowStatusEnum.RUNNING
     });
     try {
-      var taskDetail = TaskModule.selected;
-      if (taskDetail === null) throw new Error("You didn't select the task");
+      if (this.taskDetail === null) {
+        throw new Error("You didn't select the task");
+      }
 
       await this.instance.fillTransferFrom();
 

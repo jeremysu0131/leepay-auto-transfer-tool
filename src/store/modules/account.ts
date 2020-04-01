@@ -1,4 +1,4 @@
-import { getDetailById, getBoBalance, getGroup } from "../../api/card";
+import * as AccountApi from "../../api/account";
 import {
   VuexModule,
   Module,
@@ -8,7 +8,7 @@ import {
 } from "vuex-module-decorators";
 import store from "@/store";
 
-export interface ICardState {
+export interface IAccountState {
   selected: {};
   selectedDetail: {};
   current: {};
@@ -16,7 +16,7 @@ export interface ICardState {
 }
 
 @Module({ dynamic: true, store, name: "card" })
-class Card extends VuexModule implements ICardState {
+class Card extends VuexModule implements IAccountState {
   public selected = {
     id: "",
     accountCode: "",
@@ -75,6 +75,16 @@ class Card extends VuexModule implements ICardState {
   @Mutation
   SET_BANK_BALANCE(balance: number) {
     this.currentDetail.balanceInOnlineBank = balance;
+  }
+  @Action
+  async GetId(accountCode: string):Promise<number> {
+    var { data } = await AccountApi.getList();
+
+    var account = (data.data as Array<{key:number, value:string}>)
+      .find((account) => account.value.indexOf(accountCode) !== -1);
+
+    if (!account) throw new Error("Get account id fail");
+    return account.key;
   }
   //   @Mutation
   // private   SET_SELECTED_CARD( account:object)  {
@@ -143,7 +153,7 @@ class Card extends VuexModule implements ICardState {
   //   }
 
   //   actions: {
-  //     async SetSelectedCardDetail({ commit, getters }) {
+  //     async SetSelectedCardDetail() {
   //       try {
   //         const selectedCard = getters.card.selected;
   //         var result = await getDetailById(selectedCard.id);
@@ -166,11 +176,11 @@ class Card extends VuexModule implements ICardState {
   //         });
   //         return true;
   //       } catch (error) {
-  //         commit("SET_LOG", { message: error, level: "error" });
+  //         LogModule.SetLog( { message: error, level: "error" });
   //         return false;
   //       }
   //     }
-  //     async GetCurrentCardBoBalance({ commit, getters }) {
+  //     async GetCurrentCardBoBalance() {
   //       try {
   //         const currentCard = getters.card.current;
   //         var getBoBalanceResult = await getBoBalance(currentCard.id);
@@ -184,7 +194,7 @@ class Card extends VuexModule implements ICardState {
   //     }
 
   //     // Move selected card to current card
-  //     async SetCurrentCard({ commit, getters }) {
+  //     async SetCurrentCard() {
   //       commit("SET_CURRENT_CARD", getters.card.selected);
   //       commit("SET_CURRENT_CARD_DETAIL", getters.card.selectedDetail);
   //       commit("UNSET_SELECTED_CARD");
@@ -229,4 +239,4 @@ class Card extends VuexModule implements ICardState {
   //   }
 }
 
-export const CardModule = getModule(Card);
+export const AccountModule = getModule(Card);

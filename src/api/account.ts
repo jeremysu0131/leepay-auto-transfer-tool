@@ -2,16 +2,8 @@ import request from "@/utils/request";
 
 export function getList() {
   return request({
-    url: "/ps-ops-console/api/bank/account/search",
-    method: "GET",
-    params: {
-      id: null,
-      status: null,
-      bankType: null,
-      "bank.bankId": null,
-      currentPage: "1",
-      pageSize: "10000"
-    }
+    url: "/adminAcct!listAllCompanyAcct.do",
+    method: "GET"
   });
 }
 

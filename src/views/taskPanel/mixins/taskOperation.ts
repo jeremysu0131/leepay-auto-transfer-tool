@@ -1,5 +1,8 @@
 import { Component, Vue } from "vue-property-decorator";
 import { TaskModule } from "@/store/modules/task";
+import { WorkerModule } from "../../../store/modules/worker";
+import { LogModule } from "../../../store/modules/log";
+import { AccountModule } from "../../../store/modules/account";
 @Component
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
@@ -8,32 +11,32 @@ export default class TaskOperationMixin extends Vue {
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
   public async startTask() {
-    // try {
-    //   if (
-    //     this.card.current.accountCode.indexOf("ABC") > 0 ||
-    //     this.card.current.accountCode.indexOf("ICBC") > 0
-    //   ) {
-    //     var isProcessSuccess = await this.$store.dispatch(
-    //       "RunAutoTransferFlows"
-    //     );
+    try {
+      var taskDetail = TaskModule.selectedDetail;
+      // if (
+      //   taskDetail.remitterAccount.code.indexOf("ABC") > 0 ||
+      //   taskDetail.remitterAccount.code.indexOf("ICBC") > 0
+      // ) {
+      //   var isProcessSuccess = WorkerModule.RunAutoLoginFlows();
 
-    //     if (isProcessSuccess) {
-    //       this.$store.commit("HANDLE_TASK_PROCESSING", false);
-    //     } else {
-    //       new Audio(require("@/assets/sounds/alarm.mp3")).play();
-    //       this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
-    //     }
-    //   } else {
-    //     await this.$store.dispatch("RunManualTransferFlows");
-    //   }
-    // } catch (error) {
-    //   this.$store.dispatch("SetConsole", {
-    //     message: error.message,
-    //     level: "error"
-    //   });
-    // }
+      //   if (isProcessSuccess) {
+      //     this.$store.commit("HANDLE_TASK_PROCESSING", false);
+      //   } else {
+      //     new Audio(require("@/assets/sounds/alarm.mp3")).play();
+      //     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
+      //   }
+      // } else {
+      await WorkerModule.SetWorker(TaskModule.selectedDetail);
+      // await WorkerModule.RunManualLoginFlows();
+      // }
+    } catch (error) {
+      LogModule.SetConsole({
+        message: error.message,
+        level: "error"
+      });
+    }
   }
-  public async unlockTask(task:any) {
+  public async unlockTask(task: any) {
     // try {
     //   await this.$store.dispatch("UnlockSelectedTask", task.taskId);
     //   this.$message({
@@ -55,7 +58,7 @@ export default class TaskOperationMixin extends Vue {
     //   });
     // }
   }
-  public async markAsSuccess(task:any) {
+  public async markAsSuccess(task: any) {
     // this.$store.commit("HANDLE_TASK_HANDLING", true);
     // if (task) {
     //   this.$store.commit("SET_DATA_FOR_API", task);
@@ -65,7 +68,7 @@ export default class TaskOperationMixin extends Vue {
     // }
     // this.$store.commit("HANDLE_MARK_AS_SUCCESS_DIALOG", true);
   }
-  public async markAsFail(isHandleCurrentTask:any, task:any) {
+  public async markAsFail(isHandleCurrentTask: any, task: any) {
     // this.$store.commit("HANDLE_TASK_HANDLING", true);
     // if (task) {
     //   this.$store.commit("SET_DATA_FOR_API", task);
@@ -73,7 +76,6 @@ export default class TaskOperationMixin extends Vue {
     //   const selectedDataForAPI = this.$store.state.task.selectedDataForAPI;
     //   this.$store.commit("SET_DATA_FOR_API", selectedDataForAPI);
     // }
-
     // try {
     //   await this.confirmMarkAsFail(isHandleCurrentTask);
     // } catch (error) {
@@ -85,7 +87,7 @@ export default class TaskOperationMixin extends Vue {
     //   this.$store.commit("HANDLE_TASK_HANDLING", false);
     // }
   }
-  public confirmMarkAsFail(isHandleCurrentTask:any) {
+  public confirmMarkAsFail(isHandleCurrentTask: any) {
     // return this.$prompt("Please enter the reason what you want to mark this task as fail.", "", {
     //   inputPattern: /\S+/,
     //   inputErrorMessage: "The reason can't be empty"
@@ -103,7 +105,7 @@ export default class TaskOperationMixin extends Vue {
     //     return false;
     //   });
   }
-  public async markAsToConfirm(isHandleCurrentTask:any, task:any) {
+  public async markAsToConfirm(isHandleCurrentTask: any, task: any) {
     // this.isHandlingToConfirm = true;
     // this.$store.commit("HANDLE_TASK_HANDLING", true);
     // try {
@@ -112,7 +114,7 @@ export default class TaskOperationMixin extends Vue {
     //   this.isHandlingToConfirm = false;
     // }
   }
-  public async markAsReassign(isHandleCurrentTask:any, task:any) {
+  public async markAsReassign(isHandleCurrentTask: any, task: any) {
     //   this.$store.commit("HANDLE_TASK_HANDLING", true);
     //   if (task) {
     //     this.$store.commit("SET_DATA_FOR_API", task);
@@ -120,14 +122,12 @@ export default class TaskOperationMixin extends Vue {
     //     const selectedDataForAPI = this.$store.state.task.selectedDataForAPI;
     //     this.$store.commit("SET_DATA_FOR_API", selectedDataForAPI);
     //   }
-
     //   this.$confirm("Are you sure you want to mark this task as re-assign", "", {
     //     type: "warning"
     //   })
     //     .then(async() => {
     //       try {
     //         if (!isHandleCurrentTask) await this.lockTask(task);
-
     //         await this.$store.dispatch("MarkTaskFail", {
     //           isHandleCurrentTask,
     //           reason: "re-assign"

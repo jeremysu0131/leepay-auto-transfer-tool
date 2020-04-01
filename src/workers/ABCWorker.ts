@@ -17,23 +17,25 @@ import IWorkerFactory from "./IWorkerFactory";
 import TaskModel from "../models/taskModel";
 import { Data } from "electron";
 import { LogModule } from "../store/modules/log";
-import { CardModule } from "../store/modules/card";
+import { AccountModule } from "../store/modules/account";
 import { TaskModule } from "../store/modules/task";
 import dayjs, { Dayjs } from "dayjs";
+import TaskDetailModel from "../models/taskDetailModel";
 
 export default class implements IWorkerFactory {
   private driver:ThenableWebDriver;
   private bankUrl:string;
   private card:any;
-  private task:TaskModel;
+  private task:TaskDetailModel;
   private charge:string;
   private transactionTime:Dayjs;
   private bankMappingList:any;
+
   constructor() {
-    this.driver = new Builder().build();
+    this.driver = {} as ThenableWebDriver;
     this.bankUrl = "https://perbank.abchina.com/EbankSite/startup.do";
     this.card = {};
-    this.task = new TaskModel();
+    this.task = {} as TaskDetailModel;
     this.charge = "";
     this.transactionTime = dayjs();
     this.bankMappingList = {
@@ -189,8 +191,8 @@ export default class implements IWorkerFactory {
 
   async fillTransferFrom() {
     try {
-      this.card = CardModule.currentDetail;
-      this.task = TaskModule.selected;
+      this.card = AccountModule.currentDetail;
+      this.task = TaskModule.selectedDetail;
       await this.driver.switchTo().frame(
         this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
       );
@@ -853,7 +855,7 @@ export default class implements IWorkerFactory {
 
       var balance = await waitUtilGetText(this.driver, until.elementLocated(By.id("dnormal")));
 
-      CardModule.SET_BANK_BALANCE(+FormatHelper.amount(balance));
+      AccountModule.SET_BANK_BALANCE(+FormatHelper.amount(balance));
     } finally {
       await this.driver.switchTo().defaultContent();
     }

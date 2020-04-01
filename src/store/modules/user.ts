@@ -1,20 +1,27 @@
-import { VuexModule, Module, Action, Mutation, getModule } from "vuex-module-decorators";
+import {
+  VuexModule,
+  Module,
+  Action,
+  Mutation,
+  getModule
+} from "vuex-module-decorators";
 import { login, logout, getUserInfo } from "@/api/users";
 import { getToken, setToken, removeToken } from "@/utils/cookies";
 import { IUserData } from "@/api/types";
 import store from "@/store";
 
 export interface IUserState {
-  token: string
-  name: string
-  avatar: string
-  introduction: string
-  roles: string[]
+  token: string;
+  name: string;
+  avatar: string;
+  introduction: string;
+  roles: string[];
 }
 
 @Module({ dynamic: true, store, name: "user" })
 class User extends VuexModule implements IUserState {
   public token = getToken() || "";
+  public id = 0;
   public name = "";
   public avatar = "";
   public introduction = "";
@@ -28,6 +35,11 @@ class User extends VuexModule implements IUserState {
   @Mutation
   private SET_NAME(name: string) {
     this.name = name;
+  }
+
+  @Mutation
+  private SET_ID(id: number) {
+    this.id = id;
   }
 
   @Mutation
@@ -46,20 +58,23 @@ class User extends VuexModule implements IUserState {
   }
 
   @Action
-  public async Login(userInfo: { username: string, password: string }) {
+  public async Login(userInfo: { username: string; password: string }) {
     let { username, password } = userInfo;
     username = username.trim();
     this.SET_TOKEN("");
     try {
       const { data } = await login({ username, password });
-      const userData:IUserData = data.admin;
-      const token = data.token;
+
+      const token = data.data.token;
       this.SET_TOKEN(token);
+
+      const userData: IUserData = data.data.admin;
+      this.SET_ID(userData.id);
       this.SET_NAME(userData.username);
       return { isSignIn: true, message: undefined };
     } catch (error) {
       const message = error.response.data.message || error;
-      // commit("SET_LOG", { level: "warn", message });
+      // LogModule.SetLog( { level: "warn", message });
       return { isSignIn: false, message };
     }
   }
@@ -76,7 +91,9 @@ class User extends VuexModule implements IUserState {
     if (this.token === "") {
       throw Error("GetUserInfo: token is undefined!");
     }
-    const { data } = await getUserInfo({ /* Your params here */ });
+    const { data } = await getUserInfo({
+      /* Your params here */
+    });
     if (!data) {
       throw Error("Verification failed, please Login again.");
     }

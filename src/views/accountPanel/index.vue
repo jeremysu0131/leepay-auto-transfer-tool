@@ -30,7 +30,7 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { BankCardSearch, ChangeCard, SelectSignInType, SignInToBank, UnselectCard } from "./components";
 import { AppModule } from "../../store/modules/app";
-import { CardModule } from "../../store/modules/card";
+import { AccountModule } from "../../store/modules/account";
 
 @Component({
   name: "Layout",
@@ -47,7 +47,7 @@ export default class extends Vue {
     return AppModule;
   }
   get card() {
-    return CardModule;
+    return AccountModule;
   }
 
   private handleSelect() {

@@ -83,7 +83,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from "vue-property-decorator";
-import { getList, getDetailById } from "@/api/card";
+import { getList, getDetailById } from "@/api/account";
 import { AppModule } from "../../../store/modules/app";
 @Component({ name: "BankCardSearch" })
 export default class extends Vue {
