@@ -6,16 +6,18 @@ import {
   getModule
 } from "vuex-module-decorators";
 import store from "@/store";
-import { getAll } from "@/api/task";
+import * as TaskApi from "@/api/task";
 import { selectTaskStatus } from "@/utils/persistentState";
 import { asyncForEach } from "@/utils/asyncForEach";
 import { AppModule } from "./app";
 import TaskModel from "../../models/taskModel";
+import { LogModule } from "./log";
+import TaskDetailModel from "../../models/taskDetailModel";
 
 export interface ITaskState {
   list: TaskModel[];
   lastSelected: {};
-  selected: TaskModel;
+  selectedDetail: TaskDetailModel;
   selectedDataForAPI: {}; // this is use for send the api of mark success
   dataForAPI: {}; // this is use for send the api of mark success
 }
@@ -24,7 +26,7 @@ export interface ITaskState {
 class Task extends VuexModule implements ITaskState {
   public list = [] as TaskModel[];
   public lastSelected = {};
-  public selected = new TaskModel();
+  public selectedDetail = new TaskDetailModel();
   public selectedDataForAPI = {}; // this is use for send the api of mark success
   public dataForAPI = {}; // this is use for send the api of mark success
 
@@ -37,8 +39,8 @@ class Task extends VuexModule implements ITaskState {
     this.lastSelected = task;
   }
   @Mutation
-  public SET_SELECTED_DATA(task: TaskModel) {
-    this.selected = task;
+  public SET_SELECTED_DETAIL(taskDetail: TaskDetailModel) {
+    this.selectedDetail = taskDetail;
   }
   @Mutation
   // This for intergrate with weird api of leepay
@@ -55,49 +57,108 @@ class Task extends VuexModule implements ITaskState {
     AppModule.HANDLE_TASK_FETCHING(true);
     var tasks: TaskModel[] = [];
     try {
-      var response = await getAll();
-      response.data.forEach((task: any) => {
-        tasks.push({
-          id: task.id,
-          amount: task.field5,
-          asignee: task.asignee,
-          asigneeId: task.asigneeId,
-          assignedAt: task.asigneeAt,
-          remitterAccount: task.field7,
-          payeeAccount: task.toAcct,
-          merchant: {
-            id: task.merchantId,
-            name: task.merchantName
-          },
-          pendingTime: task.pendingTime,
-          remark: task.remarks,
-          createdAt: task.createdAt,
-          createdBy: task.createdBy,
-          transferFee: task.field6 || 0,
-          updatedAt: task.updatedAt,
-          updatedBy: task.updatedBy,
-          workflow: task.workflow
+      var { data } = await TaskApi.getAll();
+      (data.data as [])
+        .filter((task: any) => task.workflow === "Partial Withdraw")
+        .forEach((task: any) => {
+          tasks.push({
+            id: task.id,
+            amount: task.field5,
+            asignee: task.asignee,
+            asigneeId: task.asigneeId,
+            assignedAt: task.asigneeAt,
+            bank: {
+              id: 0,
+              code: "",
+              chineseName: ""
+            },
+            remitterAccount: task.field4,
+            payeeAccount: task.toAcct,
+            merchant: {
+              id: task.merchantId,
+              name: task.merchantName
+            },
+            pendingTime: task.pendingTime,
+            ref: task.ref,
+            remark: task.remarks,
+            createdAt: task.createdAt,
+            createdBy: task.createdBy,
+            transferFee: task.field6 || 0,
+            updatedAt: task.updatedAt,
+            updatedBy: task.updatedBy,
+            workflow: task.workflow
+          });
         });
-      });
       this.SET_TASK_LIST(tasks);
-      // commit("SET_LOG", {
-      //   level: "debug",
-      //   message: "Fetch data success"
-      // });
     } catch (error) {
       throw new Error("Get all tasks fail");
     } finally {
       AppModule.HANDLE_TASK_FETCHING(false);
     }
   }
+  @Action
+  public async GetDetail(
+    task: TaskModel,
+    accountId: number
+  ): Promise<TaskDetailModel> {
+    try {
+      var response = await TaskApi.getDetail({
+        taskId: task.id,
+        bankId: accountId,
+        ref: task.ref
+      });
+      var { data } = response.data;
+
+      return new TaskDetailModel({
+        id: data.id,
+        amount: data.amount,
+        remitterAccount: {
+          balance: data.accountBalance,
+          loginName: data.companyAccountLoginName,
+          loginPassword: data.loginPassword,
+          code: data.companyBankAccountCode,
+          usbPassword: data.usbPassword
+        },
+        payeeAccount: {
+          bank: {
+            branch: data.memberBankBranch,
+            city: data.memberBankCity,
+            province: data.memberBankProvince,
+            chineseName: data.bank
+          },
+          holderName: data.accountHolderName,
+          cardNumber: data.accountNo
+        }
+      });
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      throw new Error(error);
+    }
+  }
 
   @Action
-  public async GetSelectedTaskDetail(data: { id:number, withdraw: any, amount:number, merchantNameString:string, requestTimeStr: any }) {
+  public async Lock(taskId: number): Promise<boolean> {
+    try {
+      var { data } = await TaskApi.lock(taskId);
+      return data.code === 1;
+    } catch (error) {
+      LogModule.SetLog({ message: error, level: "error" });
+      return false;
+    }
+  }
+
+  @Action
+  public async GetSelectedTaskDetail(data: {
+    id: number;
+    withdraw: any;
+    amount: number;
+    merchantNameString: string;
+    requestTimeStr: any;
+  }) {
     // const taskId = data.id;
     // const withdrawId = withdraw.id;
     // var result = await getTaskDetail(taskId, withdrawId);
     // const data = result.data.value;
-
     // var taskDetail = {
     //   id: taskId,
     //   merchantName: merchantNameString,
@@ -116,7 +177,7 @@ class Task extends VuexModule implements ITaskState {
     // commit("SET_SELECTED_DATA", taskDetail);
   }
 }
-//   async SetTaskInfomationToTool({ commit, getters }) {
+//   async SetTaskInfomationToTool() {
 //     const taskID = getters.task.dataForAPI.id;
 //     const platform = getters.app.platform;
 //     var taskInformation = await getTaskFromToolByID(taskID, platform);
@@ -137,15 +198,6 @@ class Task extends VuexModule implements ITaskState {
 //     }
 //     commit("SET_TOOL_INFORMATION_TO_SELECTED_DATA", taskInformation.data);
 //   }
-//   async LockSelectedTask({ commit } taskId) {
-//     try {
-//       var result = await lockTask(taskId);
-//       return result.data.success;
-//     } catch (error) {
-//       commit("SET_LOG", { message: error, level: "error" });
-//       return false;
-//     }
-//   }
 //   async UnlockSelectedTask(_, taskID) {
 //     var result = await unlockTask(taskID);
 //     return result.data.success;
@@ -158,22 +210,22 @@ class Task extends VuexModule implements ITaskState {
 //     dataForAPI.newCharge = transferFee;
 //     dataForAPI.remark = note;
 
-//     commit("SET_LOG", {
+//     LogModule.SetLog( {
 //       level: "info",
 //       message: `Mark task success parameters: charge: ${transferFee}`
 //     });
 //     var result = await markTaskSuccess(dataForAPI);
-//     commit("SET_LOG", {
+//     LogModule.SetLog( {
 //       level: "info",
 //       message: `Mark task success response: ${JSON.stringify(result.data)}`
 //     });
 
 //     if (result.data.success) {
-//       await dispatch("MoveCurrentTaskToLast", {
+//       await this.MoveCurrentTaskToLast", {
 //         isHandleCurrentTask,
 //         status: "success"
 //       });
-//       await dispatch("GetAllTasks");
+//       await this.GetAllTasks");
 //     } else {
 //       throw new Error("Mark task as success fail, please contact admin");
 //     }
@@ -184,11 +236,11 @@ class Task extends VuexModule implements ITaskState {
 //     var result = await markTaskFail(dataForAPI);
 //     if (result.data.success) {
 //       // Check if fail or re-assign
-//       await dispatch("MoveCurrentTaskToLast", {
+//       await this.MoveCurrentTaskToLast", {
 //         isHandleCurrentTask,
 //         status: reason === "re-assign" ? "re-assign" : "fail"
 //       });
-//       await dispatch("GetAllTasks");
+//       await this.GetAllTasks");
 //     } else {
 //       throw new Error("Mark task as fail error, please contact admin");
 //     }
@@ -206,11 +258,11 @@ class Task extends VuexModule implements ITaskState {
 //         operator
 //       });
 //       if (result.status === 200) {
-//         await dispatch("MoveCurrentTaskToLast", {
+//         await this.MoveCurrentTaskToLast", {
 //           isHandleCurrentTask,
 //           status: "to-confirm"
 //         });
-//         await dispatch("GetAllTasks");
+//         await this.GetAllTasks");
 //       }
 //     } catch (error) {
 //       throw new Error("Mark task as to confirm fail, please contact admin");
@@ -226,7 +278,7 @@ class Task extends VuexModule implements ITaskState {
 //       var remoteResult = await checkIfExecuted(getters.task.selected.toolID);
 //       return [true, remoteResult.data];
 //     } catch (error) {
-//       dispatch("SetConsole", { message: error, level: "error" });
+//       this.SetConsole", { message: error, level: "error" });
 //       return [false];
 //     }
 //   }
@@ -254,8 +306,8 @@ class Task extends VuexModule implements ITaskState {
 //     }
 
 //     await Promise.all([
-//       dispatch("GetCurrentCardBoBalance"),
-//       dispatch("GetAllTasks")
+//       this.GetCurrentCardBoBalance"),
+//       this.GetAllTasks")
 //     ]).catch(error  {
 //       throw error;
 //     });

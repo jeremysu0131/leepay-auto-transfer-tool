@@ -42,7 +42,7 @@
 import { Component, Vue, Watch, Mixins } from "vue-property-decorator";
 import dayjs from "dayjs";
 import { saveTaskStatus } from "../../../utils/persistentState";
-import { CardModule } from "../../../store/modules/card";
+import { AccountModule } from "../../../store/modules/account";
 import { TaskModule } from "../../../store/modules/task";
 import { UserModule } from "../../../store/modules/user";
 import { MessageBox } from "element-ui";
@@ -114,6 +114,7 @@ export default class extends Mixins(TaskOperationMixin) {
     }, 1 * 1000);
   }
   beforeDestroy() {
+    console.log("distory interval");
     clearInterval(this.fetchInvervalID);
   }
 
@@ -121,7 +122,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return AppModule;
   }
   get card() {
-    return CardModule;
+    return AccountModule;
   }
   get task() {
     return TaskModule;

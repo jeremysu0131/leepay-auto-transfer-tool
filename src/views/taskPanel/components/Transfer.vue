@@ -165,7 +165,7 @@
 import { Component, Vue, Watch, Mixins } from "vue-property-decorator";
 import { mapGetters } from "vuex";
 // import { workflowStatusEnum } from "../../../../worker/utils/workflowHelper";
-import { CardModule } from "../../../store/modules/card";
+import { AccountModule } from "../../../store/modules/account";
 import { TaskModule } from "../../../store/modules/task";
 import { WorkerModule } from "../../../store/modules/worker";
 import TaskOperationMixin from "../mixins/taskOperation";
@@ -181,7 +181,7 @@ export default class extends Mixins(TaskOperationMixin) {
  private isHandlingReassign= false;
 
  get card() {
-   return CardModule;
+   return AccountModule;
  }
  get task() {
    return TaskModule;

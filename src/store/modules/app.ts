@@ -206,13 +206,13 @@ class App extends VuexModule implements IAppState {
       this.RESET_APP_STATE();
 
       await Promise.all([
-        // dispatch("UnsetCard"),
-        // dispatch("UnsetLog"),
-        // dispatch("UnsetTask"),
-        // dispatch("UnsetWorker"),
+        // this.UnsetCard"),
+        // this.UnsetLog"),
+        // this.UnsetTask"),
+        // this.UnsetWorker"),
       ]);
     } catch (error) {
-      // return dispatch("SetConsole", { level: "error", message: error.toString() });
+      // return this.SetConsole", { level: "error", message: error.toString() });
     }
   }
 }

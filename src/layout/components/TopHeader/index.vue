@@ -73,7 +73,7 @@ export default class extends Vue {
     return UserModule.name;
   }
   // get card(){
-  //   return CardModule
+  //   return AccountModule
   // }
   get task() {
     return TaskModule;

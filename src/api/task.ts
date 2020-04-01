@@ -14,23 +14,26 @@ export function getAll() {
   });
 }
 
-export function getTaskDetail(taskId: number, withdrawId: number) {
+export function getDetail(data:{taskId: number, ref: string, bankId:number}) {
   return request({
-    url: "/ps-ops-console/api/withdraw/loadWithdrawInfo",
+    url: "/adminWF!loadPartialWithdrawPayment.do",
     method: "GET",
     params: {
-      withdrawId,
-      payDetailId: taskId
+      "task.id": data.taskId,
+      "task.ref": data.ref,
+      "task.state.state": null,
+      bankId: data.bankId
     }
   });
 }
 
-export function lockTask(taskId: number) {
+export function lock(taskId: number) {
   return request({
-    url: "/ps-ops-console/api/task/lock",
+    url: "/adminWF!claimTask.do",
     method: "GET",
     params: {
-      taskId
+      "task.id": taskId,
+      taskName: "WP-A"
     }
   });
 }

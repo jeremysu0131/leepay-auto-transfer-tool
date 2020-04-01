@@ -3,11 +3,11 @@ import { Builder, ThenableWebDriver } from "selenium-webdriver";
 import { setProxy, unsetProxy, setIEEnviroment } from "./utils/regeditTool";
 import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
 import { LogModule } from "../store/modules/log";
-import { CardModule } from "../store/modules/card";
 import { WorkerModule } from "../store/modules/worker";
-import { TaskModule } from "../store/modules/task";
 import { WorkerAdapterFactory } from './WorkerAdapterFactory';
 import { IWorkerAdapter } from './IWorkerAdapter';
+import TaskDetailModel from "../models/taskDetailModel";
+import { AccountModule } from '../store/modules/account';
 
 /**
  * Bank Worker
@@ -17,18 +17,13 @@ export default class BankWorker {
   private taskStartAt: Date;
   private instance: IWorkerAdapter;
   private card: any;
+  private taskDetail: TaskDetailModel;
 
-  constructor(data: {
-    accountCode: string;
-    bankCode: string;
-    accountName: string;
-    accountPassword: string;
-    usbPassword: string;
-    proxy: string;
-  }) {
+  constructor(taskDetail: TaskDetailModel) {
     this.taskStartAt = new Date();
-    this.instance = WorkerAdapterFactory.createWorkerAdapter(data.accountCode);
-    this.card = CardModule.selectedDetail;
+    this.instance = WorkerAdapterFactory.createWorkerAdapter(taskDetail.remitterAccount.code);
+    this.taskDetail = taskDetail;
+    this.card = AccountModule.selectedDetail;
   }
 
   async setIEEnviroment() {
@@ -78,6 +73,7 @@ export default class BankWorker {
 
   async launchSelenium() {
     try {
+      console.log("call");
       WorkerModule.UPDATE_FLOW_STATUS({
         name: WorkflowEnum.LAUNCH_SELENIUM,
         status: WorkflowStatusEnum.RUNNING
@@ -283,8 +279,9 @@ export default class BankWorker {
       status: WorkflowStatusEnum.RUNNING
     });
     try {
-      var taskDetail = TaskModule.selected;
-      if (taskDetail === null) throw new Error("You didn't select the task");
+      if (this.taskDetail === null) {
+        throw new Error("You didn't select the task");
+      }
 
       await this.instance.fillTransferFrom();
 

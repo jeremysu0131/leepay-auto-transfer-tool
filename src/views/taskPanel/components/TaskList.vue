@@ -85,7 +85,6 @@
           <div style="display: flex; justify-content: space-around">
             <div>
               <el-button
-                v-if="scope.row.toolStatus !== 'to-confirm'"
                 class="task-operator__button"
                 style="width:80px"
                 size="mini"
@@ -196,13 +195,14 @@
 import { Component, Vue, Watch, Mixins } from "vue-property-decorator";
 import dayjs from "dayjs";
 import { saveTaskStatus } from "../../../utils/persistentState";
-import { CardModule } from "../../../store/modules/card";
+import { AccountModule } from "../../../store/modules/account";
 import { TaskModule } from "../../../store/modules/task";
 import { UserModule } from "../../../store/modules/user";
 import { MessageBox } from "element-ui";
 import { AppModule } from "@/store/modules/app";
 import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
+import TaskModel from "../../../models/taskModel";
 
 @Component({
   name: "TaskList",
@@ -224,7 +224,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return AppModule;
   }
   get card() {
-    return CardModule;
+    return AccountModule;
   }
   get task() {
     return TaskModule;
@@ -233,7 +233,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return UserModule.name;
   }
   get selectedTask() {
-    return this.task.selected;
+    return this.task.selectedDetail;
   }
 
   get tableHeight() {
@@ -249,62 +249,36 @@ export default class extends Mixins(TaskOperationMixin) {
     }
     return "";
   }
-  private async handleRowSelect(val: any) {
-    try {
-      this.$store.commit("HANDLE_TASK_PROCESSING", true);
-      var isLockSuccess = await this.$store.dispatch(
-        "LockSelectedTask",
-        val.taskId
-      );
-      if (!isLockSuccess) {
-        return this.$store.dispatch("SetConsole", {
-          title: "Automation Stopped",
+  private async lockTask(task: TaskModel) {
+    console.log(task.asigneeId, UserModule.id);
+    if (task.asigneeId !== UserModule.id) {
+      if (!(await TaskModule.Lock(task.id))) {
+        return LogModule.SetConsole({
+          // title: "Automation Stopped",
+          level: "error",
           message:
             "Can not claim the tasks. Task has been assigned.\r\n" +
             "Please claim it manully in order to process it\r\n" +
             'Note: the "auto process task" has been turned off as the result.'
         });
       }
-
-      this.$store.commit("SET_DATA_FOR_API", val);
-      this.$store.commit("SET_SELECTED_DATA_FOR_API", val);
-      await this.$store.dispatch("GetAndSetSelectedTaskDetail", val);
-      await this.$store.dispatch("SetTaskInfomationToTool");
-      val.toolStatus = "processing";
-
-      var [isCheckSuccess, result] = await this.$store.dispatch(
-        "CheckTaskExecuted"
-      );
-
-      if (isCheckSuccess && result.length === 0) {
-        // await this.recordExecutingTask(
-        //   val.taskId,
-        //   "leepay",
-        //   "First time run, create by system.",
-        //   this.name
-        // );
-        await this.startTask();
-      } else if (isCheckSuccess && result.length > 0) {
-        this.$store.commit("HANDLE_TASK_AUTO_PROCESS", false);
-
-        if (this.app.task.isAutoProcess) {
-          this.$store.dispatch("SetConsole", {
-            title: "Automation Stopped",
-            message:
-              "Please check the current task status carefully and process it manually\r\n" +
-              'Note: the "auto process task" has been turned off as the result.'
-          });
-        }
-
-        if (await this.confirmExecution(val.taskId, result)) {
-          await this.startTask();
-        } else {
-          this.$store.commit("HANDLE_TASK_PROCESSING", false);
-        }
-      }
-    } catch (error) {
-      this.$store.dispatch("SetConsole", { level: "error", message: error });
     }
+  }
+  private async handleRowSelect(task: TaskModel) {
+    try {
+      AppModule.HANDLE_TASK_PROCESSING(true);
+      // await this.lockTask(task);
+      var taskDetail = await this.getTaskDetail(task);
+      TaskModule.SET_SELECTED_DETAIL(taskDetail);
+      await this.startTask();
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+    }
+  }
+  private async getTaskDetail(task: TaskModel) {
+    var accountId = await AccountModule.GetId(task.remitterAccount);
+    var taskDetail = await TaskModule.GetDetail(task, accountId);
+    return taskDetail;
   }
   private confirmExecution(taskID: number, executedTasks: any) {
     var message = "Previous executed record:" + "<br>";
@@ -342,8 +316,8 @@ export default class extends Mixins(TaskOperationMixin) {
     return false;
   }
   private isProcessButtonDisabled(row: any) {
-    if (row.status !== "I" || row.toolStatus === "to-confirm") return true;
-    else if (this.app.task.isProcessing) return true;
+    // if (row.status !== "I" || row.toolStatus === "to-confirm") return true;
+    // else if (this.app.task.isProcessing) return true;
     return false;
   }
   private isSuccessButtonDisabled(row: any) {

@@ -7,7 +7,7 @@
 //  * @param {String} object.message
 //  */
 // export function LogModule.SetLog({ level, message }) {
-//   store.commit("SET_LOG", { level, message });
+//   store.LogModule.SetLog( { level, message });
 // }
 
 // export function setBankBalance(balance) {
@@ -115,7 +115,7 @@
 //   return store.state.task.selected;
 // }
 // export async function markTaskSuccess(charge) {
-//   await store.dispatch("MarkTaskSuccess", {
+//   await store.this.MarkTaskSuccess", {
 //     isHandleCurrentTask: true,
 //     transferFee: charge,
 //     note: "Mark by auto transfer tool"
@@ -123,5 +123,5 @@
 // }
 
 // export async function markTaskFail() {
-//   // await store.dispatch("MarkTaskSuccess");
+//   // await store.this.MarkTaskSuccess");
 // }

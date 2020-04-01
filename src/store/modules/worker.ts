@@ -1,13 +1,4 @@
 import BankWorker from "@/workers/BankWorker";
-// import {
-//   workflowEnum,
-//   signInWorkflowEnum
-// } from "../../../worker/utils/workflowHelper";
-// import {
-//   checkIsProxySet,
-//   setProxy,
-//   unsetProxy
-// } from "../../../worker/utils/regeditTool";
 import {
   VuexModule,
   Module,
@@ -16,19 +7,27 @@ import {
   getModule
 } from "vuex-module-decorators";
 import store from "@/store";
-import { CardModule } from "./card";
-import { signInWorkflowEnum } from "../../workers/utils/workflowHelper";
+import { AccountModule } from "./account";
+import {
+  signInWorkflowEnum,
+  WorkflowEnum
+} from "../../workers/utils/workflowHelper";
+import { LogModule } from "./log";
+import { AppModule } from "./app";
+import TaskModel from "../../models/taskModel";
+import { TaskModule } from "./task";
+import TaskDetailModel from "../../models/taskDetailModel";
 
 export interface IWorkerState {
-  worker: any;
+  worker: BankWorker;
   workflow: any[];
 }
 
 @Module({ dynamic: true, store, name: "worker" })
 class WorkerModuleStatic extends VuexModule implements IWorkerState {
-  public workflow = []as any[];
+  public workflow = [] as any[];
   public signInWorkflow = [] as any[];
-  public worker = {};
+  public worker = {} as BankWorker;
 
   @Mutation
   SET_WORKER(worker: BankWorker) {
@@ -49,7 +48,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   //   this.signInWorkflow = signInWorkflow;
   // }
   @Mutation
-  UPDATE_FLOW_STATUS(data: { name: any; status: any; }) {
+  UPDATE_FLOW_STATUS(data: { name: any; status: any }) {
     this.workflow.forEach(flow => {
       if (flow.name === data.name) flow.status = data.status;
     });
@@ -62,9 +61,203 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   //   state.workflow = workflowEnum(bankCode);
   // },
   @Action
-  public async SetWorker() {
-    this.SET_WORKER(new BankWorker(CardModule.selected));
+  public async SetWorker(taskDetail: TaskDetailModel) {
+    try {
+      console.log(taskDetail);
+      var bankWorker = new BankWorker(taskDetail);
+      console.log("worker factory", bankWorker);
+      this.SET_WORKER(bankWorker);
     // commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  @Action
+  async RunAutoLoginFlows() {
+    AppModule.HANDLE_TASK_AUTO_PROCESS(true);
+    AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
+    try {
+      await this.SetIEEnviroment();
+      // await this.SetProxy");
+      await this.LaunchSelenium();
+      await this.InputSignInInformation();
+      await this.SubmitToSignIn();
+      await this.SendUSBKey();
+      await this.CheckIfLoginSuccess();
+    } catch (error) {
+      LogModule.SetLog({ message: error, level: "error" });
+      LogModule.SetConsole({
+        level: "error",
+        message:
+          'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
+      });
+    } finally {
+      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
+    }
+  }
+
+  @Action
+  async RunManualLoginFlows() {
+    AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
+    try {
+      await this.SetIEEnviroment();
+      await this.SetProxy();
+      await this.LaunchSelenium();
+    } catch (error) {
+      return LogModule.SetLog({ message: error, level: "error" });
+    } finally {
+      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
+    }
+  }
+
+  @Action
+  async SetIEEnviroment() {
+    if (!(await this.worker.setIEEnviroment())) {
+      throw new Error("Set IE enviroment fail");
+    }
+  }
+  @Action
+  async UnsetWorker() {
+    await this.CloseSelenium();
+    this.SET_WORKER({} as BankWorker);
+    // commit("SET_WORKFLOW", null);
+  }
+  @Action
+  async CheckIsProxySet() {
+    try {
+      // this.HANDLE_PROXY_STATE (await checkIsProxySet());
+    } catch (error) {
+      return LogModule.SetConsole({ message: error, level: "error" });
+    }
+  }
+  @Action
+  async SetProxy() {
+    if (!(await this.worker.setProxy())) {
+      throw new Error("Set proxy fail");
+    }
+  }
+  @Action
+  async UnsetProxy() {
+    try {
+      // await this.unsetProxy();
+    } catch (error) {
+      return LogModule.SetConsole({ message: error, level: "error" });
+    }
+  }
+  @Action
+  async LaunchSelenium() {
+    await this.worker.launchSelenium();
+  }
+  @Action
+  async CloseSelenium() {
+    if (this.worker) await this.worker.closeSelenium();
+  }
+  @Action
+  async InputSignInInformation() {
+    await this.worker.inputSignInInformation();
+  }
+  @Action
+  async SubmitToSignIn() {
+    await this.worker.submitToSignIn();
+  }
+  @Action
+  async SendUSBKey() {
+    await this.worker.sendUSBKey();
+  }
+  @Action
+  async CheckIfLoginSuccess() {
+    const isManualLogin = AppModule.isManualLogin;
+    if (await this.worker.checkIfLoginSuccess({ isManualLogin })) {
+      AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
+      AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
+      AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
+      AppModule.HANDLE_TASK_VISIBLE(true);
+      AppModule.HANDLE_TASK_FETCHABLE(true);
+      AppModule.HANDLE_SHOWING_TAB("tasks");
+
+      // If selected card is empty, means this is called by relogin
+      if (AccountModule.selected.id) {
+        // AccountModule.SetCurrentCard();
+      }
+      await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
+    }
+  }
+  @Action
+  async GetCookie() {
+    try {
+      await this.worker.getCookie();
+    } catch (error) {
+      LogModule.SetLog({ message: error, level: "error" });
+      throw error;
+    }
+  }
+  @Action
+  async GetBankBalance() {
+    try {
+      await this.worker.getBalance();
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: "Fail to get balance" });
+      LogModule.SetLog({ level: "error", message: error });
+    }
+  }
+  @Action
+  async GoTransferPage() {
+    await this.worker.goTransferPage();
+  }
+  @Action
+  async FillTransferFrom() {
+    await this.worker.fillTransferFrom();
+  }
+  @Action
+  async FillNote() {
+    await this.worker.fillNote();
+  }
+  @Action
+  async ConfirmTransaction() {
+    await this.worker.confirmTransaction();
+  }
+  @Action
+  async CheckIfSuccess() {
+    await this.worker.checkIfSuccess();
+  }
+  @Action
+  async RunSelectedFlow(flowName: WorkflowEnum) {
+    /* eslint-disable no-return-await */
+    switch (flowName) {
+      case WorkflowEnum.SET_IE_ENVIROMENT:
+        return await this.SetIEEnviroment();
+      case WorkflowEnum.SET_PROXY:
+        return await this.SetProxy();
+      case WorkflowEnum.LAUNCH_SELENIUM:
+        return await this.LaunchSelenium();
+      case WorkflowEnum.CLOSE_SELENIUM:
+        return await this.CloseSelenium();
+      case WorkflowEnum.INPUT_SIGN_IN_INFORMATION:
+        return await this.InputSignInInformation();
+      case WorkflowEnum.SUBMIT_TO_SIGN_IN:
+        return await this.SubmitToSignIn();
+      case WorkflowEnum.SEND_USB_KEY:
+        return await this.SendUSBKey();
+      case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
+        return await this.CheckIfLoginSuccess();
+      case WorkflowEnum.GET_COOKIE:
+        return await this.GetCookie();
+      case WorkflowEnum.GET_BALANCE:
+        return await this.GetBankBalance();
+      case WorkflowEnum.GO_TRANSFER_PAGE:
+        return await this.GoTransferPage();
+      case WorkflowEnum.FILL_TRANSFER_INFORMATION:
+        return await this.FillTransferFrom();
+      case WorkflowEnum.FILL_NOTE:
+        return await this.FillNote();
+      case WorkflowEnum.CONFIRM_TRANSACTION:
+        return await this.ConfirmTransaction();
+      case WorkflowEnum.CHECK_IF_SUCCESS:
+        return await this.CheckIfSuccess();
+      default:
+        throw new Error("No such workflow");
+    }
+    /* eslint-enable no-return-await */
   }
 }
 export const WorkerModule = getModule(WorkerModuleStatic);
@@ -75,211 +268,43 @@ export const WorkerModule = getModule(WorkerModuleStatic);
 //     // data: name, status
 //     // data: name, status
 //   actions: {
-//     async RunManualLoginFlows({ dispatch, commit }) {
-//       commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", true);
-//       try {
-//         await dispatch("SetIEEnviroment");
-//         // await dispatch("SetProxy");
-//         await dispatch("LaunchSelenium");
-//       } catch (error) {
-//         return commit("SET_LOG", { message: error, level: "error" });
-//       } finally {
-//         commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", false);
-//       }
-//     },
-//     async RunAutoLoginFlows({ dispatch, commit }) {
-//       commit("HANDLE_TASK_AUTO_PROCESS", true);
-//       commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", true);
-//       try {
-//         await dispatch("SetIEEnviroment");
-//         // await dispatch("SetProxy");
-//         await dispatch("LaunchSelenium");
-//         await dispatch("InputSignInInformation", { useCurrent: false });
-//         await dispatch("SubmitToSignIn");
-//         await dispatch("SendUSBKey");
-//         await dispatch("CheckIfLoginSuccess");
-//       } catch (error) {
-//         commit("SET_LOG", { message: error, level: "error" });
-//         return dispatch("SetConsole", {
-//           level: "error",
-//           message:
-//             'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
-//         });
-//       } finally {
-//         commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", false);
-//       }
-//     },
 //     async RunAutoReloginFlows({ dispatch, commit }) {
 //       commit("HANDLE_ACCOUNT_SIGN_IN_SUCCESS", false);
 //       commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", true);
 //       commit("HANDLE_SHOWING_TAB", "accounts");
 //       commit("HANDLE_ACCOUNT_SHOWING_PAGE", "sign-in-to-bank");
 //       try {
-//         await dispatch("LaunchSelenium");
-//         await dispatch("InputSignInInformation", { useCurrent: true });
-//         await dispatch("SubmitToSignIn");
-//         await dispatch("SendUSBKey");
-//         await dispatch("CheckIfLoginSuccess");
+//         await this.LaunchSelenium");
+//         await this.InputSignInInformation", { useCurrent: true });
+//         await this.SubmitToSignIn");
+//         await this.SendUSBKey");
+//         await this.CheckIfLoginSuccess");
 //       } catch (error) {
-//         return dispatch("SetConsole", { message: error, level: "error" });
+//         return this.SetConsole", { message: error, level: "error" });
 //       } finally {
 //         commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", false);
 //       }
 //     },
 //     async RunAutoTransferFlows({ dispatch }) {
 //       try {
-//         await dispatch("GoTransferPage");
-//         await dispatch("FillTransferFrom");
-//         await dispatch("FillNote");
-//         await dispatch("ConfirmTransaction");
-//         return await dispatch("CheckIfSuccess");
+//         await this.GoTransferPage");
+//         await this.FillTransferFrom");
+//         await this.FillNote");
+//         await this.ConfirmTransaction");
+//         return await this.CheckIfSuccess");
 //       } catch (error) {
-//         dispatch("SetConsole", { message: error, level: "error" });
+//         this.SetConsole", { message: error, level: "error" });
 //         return false;
 //       }
 //     },
 //     async RunManualTransferFlows({ dispatch }) {
 //       try {
-//         await dispatch("GoTransferPage");
-//         await dispatch("FillTransferFrom");
+//         await this.GoTransferPage");
+//         await this.FillTransferFrom");
 //       } catch (error) {
-//         return dispatch("SetConsole", { message: error, level: "error" });
+//         return this.SetConsole", { message: error, level: "error" });
 //       }
 //     },
-//     async UnsetWorker({ commit, dispatch }) {
-//       await dispatch("CloseSelenium");
-//       commit("SET_WORKER", null);
-//       commit("SET_WORKFLOW", null);
-//     },
-//     async SetIEEnviroment({ getters }) {
-//       if (!(await getters.worker.runner.setIEEnviroment())) {
-//         throw new Error("Set IE enviroment fail");
-//       }
-//     },
-//     async CheckIsProxySet({ commit, dispatch }) {
-//       try {
-//         commit("HANDLE_PROXY_STATE", await checkIsProxySet());
-//       } catch (error) {
-//         return dispatch("SetConsole", { message: error, level: "error" });
-//       }
-//     },
-//     async SetProxy({ getters }) {
-//       if (!(await getters.worker.runner.setProxy())) {
-//         throw new Error("Set proxy fail");
-//       }
-//     },
-//     async UnsetProxy({ dispatch }) {
-//       try {
-//         await unsetProxy();
-//       } catch (error) {
-//         return dispatch("SetConsole", { message: error, level: "error" });
-//       }
-//     },
-//     async LaunchSelenium({ getters }) {
-//       return await getters.worker.runner.launchSelenium();
-//     },
-//     async CloseSelenium({ getters }) {
-//       if (getters.worker.runner) await getters.worker.runner.closeSelenium();
-//     },
-//     async InputSignInInformation({ getters }, { useCurrent = false }) {
-//       return await getters.worker.runner.inputSignInInformation(useCurrent);
-//     },
-//     async SubmitToSignIn({ getters }) {
-//       return await getters.worker.runner.submitToSignIn();
-//     },
-//     async SendUSBKey({ getters }) {
-//       await getters.worker.runner.sendUSBKey();
-//     },
-//     async CheckIfLoginSuccess({ commit, dispatch, getters }) {
-//       const isManualLogin = getters.app.isManualLogin;
-//       if (await getters.worker.runner.checkIfLoginSuccess({ isManualLogin })) {
-//         commit("HANDLE_ACCOUNT_SHOWING_PAGE", "bank-card-search");
-//         commit("HANDLE_ACCOUNT_SIGN_IN_SUCCESS", true);
-//         commit("SET_SIGN_IN_SUCCESS_TIME", new Date());
-
-//         commit("HANDLE_TASK_VISIBLE", true);
-//         commit("HANDLE_TASK_FETCHABLE", true);
-//         commit("HANDLE_SHOWING_TAB", "tasks");
-
-//         // If selected card is empty, means this is called by relogin
-//         if (getters.card.selected.id) {
-//           dispatch("SetCurrentCard");
-//         }
-//         await Promise.all([
-//           dispatch("GetBankBalance"),
-//           dispatch("GetAllTasks")
-//         ]);
-//       }
-//     },
-//     async GetCookie({ commit, getters }) {
-//       try {
-//         await getters.worker.runner.getCookie();
-//       } catch (error) {
-//         commit("SET_LOG", { message: error, level: "error" });
-//         throw error;
-//       }
-//     },
-//     async GetBankBalance({ commit, getters }) {
-//       try {
-//         await getters.worker.runner.getBalance();
-//       } catch (error) {
-//         commit("SET_LOG", { level: "error", message: "Fail to get balance" });
-//         commit("SET_LOG", { level: "error", message: error });
-//       }
-//     },
-//     async GoTransferPage({ getters }) {
-//       await getters.worker.runner.goTransferPage();
-//     },
-//     async FillTransferFrom({ getters }) {
-//       await getters.worker.runner.fillTransferFrom();
-//     },
-//     async FillNote({ getters }) {
-//       await getters.worker.runner.fillNote();
-//     },
-//     async ConfirmTransaction({ getters }) {
-//       await getters.worker.runner.confirmTransaction();
-//     },
-//     async CheckIfSuccess({ getters }) {
-//       return await getters.worker.runner.checkIfSuccess();
-//     },
-//     async RunSelectedFlow({ dispatch }, flowName) {
-//       const publicWorkflowEnum = workflowEnum();
-//       switch (flowName) {
-//         case publicWorkflowEnum.SET_IE_ENVIROMENT:
-//           return await dispatch("SetIEEnviroment");
-//         case publicWorkflowEnum.SET_PROXY:
-//           return await dispatch("SetProxy");
-//         case publicWorkflowEnum.LAUNCH_SELENIUM:
-//           return await dispatch("LaunchSelenium");
-//         case publicWorkflowEnum.CLOSE_SELENIUM:
-//           return await dispatch("CloseSelenium");
-//         case publicWorkflowEnum.INPUT_SIGN_IN_INFORMATION:
-//           return await dispatch("InputSignInInformation");
-//         case publicWorkflowEnum.SUBMIT_TO_SIGN_IN:
-//           return await dispatch("SubmitToSignIn");
-//         case publicWorkflowEnum.SEND_USB_KEY:
-//           return await dispatch("SendUSBKey");
-//         case publicWorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
-//           return await dispatch("checkIfLoginSuccess");
-//         case publicWorkflowEnum.GET_COOKIE:
-//           return await dispatch("GetCookie");
-//         case publicWorkflowEnum.GET_BALANCE:
-//           return await dispatch("GetBankBalance");
-//         case publicWorkflowEnum.GO_TRANSFER_PAGE:
-//           return await dispatch("GoTransferPage");
-//         case publicWorkflowEnum.FILL_TRANSFER_INFORMATION:
-//           return await dispatch("FillTransferFrom");
-//         case publicWorkflowEnum.FILL_NOTE:
-//           return await dispatch("FillNote");
-//         case publicWorkflowEnum.CONFIRM_TRANSACTION:
-//           return await dispatch("ConfirmTransaction");
-//         case publicWorkflowEnum.CHECK_IF_SUCCESS:
-//           return await dispatch("CheckIfSuccess");
-//         default:
-//           throw new Error("No such workflow");
-//       }
-//     }
-//   }
 // };
 
 // export default worker;

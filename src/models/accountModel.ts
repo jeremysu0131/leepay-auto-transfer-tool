@@ -1,5 +1,3 @@
-export default interface AccountModel {
-  id: 0;
-  bankCode: "";
-  accountCode: "";
+export default class AccountModel {
+  id? = 0;
 }
