@@ -21,21 +21,23 @@ export default class BankWorker {
 
   constructor(taskDetail: TaskDetailModel) {
     this.taskStartAt = new Date();
-    this.instance = WorkerAdapterFactory.createWorkerAdapter(taskDetail.remitterAccount.code);
+    this.instance = WorkerAdapterFactory.createWorkerAdapter(
+      taskDetail.remitterAccount.code
+    );
     this.taskDetail = taskDetail;
     this.card = AccountModule.selectedDetail;
   }
 
   async setIEEnvironment() {
     WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.SET_IE_ENVIROMENT,
+      name: WorkflowEnum.SET_IE_ENVIRONMENT,
       status: WorkflowStatusEnum.RUNNING
     });
 
     var isSet = await setIEEnvironment();
 
     WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.SET_IE_ENVIROMENT,
+      name: WorkflowEnum.SET_IE_ENVIRONMENT,
       status: isSet ? WorkflowStatusEnum.SUCCESS : WorkflowStatusEnum.FAIL
     });
     return isSet;
@@ -79,22 +81,24 @@ export default class BankWorker {
         status: WorkflowStatusEnum.RUNNING
       });
 
-      const driver = await new Builder()
+      const driver = (await new Builder()
         .withCapabilities({
           ignoreZoomSetting: true
           // requireWindowFocus: true
         })
         .forBrowser("ie")
-        .build() as ThenableWebDriver;
-        
+        .build()) as ThenableWebDriver;
+
       this.instance.setDriver(driver);
 
       const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-      await this.instance.getDriver()
+      await this.instance
+        .getDriver()
         .manage()
         .window()
         .setSize(width * (1 / 2), height);
-      await this.instance.getDriver()
+      await this.instance
+        .getDriver()
         .manage()
         .window()
         .setPosition(0, 0);

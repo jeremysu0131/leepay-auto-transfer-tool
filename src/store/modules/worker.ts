@@ -67,7 +67,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
       var bankWorker = new BankWorker(taskDetail);
       console.log("worker factory", bankWorker);
       this.SET_WORKER(bankWorker);
-    // commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);
+      // commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);
     } catch (error) {
       console.log(error);
     }
@@ -224,7 +224,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   async RunSelectedFlow(flowName: WorkflowEnum) {
     /* eslint-disable no-return-await */
     switch (flowName) {
-      case WorkflowEnum.SET_IE_ENVIROMENT:
+      case WorkflowEnum.SET_IE_ENVIRONMENT:
         return await this.SetIEEnviroment();
       case WorkflowEnum.SET_PROXY:
         return await this.SetProxy();

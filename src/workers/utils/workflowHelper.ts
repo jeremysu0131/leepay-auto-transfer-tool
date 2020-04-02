@@ -1,5 +1,5 @@
 export enum WorkflowEnum {
-  SET_IE_ENVIROMENT = "Set IE enviroment",
+  SET_IE_ENVIRONMENT = "Set IE environment",
   SET_PROXY = "Set proxy",
   LAUNCH_SELENIUM = "Launch IE",
   CLOSE_SELENIUM = "Close IE",
@@ -17,10 +17,10 @@ export enum WorkflowEnum {
   CHECK_IF_SUCCESS = "Check if transfer success"
 }
 export enum WorkflowStatusEnum {
-  PENDING= "pending",
-  RUNNING= "running",
-  SUCCESS= "success",
-  FAIL= "fail"
+  PENDING = "pending",
+  RUNNING = "running",
+  SUCCESS = "success",
+  FAIL = "fail"
 }
 
 /**
@@ -29,43 +29,43 @@ export enum WorkflowStatusEnum {
 export function signInWorkflowEnum(isManualSignIn: any) {
   return isManualSignIn
     ? [
-      {
-        status: "pending",
-        message: "",
-        name: WorkflowEnum.SET_IE_ENVIROMENT
-      },
-      // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
-      { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
-      {
-        status: "pending",
-        message: "",
-        name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
-      }
-    ]
+        {
+          status: "pending",
+          message: "",
+          name: WorkflowEnum.SET_IE_ENVIRONMENT
+        },
+        // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
+        { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
+        {
+          status: "pending",
+          message: "",
+          name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
+        }
+      ]
     : [
-      {
-        status: "pending",
-        message: "",
-        name: WorkflowEnum.SET_IE_ENVIROMENT
-      },
-      // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
-      { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
-      {
-        status: "pending",
-        message: "",
-        name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION
-      },
-      {
-        status: "pending",
-        message: "",
-        name: WorkflowEnum.SUBMIT_TO_SIGN_IN
-      },
-      {
-        status: "pending",
-        message: "",
-        name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
-      }
-    ];
+        {
+          status: "pending",
+          message: "",
+          name: WorkflowEnum.SET_IE_ENVIRONMENT
+        },
+        // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
+        { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
+        {
+          status: "pending",
+          message: "",
+          name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION
+        },
+        {
+          status: "pending",
+          message: "",
+          name: WorkflowEnum.SUBMIT_TO_SIGN_IN
+        },
+        {
+          status: "pending",
+          message: "",
+          name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
+        }
+      ];
 }
 
 /**
@@ -113,7 +113,7 @@ const BCMWorkflow = [
 Object.freeze(BCMWorkflow);
 
 const BOCWorkflow = [
-  // { status: "pending", message: "", name: WorkflowEnum.SET_IE_ENVIROMENT },
+  // { status: "pending", message: "", name: WorkflowEnum.SET_IE_ENVIRONMENT },
   // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
   // { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
   // { status: "pending", message: "", name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS },
@@ -150,7 +150,7 @@ const CITICWorkflow = [
 Object.freeze(CITICWorkflow);
 
 const CMBCWorkflow = [
-  // { status: "pending", message: "", name: WorkflowEnum.SET_IE_ENVIROMENT },
+  // { status: "pending", message: "", name: WorkflowEnum.SET_IE_ENVIRONMENT },
   // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
   // { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
   // { status: "pending", message: "", name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS },
