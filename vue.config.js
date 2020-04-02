@@ -8,6 +8,7 @@ module.exports = {
     name: name
   },
   pluginOptions: {
+    exposeEnv: ["PATH"],
     "style-resources-loader": {
       preProcessor: "scss",
       patterns: [

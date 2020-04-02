@@ -82,8 +82,6 @@ export default class BankWorker {
         status: WorkflowStatusEnum.RUNNING
       });
 
-      console.log("call");
-      console.log(process.env["PATH"]);
       const driver = await new Builder()
         .withCapabilities({
           ignoreZoomSetting: true
