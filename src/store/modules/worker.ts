@@ -112,7 +112,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
 
   @Action
   async SetIEEnviroment() {
-    if (!(await this.worker.setIEEnviroment())) {
+    if (!(await this.worker.setIEEnvironment())) {
       throw new Error("Set IE enviroment fail");
     }
   }

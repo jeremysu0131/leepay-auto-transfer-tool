@@ -65,7 +65,7 @@ export function unsetProxy() {
   });
 }
 
-export async function setIEEnviroment() {
+export async function setIEEnvironment() {
   try {
     await setIEFeature();
     await setIESecurityZones();

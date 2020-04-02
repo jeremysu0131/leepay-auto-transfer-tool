@@ -4,7 +4,7 @@ import { ThenableWebDriver } from "selenium-webdriver";
  * 此介面僅提供銀行網頁互動
  */
 export interface IWorkerAdapter {
-  // setIEEnviroment(): Promise<boolean>;
+  // setIEEnvironment(): Promise<boolean>;
   // setProxy(): Promise<boolean>;
   // unsetProxy(): void;
   // closeSelenium(): void;
@@ -22,8 +22,8 @@ export interface IWorkerAdapter {
    * 填寫登入資訊
    */
   inputSignInInformation(): Promise<void>;
-  checkSignInInformationCorrectly():Promise<boolean>;
-  
+  checkSignInInformationCorrectly(): Promise<boolean>;
+
   /**
    * 送出登入表單
    */
@@ -50,10 +50,12 @@ export interface IWorkerAdapter {
 
   /**
    * 進入轉帳頁面
-   * 1. 從登入後的頁面跳轉到至轉帳首頁
-   * 2. 檢查確認是否正確至轉帳頁面
+   * 從登入後的頁面跳轉到至轉帳首頁
    */
   goTransferPage(): void;
+  /**
+   * 檢查確認是否正確至轉帳頁面
+   */
   checkIfInTransferPage(): Promise<boolean>;
 
   /**
@@ -61,23 +63,47 @@ export interface IWorkerAdapter {
    * 1. 填寫受款人的訊息
    * 2. 填寫金額
    * ps 1. 欄位檢查：逐一欄位做檢查
-   * ps 2. 表單檢查：檢查全部表單
    */
   fillTransferForm(): void;
+
+  /**
+   * 表單檢查：檢查表單填寫內容
+   */
   checkTransferInformationCorrectly(): Promise<boolean>;
+
+  /**
+   * Submit transaction form if check transfer information correctly
+   */
+  submitTransaction(): void;
 
   /**
    * 填寫附言 (非必要)
    */
   fillNote(): void;
-  checkIfNoteFilled():void;
+  /**
+   * 檢查填寫附言 (非必要)
+   */
+  checkIfNoteFilled(): void;
+
+  /**
+   * Check if bank received data correctly before confirm transaction
+   */
+  checkBankReceivedTransferInformation(): Promise<boolean>;
+
+  /**
+   * Send password to perform transaction
+   */
+  sendPasswordToPerformTransaction(): void;
+
+  /**
+   * Send usb password to perform transaction
+   */
+  sendUsbPasswordToPerformTransaction(): void;
 
   /**
    * 轉帳填寫完畢後，點擊【確認】後的流程。(各家銀行不一樣)
    */
-  confirmTransaction(): void;
-
-  submitTransaction(): void;
+  // confirmTransaction(): void;
 
   /**
    * 檢查轉帳是否轉帳成功

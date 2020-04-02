@@ -1,6 +1,6 @@
 import { screen } from "electron";
 import { Builder, ThenableWebDriver } from "selenium-webdriver";
-import { setProxy, unsetProxy, setIEEnviroment } from "./utils/regeditTool";
+import { setProxy, unsetProxy, setIEEnvironment } from "./utils/regeditTool";
 import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
 import { LogModule } from "../store/modules/log";
 import { WorkerModule } from "../store/modules/worker";
@@ -26,13 +26,13 @@ export default class BankWorker {
     this.card = AccountModule.selectedDetail;
   }
 
-  async setIEEnviroment() {
+  async setIEEnvironment() {
     WorkerModule.UPDATE_FLOW_STATUS({
       name: WorkflowEnum.SET_IE_ENVIROMENT,
       status: WorkflowStatusEnum.RUNNING
     });
 
-    var isSet = await setIEEnviroment();
+    var isSet = await setIEEnvironment();
 
     WorkerModule.UPDATE_FLOW_STATUS({
       name: WorkflowEnum.SET_IE_ENVIROMENT,
