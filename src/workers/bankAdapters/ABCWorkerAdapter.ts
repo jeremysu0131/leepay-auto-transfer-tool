@@ -1,4 +1,4 @@
-import { Builder, By, ThenableWebDriver, until } from "selenium-webdriver";
+import { Builder, By, until, WebDriver } from "selenium-webdriver";
 import cheerio from "cheerio";
 import * as KeySender from "../utils/keySender";
 import * as UsbTrigger from "../utils/usbTrigger";
@@ -24,7 +24,7 @@ import { TaskModule } from "../../store/modules/task";
  * ABC 銀行 Woker Adapter
  */
 export class ABCWorkerAdapter implements IWorkerAdapter {
-  private driver: ThenableWebDriver;
+  private driver: WebDriver;
   private bankUrl: string;
   private card: any;
   private task: TaskDetailModel;
@@ -33,7 +33,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   private bankMappingList: any;
 
   constructor() {
-    this.driver = {} as ThenableWebDriver;
+    this.driver = {} as WebDriver;
     this.bankUrl = "https://perbank.abchina.com/EbankSite/startup.do";
     this.card = {};
     this.task = {} as TaskDetailModel;
@@ -64,11 +64,41 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       浦发银行: "浦东发展银行"
     };
   }
+  checkSignInInformationCorrectly(): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
+  checkIfInTransferPage(): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
+  fillTransferForm(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  checkTransferInformationCorrectly(): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
+  submitTransaction(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  checkIfNoteFilled(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  checkBankReceivedTransferInformation(): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
+  sendPasswordToPerformTransaction(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  sendUsbPasswordToPerformTransaction(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  checkIfTransactionSuccess(): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
 
-  public getDriver(): ThenableWebDriver {
+  public getDriver(): WebDriver {
     return this.driver;
   }
-  public setDriver(driver: ThenableWebDriver): void {
+  public setDriver(driver: WebDriver): void {
     this.driver = driver;
   }
 
@@ -94,7 +124,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     }
   }
   async focusPasswordField() {
-    await this.driver.wait(until.elementLocated(By.id("PowerEnterDiv_powerpass_2")), 20 * 1000);
+    await this.driver.wait(
+      until.elementLocated(By.id("PowerEnterDiv_powerpass_2")),
+      20 * 1000
+    );
     await executeJavaScript(
       this.driver,
       "focus password box ",
@@ -114,12 +147,17 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     await KeySender.sendKey(KeySender.KeyEnum.RETURN, 2 * 1000);
 
     var passwordMessage = await this.driver
-      .wait(until.elementLocated(By.id("PowerEnterDiv_powerpass_2_Msg")), 2 * 1000)
+      .wait(
+        until.elementLocated(By.id("PowerEnterDiv_powerpass_2_Msg")),
+        2 * 1000
+      )
       .getText();
     if (passwordMessage) {
       LogModule.SetLog({
         level: "warn",
-        message: "Login password sent length incorrectly. Message on bank: " + passwordMessage
+        message:
+          "Login password sent length incorrectly. Message on bank: " +
+          passwordMessage
       });
       return false;
     }
@@ -134,7 +172,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
   async sendUSBKey() {}
 
-  async checkIfLoginSuccess(globalState:{isManualLogin:boolean}) {
+  async checkIfLoginSuccess(globalState: { isManualLogin: boolean }) {
     try {
       const element = until.elementLocated(By.id("contentFrame"));
       if (globalState.isManualLogin) {
@@ -155,9 +193,11 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   }
 
   async getCookie() {
-    const cookie:string = await this.driver.executeScript("return document.cookie");
+    const cookie: string = await this.driver.executeScript(
+      "return document.cookie"
+    );
     if (!cookie || cookie.length === 0) throw new Error("get cookie failure!");
-    return { cookie, session: null };
+    // return { cookie, session: null };
   }
   resetVariables() {
     this.charge = "0";
@@ -177,18 +217,29 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       );
       // This wait until transfer page load
       // Switch to iframe
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
-      );
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
       await this.driver.wait(
         until.elementIsVisible(
-          await this.driver.wait(until.elementLocated(By.id("fromAcctBalance")), 60 * 1000)
+          await this.driver.wait(
+            until.elementLocated(By.id("fromAcctBalance")),
+            60 * 1000
+          )
         ),
         60 * 1000
       );
       await this.driver.wait(
         until.elementIsVisible(
-          await this.driver.wait(until.elementLocated(By.id("toAcctNo")), 60 * 1000)
+          await this.driver.wait(
+            until.elementLocated(By.id("toAcctNo")),
+            60 * 1000
+          )
         ),
         60 * 1000
       );
@@ -201,9 +252,14 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     try {
       this.card = AccountModule.currentDetail;
       this.task = TaskModule.selectedDetail;
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
-      );
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
 
       // account
       await sendKeysV2(
@@ -218,7 +274,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       // name
       await sendKeysV2(
         this.driver,
-        this.driver.wait(until.elementLocated(By.id("toAcctNameKey")), 5 * 1000),
+        this.driver.wait(
+          until.elementLocated(By.id("toAcctNameKey")),
+          5 * 1000
+        ),
         {
           // text: this.task.receiverName
           text: ""
@@ -244,7 +303,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         "document.getElementById('transferNext').click()",
         0
       );
-      await this.driver.wait(until.elementLocated(By.id("agreeBtn")), 30 * 1000);
+      await this.driver.wait(
+        until.elementLocated(By.id("agreeBtn")),
+        30 * 1000
+      );
       await this.checkSubmittedValue();
     } finally {
       await this.driver.switchTo().defaultContent();
@@ -263,7 +325,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           });
           throw new Error(errorMessage);
         }
-        var bankField = this.driver.wait(until.elementLocated(By.id("bankKey")), 100);
+        var bankField = this.driver.wait(
+          until.elementLocated(By.id("bankKey")),
+          100
+        );
         var isBankSelected = await getElementValue(bankField);
         // this field  have value mean choose bank successful
         if (isBankSelected.trim()) {
@@ -283,7 +348,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         );
         await this.driver.sleep(100);
       } catch (error) {
-        if (error.name === "OperationalError" || error.name === "JavascriptError") {
+        if (
+          error.name === "OperationalError" ||
+          error.name === "JavascriptError"
+        ) {
           LogModule.SetLog({
             level: "warn",
             message: `wait until bank selected fail, ${retryTimes} times, Error: ${error}`
@@ -302,7 +370,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     var nameCardLine = await this.driver
       .wait(
         until.elementLocated(
-          By.css("table.table.table-centre>tbody>tr:nth-child(2)>td:nth-child(2)")
+          By.css(
+            "table.table.table-centre>tbody>tr:nth-child(2)>td:nth-child(2)"
+          )
         ),
         1 * 1000
       )
@@ -311,7 +381,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     var thirdLine = await this.driver
       .wait(
         until.elementLocated(
-          By.css("table.table.table-centre>tbody>tr:nth-child(3)>td:nth-child(2)")
+          By.css(
+            "table.table.table-centre>tbody>tr:nth-child(3)>td:nth-child(2)"
+          )
         ),
         1 * 1000
       )
@@ -322,7 +394,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       amountLine = await this.driver
         .wait(
           until.elementLocated(
-            By.css("table.table.table-centre>tbody>tr:nth-child(4)>td:nth-child(2)")
+            By.css(
+              "table.table.table-centre>tbody>tr:nth-child(4)>td:nth-child(2)"
+            )
           ),
           1 * 1000
         )
@@ -351,9 +425,14 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   async confirmTransaction() {
     try {
       ScreenshotHelper.capture("ABC-" + this.task.id + "-confirmTransaction");
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
-      );
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
 
       await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
       // TODO: Get transfer fee here
@@ -370,7 +449,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     var retryTimes = 3;
     while (retryTimes >= 0) {
       try {
-        if (retryTimes === 0) throw new Error("Send query password fail, please restart the task");
+        if (retryTimes === 0) {
+          throw new Error("Send query password fail, please restart the task");
+        }
 
         WindowFocusTool.focusAndCheckIE();
 
@@ -390,7 +471,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           for (let index = 0; index < 10; index++) {
             await KeySender.sendKey(KeySender.KeyEnum.BACKSPACE, 100);
           }
-          LogModule.SetLog({ level: "warn", message: "Query password sent length incorrectly" });
+          LogModule.SetLog({
+            level: "warn",
+            message: "Query password sent length incorrectly"
+          });
         } else {
           await this.confirmSameTransaction();
           break;
@@ -412,7 +496,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   async confirmSameTransaction() {
     try {
       // Check if need to confirm
-      await this.driver.wait(until.elementLocated(By.id("popupbox-confirm-0")), 5 * 1000);
+      await this.driver.wait(
+        until.elementLocated(By.id("popupbox-confirm-0")),
+        5 * 1000
+      );
 
       // If yes, focus password field again
       await executeJavaScript(
@@ -430,7 +517,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       });
     } catch (error) {
       if (error.name === "TimeoutError") {
-        return LogModule.SetLog({ level: "info", message: "Not detected confirm prompt'" });
+        return LogModule.SetLog({
+          level: "info",
+          message: "Not detected confirm prompt'"
+        });
       }
       throw error;
     }
@@ -453,14 +543,19 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     var retryTimes = 20;
     while (retryTimes >= 0) {
       try {
-        if (retryTimes === 0) throw new Error("USB didn't press, please restart the task");
+        if (retryTimes === 0) {
+          throw new Error("USB didn't press, please restart the task");
+        }
 
         await this.driver.sleep(3 * 1000);
         UsbTrigger.run(this.card.accountCode);
         await this.driver.sleep(3 * 1000);
         // TODO: wait if page load
         // this wait 10 sec it because we need to wait the success page
-        var message = await this.driver.wait(until.elementLocated(By.id("trnTips")), 10 * 1000);
+        var message = await this.driver.wait(
+          until.elementLocated(By.id("trnTips")),
+          10 * 1000
+        );
 
         if (message) {
           LogModule.SetLog({ level: "info", message: "USB pressed" });
@@ -474,7 +569,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           });
           continue;
         } else if (error.name === "TimeoutError") {
-          LogModule.SetLog({ level: "warn", message: "Can't get the element 'trnTips'" });
+          LogModule.SetLog({
+            level: "warn",
+            message: "Can't get the element 'trnTips'"
+          });
           break;
         } else throw error;
       } finally {
@@ -519,15 +617,22 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   async getTransactionTime() {
     try {
       this.transactionTime = dayjs();
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
-      );
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
 
       // 回单时间与交易时间会不同
       const transactionTime = await this.driver
         .wait(
           until.elementLocated(
-            By.css("#trnSuccess > .m-serialnumberbox > .m-serialnumberright > span")
+            By.css(
+              "#trnSuccess > .m-serialnumberbox > .m-serialnumberright > span"
+            )
           ),
           5 * 1000
         )
@@ -535,7 +640,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       this.transactionTime = dayjs(transactionTime, "YYYY/MM/DD HH:mm:ss");
     } catch (error) {
       if (error.name === "TimeoutError") {
-        return LogModule.SetLog({ level: "warn", message: "Get the transaction time fail" });
+        return LogModule.SetLog({
+          level: "warn",
+          message: "Get the transaction time fail"
+        });
       }
       throw error;
     } finally {
@@ -546,11 +654,19 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   // 跳转到打印回单页面
   async goCustomerAdvice() {
     try {
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
-      );
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
 
-      await this.driver.wait(until.elementLocated(By.id("printBtn")), 20 * 1000);
+      await this.driver.wait(
+        until.elementLocated(By.id("printBtn")),
+        20 * 1000
+      );
       await executeJavaScript(
         this.driver,
         "change page to print table  ",
@@ -559,15 +675,24 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       );
       await this.driver.wait(
         until.elementIsVisible(
-          await this.driver.wait(until.elementLocated(By.css("table.printTable")), 20 * 1000)
+          await this.driver.wait(
+            until.elementLocated(By.css("table.printTable")),
+            20 * 1000
+          )
         ),
         20 * 1000
       );
-      LogModule.SetLog({ level: "info", message: "Go customer advice success" });
+      LogModule.SetLog({
+        level: "info",
+        message: "Go customer advice success"
+      });
       return true;
     } catch (error) {
       if (error.name === "TimeoutError") {
-        LogModule.SetLog({ level: "warn", message: "Go customer advice error" });
+        LogModule.SetLog({
+          level: "warn",
+          message: "Go customer advice error"
+        });
         return false;
       }
       throw error;
@@ -581,19 +706,32 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     try {
       ScreenshotHelper.capture("ABC-" + this.task.id + "-checkCustomerAdvice");
 
-      await this.driver.wait(until.elementLocated(By.id("contentFrame")), 10 * 1000);
-
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      await this.driver.wait(
+        until.elementLocated(By.id("contentFrame")),
+        10 * 1000
       );
 
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
+
       var adviceTitle = await this.driver
-        .wait(until.elementLocated(By.css("table.printTable>thead>tr>td")), 1 * 1000)
+        .wait(
+          until.elementLocated(By.css("table.printTable>thead>tr>td")),
+          1 * 1000
+        )
         .getText();
 
       const transactionTime = await this.driver
         .wait(
-          until.elementLocated(By.css("table.printTable>tbody>tr:nth-child(1)>td>span")),
+          until.elementLocated(
+            By.css("table.printTable>tbody>tr:nth-child(1)>td>span")
+          ),
           1 * 1000
         )
         .getText();
@@ -602,7 +740,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
       var amount = await this.driver
         .wait(
-          until.elementLocated(By.css("table.printTable>tbody>tr:nth-child(5)>td:nth-child(2)")),
+          until.elementLocated(
+            By.css("table.printTable>tbody>tr:nth-child(5)>td:nth-child(2)")
+          ),
           1 * 1000
         )
         .getText();
@@ -610,7 +750,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
       this.charge = await this.driver
         .wait(
-          until.elementLocated(By.css("table.printTable>tbody>tr:nth-child(5)>td:nth-child(4)")),
+          until.elementLocated(
+            By.css("table.printTable>tbody>tr:nth-child(5)>td:nth-child(4)")
+          ),
           1 * 1000
         )
         .getText();
@@ -625,7 +767,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       // If the result shows success, than stop doing following job
       if (adviceTitle.indexOf("成功") !== -1) return true;
       else {
-        LogModule.SetLog({ level: "warn", message: "Fail to check if task success in advice" });
+        LogModule.SetLog({
+          level: "warn",
+          message: "Fail to check if task success in advice"
+        });
         return false;
       }
     } finally {
@@ -644,11 +789,19 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
       await this.driver.sleep(1000);
       await waitPageLoad(this.driver);
-      await this.driver.wait(until.elementLocated(By.id("contentFrame")), 30 * 1000);
-
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      await this.driver.wait(
+        until.elementLocated(By.id("contentFrame")),
+        30 * 1000
       );
+
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
 
       await this.driver.wait(
         until.elementLocated(By.css(".tabs-head>li:nth-child(3)>a")),
@@ -657,7 +810,10 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
       await this.waitUntilTransactionPageLoaded();
 
-      LogModule.SetLog({ level: "info", message: "Go transfer record page success" });
+      LogModule.SetLog({
+        level: "info",
+        message: "Go transfer record page success"
+      });
     } finally {
       await this.driver.switchTo().defaultContent();
     }
@@ -667,7 +823,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     var retryTimes = 20;
     while (retryTimes >= 0) {
       try {
-        if (retryTimes === 0) throw new Error("Wait until transaction page loaded fail");
+        if (retryTimes === 0) {
+          throw new Error("Wait until transaction page loaded fail");
+        }
 
         if (retryTimes % 5 === 0) {
           await executeJavaScript(
@@ -680,9 +838,18 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           await waitPageLoad(this.driver);
         }
 
-        var startDateField = this.driver.wait(until.elementLocated(By.id("startDate")), 1 * 1000);
-        var endDateField = this.driver.wait(until.elementLocated(By.id("endDate")), 1 * 1000);
-        var queryButton = this.driver.wait(until.elementLocated(By.id("qryTrnDetail")), 1 * 1000);
+        var startDateField = this.driver.wait(
+          until.elementLocated(By.id("startDate")),
+          1 * 1000
+        );
+        var endDateField = this.driver.wait(
+          until.elementLocated(By.id("endDate")),
+          1 * 1000
+        );
+        var queryButton = this.driver.wait(
+          until.elementLocated(By.id("qryTrnDetail")),
+          1 * 1000
+        );
         var [startDate, endDate] = await Promise.all([
           getElementValue(startDateField),
           getElementValue(endDateField),
@@ -719,14 +886,25 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
   async queryTransferRecord() {
     try {
-      await this.driver.wait(until.elementLocated(By.id("contentFrame")), 10 * 1000);
-
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      await this.driver.wait(
+        until.elementLocated(By.id("contentFrame")),
+        10 * 1000
       );
+
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
       await this.waitUntilTransactionDetailLoaded();
 
-      LogModule.SetLog({ level: "info", message: "Query transfer record success" });
+      LogModule.SetLog({
+        level: "info",
+        message: "Query transfer record success"
+      });
     } finally {
       await this.driver.switchTo().defaultContent();
     }
@@ -736,7 +914,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     var retryTimes = 20;
     while (retryTimes >= 0) {
       try {
-        if (retryTimes === 0) throw new Error("Query transaction detail loaded fail");
+        if (retryTimes === 0) {
+          throw new Error("Query transaction detail loaded fail");
+        }
 
         if (retryTimes % 5 === 0) {
           // click 查詢
@@ -751,7 +931,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         }
 
         await this.driver.wait(
-          until.elementLocated(By.css("table.table.table-striped.table-hover>tbody")),
+          until.elementLocated(
+            By.css("table.table.table-striped.table-hover>tbody")
+          ),
           1 * 1000
         );
         return;
@@ -774,13 +956,23 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     try {
       ScreenshotHelper.capture("ABC-" + this.task.id + "-checkTransferHistory");
 
-      await this.driver.wait(until.elementLocated(By.id("contentFrame")), 10 * 1000);
-
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      await this.driver.wait(
+        until.elementLocated(By.id("contentFrame")),
+        10 * 1000
       );
+
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
       var tableElement = await this.driver.wait(
-        until.elementLocated(By.css("table.table.table-striped.table-hover>tbody")),
+        until.elementLocated(
+          By.css("table.table.table-striped.table-hover>tbody")
+        ),
         10 * 1000
       );
       var tableHtml = await tableElement.getAttribute("outerHTML");
@@ -795,10 +987,17 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       transactions.each((_, transaction) => {
         const date = transaction.children[0].children[0].children[0].data;
         const time = transaction.children[0].children[1].children[0].data;
-        const startTime = dayjs(`${date} ${time}`, "YYYY-MM-DD HH:mm:ss").subtract(10, "second");
-        const endTime = dayjs(`${date} ${time}`, "YYYY-MM-DD HH:mm:ss").add(10, "second");
+        const startTime = dayjs(
+          `${date} ${time}`,
+          "YYYY-MM-DD HH:mm:ss"
+        ).subtract(10, "second");
+        const endTime = dayjs(`${date} ${time}`, "YYYY-MM-DD HH:mm:ss").add(
+          10,
+          "second"
+        );
 
-        const receiverInfo = transaction.children[2].children[0].children[0].data;
+        const receiverInfo =
+          transaction.children[2].children[0].children[0].data;
 
         let receiverName = "";
         let receiverAccount = "";
@@ -814,7 +1013,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
         if (
           this.transactionTime.isAfter(startTime) &&
-         this.transactionTime.isBefore(endTime) &&
+          this.transactionTime.isBefore(endTime) &&
           // receiverName === this.task.receiverName &&
           // receiverAccount === this.task.bank.cardNumber &&
           // amount === FormatHelper.amount(this.task.requestAmount) &&
@@ -855,13 +1054,24 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       );
       await this.driver.sleep(3 * 1000);
 
-      await this.driver.wait(until.elementLocated(By.id("contentFrame")), 10 * 1000);
-
-      await this.driver.switchTo().frame(
-        this.driver.wait(until.elementLocated(By.id("contentFrame")), 60 * 1000)
+      await this.driver.wait(
+        until.elementLocated(By.id("contentFrame")),
+        10 * 1000
       );
 
-      var balance = await waitUtilGetText(this.driver, until.elementLocated(By.id("dnormal")));
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
+
+      var balance = await waitUtilGetText(
+        this.driver,
+        until.elementLocated(By.id("dnormal"))
+      );
 
       AccountModule.SET_BANK_BALANCE(+FormatHelper.amount(balance));
     } finally {

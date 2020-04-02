@@ -193,7 +193,7 @@ export default class extends Mixins(TaskOperationMixin) {
    return this.task.lastSelected;
  }
  get selectedTask() {
-   return this.task.selected;
+   return this.task.selectedDetail;
  }
 }
 // methods: {

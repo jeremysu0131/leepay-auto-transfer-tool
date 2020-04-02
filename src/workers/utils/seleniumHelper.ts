@@ -1,13 +1,13 @@
 import { asyncForEach } from "@/utils/asyncForEach";
 
 // eslint-disable-next-line no-unused-vars
-import { Locator, ThenableWebDriver, WebElementPromise, WebElementCondition } from "selenium-webdriver";
+import { Locator, WebElementPromise, WebElementCondition, WebDriver } from "selenium-webdriver";
 import { LogModule } from "../../store/modules/log";
 
 /**
  * Execute JavaScript
  */
-export async function executeJavaScript(driver:ThenableWebDriver, name:string, script:string, delayMilliseconds = 1000) {
+export async function executeJavaScript(driver:WebDriver, name:string, script:string, delayMilliseconds = 1000) {
   try {
     if (!name) throw new Error("You didn't set the name of this execute method");
     await driver.sleep(delayMilliseconds);
@@ -90,7 +90,7 @@ export async function sendKeys(
  * 4. 自動增加延遲輸入時間（例：若第一次輸入文字間隔為 100 ms，但檢查後發現輸入錯誤，則第二次會增加延遲的時間至 100ms * 執行次數），透過這樣的方式來增加輸入成功率
  */
 export async function sendKeysV2(
-  driver:ThenableWebDriver,
+  driver:WebDriver,
   webElement:WebElementPromise,
   { text = "", replaceRule, maxExecuteTimes = 3, ms = 100 }:{text:string, replaceRule?:RegExp, maxExecuteTimes?:number, ms?:number}
 ) {
@@ -120,7 +120,7 @@ export async function sendKeysV2(
 /**
  * Wait until element focused
  */
-async function waitUntilElementFocused(driver:ThenableWebDriver, webElement:WebElementPromise, retryTimes = 3) {
+async function waitUntilElementFocused(driver:WebDriver, webElement:WebElementPromise, retryTimes = 3) {
   while (retryTimes >= 0) {
     try {
       if (retryTimes === 0) throw new Error("Element can't be focus");
@@ -171,7 +171,7 @@ async function checkInputCorrectly(webElement:WebElementPromise, text:string, re
  * wait focus
  */
 // TODO: To remove
-export async function waitElementFocused(driver:ThenableWebDriver, webElement:WebElementPromise) {
+export async function waitElementFocused(driver:WebDriver, webElement:WebElementPromise) {
   var retryTime = 3;
   while (retryTime >= 0) {
     try {
@@ -203,14 +203,14 @@ export async function getElementValue(webElement:WebElementPromise):Promise<stri
   return value;
 }
 
-export async function waitPageLoad(driver:ThenableWebDriver) {
+export async function waitPageLoad(driver:WebDriver) {
   await driver.wait(async() => {
     const readyState = await driver.executeScript("return document.readyState");
     return readyState === "complete";
   });
 }
 
-export async function waitUtilGetText(driver:ThenableWebDriver, waitingType:WebElementCondition) {
+export async function waitUtilGetText(driver:WebDriver, waitingType:WebElementCondition) {
   var text;
   while (!text) {
     text = await driver.wait(waitingType).getText();
@@ -220,9 +220,9 @@ export async function waitUtilGetText(driver:ThenableWebDriver, waitingType:WebE
 
 /**
  *
- * @param {ThenableWebDriver} driver
+ * @param {WebDriver} driver
  */
-export async function isElementExist(driver:ThenableWebDriver, locator:Locator) {
+export async function isElementExist(driver:WebDriver, locator:Locator) {
   var elements = await driver.findElements(locator);
   if (elements) {
     return true;

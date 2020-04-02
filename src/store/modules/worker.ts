@@ -100,7 +100,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   async RunManualLoginFlows() {
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
     try {
-      await this.SetIEEnviroment();
+      // await this.SetIEEnviroment();
       await this.SetProxy();
       await this.LaunchSelenium();
     } catch (error) {
@@ -112,9 +112,9 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
 
   @Action
   async SetIEEnviroment() {
-    if (!(await this.worker.setIEEnvironment())) {
-      throw new Error("Set IE enviroment fail");
-    }
+    // if (!(await this.worker.setIEEnvironment())) {
+    //   throw new Error("Set IE enviroment fail");
+    // }
   }
   @Action
   async UnsetWorker() {

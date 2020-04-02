@@ -1,4 +1,4 @@
-import { ThenableWebDriver } from "selenium-webdriver";
+import { WebDriver } from "selenium-webdriver";
 
 /**
  * 此介面僅提供銀行網頁互動
@@ -6,17 +6,17 @@ import { ThenableWebDriver } from "selenium-webdriver";
 export interface IWorkerAdapter {
   // setIEEnvironment(): Promise<boolean>;
   // setProxy(): Promise<boolean>;
-  // unsetProxy(): void;
-  // closeSelenium(): void;
+  // unsetProxy(): Promise<void>
+  // closeSelenium(): Promise<void>
 
-  getDriver(): ThenableWebDriver;
-  setDriver(driver: ThenableWebDriver): void;
+  getDriver(): WebDriver;
+  setDriver(driver:WebDriver): void;
 
   /**
    * 進入銀行登入頁面
    * 並且做檢查確認是否有進入該頁面
    */
-  launchSelenium(): void;
+  launchSelenium(): Promise<void>;
 
   /**
    * 填寫登入資訊
@@ -27,12 +27,12 @@ export interface IWorkerAdapter {
   /**
    * 送出登入表單
    */
-  submitToSignIn(): void;
+  submitToSignIn(): Promise<void>;
 
   /**
    * 輸入 U Key 密碼
    */
-  sendUSBKey(): void;
+  sendUSBKey(): Promise<void>;
 
   /**
    * 檢查登入是否成功
@@ -46,13 +46,13 @@ export interface IWorkerAdapter {
   /**
    * 取得登入 Cookie
    */
-  getCookie(): void;
+  getCookie(): Promise<void>;
 
   /**
    * 進入轉帳頁面
    * 從登入後的頁面跳轉到至轉帳首頁
    */
-  goTransferPage(): void;
+  goTransferPage(): Promise<void>;
   /**
    * 檢查確認是否正確至轉帳頁面
    */
@@ -64,7 +64,7 @@ export interface IWorkerAdapter {
    * 2. 填寫金額
    * ps 1. 欄位檢查：逐一欄位做檢查
    */
-  fillTransferForm(): void;
+  fillTransferForm(): Promise<void>;
 
   /**
    * 表單檢查：檢查表單填寫內容
@@ -74,16 +74,16 @@ export interface IWorkerAdapter {
   /**
    * Submit transaction form if check transfer information correctly
    */
-  submitTransaction(): void;
+  submitTransaction(): Promise<void>;
 
   /**
    * 填寫附言 (非必要)
    */
-  fillNote(): void;
+  fillNote(): Promise<void>;
   /**
    * 檢查填寫附言 (非必要)
    */
-  checkIfNoteFilled(): void;
+  checkIfNoteFilled(): Promise<void>;
 
   /**
    * Check if bank received data correctly before confirm transaction
@@ -93,17 +93,17 @@ export interface IWorkerAdapter {
   /**
    * Send password to perform transaction
    */
-  sendPasswordToPerformTransaction(): void;
+  sendPasswordToPerformTransaction(): Promise<void>;
 
   /**
    * Send usb password to perform transaction
    */
-  sendUsbPasswordToPerformTransaction(): void;
+  sendUsbPasswordToPerformTransaction(): Promise<void>;
 
   /**
    * 轉帳填寫完畢後，點擊【確認】後的流程。(各家銀行不一樣)
    */
-  // confirmTransaction(): void;
+  // confirmTransaction(): Promise<void>
 
   /**
    * 檢查轉帳是否轉帳成功
@@ -117,5 +117,5 @@ export interface IWorkerAdapter {
   /**
    * 取得餘額
    */
-  getBalance(): void;
+  getBalance(): Promise<void>;
 }

@@ -1,5 +1,5 @@
 import { screen } from "electron";
-import { Builder, ThenableWebDriver } from "selenium-webdriver";
+import { Builder } from "selenium-webdriver";
 import { setProxy, unsetProxy, setIEEnvironment } from "./utils/regeditTool";
 import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
 import { LogModule } from "../store/modules/log";
@@ -8,6 +8,8 @@ import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 import { IWorkerAdapter } from "./IWorkerAdapter";
 import TaskDetailModel from "../models/taskDetailModel";
 import { AccountModule } from "../store/modules/account";
+import { Options } from "selenium-webdriver/ie";
+// var path = require("iedriver").path;
 
 /**
  * Bank Worker
@@ -36,10 +38,10 @@ export default class BankWorker {
 
     var isSet = await setIEEnvironment();
 
-    WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.SET_IE_ENVIRONMENT,
-      status: isSet ? WorkflowStatusEnum.SUCCESS : WorkflowStatusEnum.FAIL
-    });
+    // WorkerModule.UPDATE_FLOW_STATUS({
+    //   name: WorkflowEnum.SET_IE_ENVIRONMENT,
+    //   status: isSet ? WorkflowStatusEnum.SUCCESS : WorkflowStatusEnum.FAIL
+    // });
     return isSet;
   }
 
@@ -75,22 +77,24 @@ export default class BankWorker {
 
   async launchSelenium() {
     try {
-      console.log("call");
       WorkerModule.UPDATE_FLOW_STATUS({
         name: WorkflowEnum.LAUNCH_SELENIUM,
         status: WorkflowStatusEnum.RUNNING
       });
 
-      const driver = (await new Builder()
+      console.log("call");
+      console.log(process.env["PATH"]);
+      const driver = await new Builder()
         .withCapabilities({
           ignoreZoomSetting: true
           // requireWindowFocus: true
         })
         .forBrowser("ie")
-        .build()) as ThenableWebDriver;
-
+        .build();
+      console.log("call");
       this.instance.setDriver(driver);
 
+      console.log("call");
       const { width, height } = screen.getPrimaryDisplay().workAreaSize;
       await this.instance
         .getDriver()
@@ -111,6 +115,7 @@ export default class BankWorker {
       });
       LogModule.SetLog({ message: "Selenium launched", level: "info" });
     } catch (error) {
+      console.log(error);
       WorkerModule.UPDATE_FLOW_STATUS({
         name: WorkflowEnum.LAUNCH_SELENIUM,
         status: WorkflowStatusEnum.FAIL
@@ -287,7 +292,7 @@ export default class BankWorker {
         throw new Error("You didn't select the task");
       }
 
-      await this.instance.fillTransferFrom();
+      await this.instance.fillTransferForm();
 
       WorkerModule.UPDATE_FLOW_STATUS({
         name: WorkflowEnum.FILL_TRANSFER_INFORMATION,
@@ -330,7 +335,9 @@ export default class BankWorker {
       status: WorkflowStatusEnum.RUNNING
     });
     try {
-      await this.instance.confirmTransaction();
+      await this.instance.checkBankReceivedTransferInformation();
+      await this.instance.sendPasswordToPerformTransaction();
+      await this.instance.sendUsbPasswordToPerformTransaction();
 
       WorkerModule.UPDATE_FLOW_STATUS({
         name: WorkflowEnum.CONFIRM_TRANSACTION,
@@ -352,7 +359,7 @@ export default class BankWorker {
       status: WorkflowStatusEnum.RUNNING
     });
     try {
-      var isCheckSuccess = await this.instance.checkIfSuccess();
+      var isCheckSuccess = await this.instance.checkIfTransactionSuccess();
       calculateTransferTime(this.taskStartAt);
       WorkerModule.UPDATE_FLOW_STATUS({
         name: WorkflowEnum.CHECK_IF_SUCCESS,

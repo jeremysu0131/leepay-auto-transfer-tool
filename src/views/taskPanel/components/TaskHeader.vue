@@ -131,7 +131,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return UserModule.name;
   }
   get selectedTask() {
-    return this.task.selected;
+    return this.task.selectedDetail;
   }
 
   get balanceInSystem() {
