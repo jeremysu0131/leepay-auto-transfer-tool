@@ -18,6 +18,7 @@ import { TaskModule } from "./task";
 import { transponder } from "../../electron-communicator";
 import { ipcRenderer } from "electron";
 import TaskDetailModel from "../../workers/models/taskDetailModel";
+import RemitterAccountModel from "../../workers/models/remitterAccountModel";
 
 export interface IWorkerState {
   worker: BankWorker;
@@ -62,11 +63,11 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   //   state.workflow = workflowEnum(bankCode);
   // },
   @Action
-  public async SetWorker(taskDetail: TaskDetailModel) {
+  public async SetWorker(remitterAccount:RemitterAccountModel) {
     try {
-      transponder(ipcRenderer, WorkflowEnum.SET_WORKER, taskDetail);
+      transponder(ipcRenderer, WorkflowEnum.SET_WORKER, remitterAccount);
     } catch (error) {
-      console.log(error);
+      LogModule.SetLog({ level: "error", message: error });
     }
   }
   @Action
@@ -74,8 +75,8 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     AppModule.HANDLE_TASK_AUTO_PROCESS(true);
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
     try {
-      // await this.SetIEEnviroment();
-      // await this.SetProxy();
+      await this.SetIEEnvironment();
+      await this.SetProxy();
       await this.LaunchSelenium();
       await this.InputSignInInformation();
       await this.SubmitToSignIn();
@@ -109,7 +110,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
 
   @Action
-  async SetIEEnviroment() {
+  async SetIEEnvironment() {
      await transponder(ipcRenderer, WorkflowEnum.SET_IE_ENVIRONMENT);
     // if (!(await this.worker.setIEEnvironment())) {
     //   throw new Error("Set IE enviroment fail");
@@ -234,7 +235,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     /* eslint-disable no-return-await */
     switch (flowName) {
       case WorkflowEnum.SET_IE_ENVIRONMENT:
-        return await this.SetIEEnviroment();
+        return await this.SetIEEnvironment();
       case WorkflowEnum.SET_PROXY:
         return await this.SetProxy();
       case WorkflowEnum.LAUNCH_SELENIUM:

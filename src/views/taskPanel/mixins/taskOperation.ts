@@ -26,7 +26,7 @@ export default class TaskOperationMixin extends Vue {
       //     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
       //   }
       // } else {
-      await WorkerModule.SetWorker(TaskModule.selectedDetail);
+      await WorkerModule.SetWorker(TaskModule.selectedDetail.remitterAccount);
       await WorkerModule.RunAutoLoginFlows();
       // }
     } catch (error) {
