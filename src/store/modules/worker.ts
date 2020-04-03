@@ -83,7 +83,6 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
       await this.SendUSBKey();
       await this.CheckIfLoginSuccess();
     } catch (error) {
-      console.log(error);
       LogModule.SetLog({ message: error, level: "error" });
       LogModule.SetConsole({
         level: "error",

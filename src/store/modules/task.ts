@@ -58,7 +58,6 @@ class Task extends VuexModule implements ITaskState {
     var tasks: TaskModel[] = [];
     try {
       var { data } = await TaskApi.getAll();
-      console.log(data.data);
       (data.data as [])
         .filter((task: any) => task.task === "FT-P")
         .forEach((task: any) => {
