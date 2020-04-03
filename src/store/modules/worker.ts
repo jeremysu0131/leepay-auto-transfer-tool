@@ -65,7 +65,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   public async SetWorker(taskDetail: TaskDetailModel) {
     try {
-      transponder(ipcRenderer, "SET_WORKER", taskDetail);
+      transponder(ipcRenderer, WorkflowEnum.SET_WORKER, taskDetail);
     } catch (error) {
       console.log(error);
     }

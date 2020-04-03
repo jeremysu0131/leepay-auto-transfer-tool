@@ -1,4 +1,5 @@
 export enum WorkflowEnum {
+  SET_WORKER="SET_WORKER",
   SET_IE_ENVIRONMENT = "Set IE environment",
   SET_PROXY = "Set proxy",
   UNSET_PROXY = "Unet proxy",
