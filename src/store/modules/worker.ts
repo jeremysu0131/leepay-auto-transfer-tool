@@ -65,7 +65,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   public async SetWorker(taskDetail: TaskDetailModel) {
     try {
-      transponder(ipcRenderer, "SET_WORKER");
+      transponder(ipcRenderer, "SET_WORKER", taskDetail);
     } catch (error) {
       console.log(error);
     }
@@ -75,14 +75,15 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     AppModule.HANDLE_TASK_AUTO_PROCESS(true);
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
     try {
-      await this.SetIEEnviroment();
-      // await this.SetProxy");
+      // await this.SetIEEnviroment();
+      // await this.SetProxy();
       await this.LaunchSelenium();
       await this.InputSignInInformation();
       await this.SubmitToSignIn();
       await this.SendUSBKey();
       await this.CheckIfLoginSuccess();
     } catch (error) {
+      console.log(error);
       LogModule.SetLog({ message: error, level: "error" });
       LogModule.SetConsole({
         level: "error",
@@ -110,6 +111,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
 
   @Action
   async SetIEEnviroment() {
+     await transponder(ipcRenderer, WorkflowEnum.SET_IE_ENVIRONMENT);
     // if (!(await this.worker.setIEEnvironment())) {
     //   throw new Error("Set IE enviroment fail");
     // }
@@ -130,13 +132,15 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Action
   async SetProxy() {
-    if (!(await this.worker.setProxy())) {
-      throw new Error("Set proxy fail");
-    }
+     await transponder(ipcRenderer, WorkflowEnum.SET_PROXY);
+    // if (!(await this.worker.setProxy())) {
+    //   throw new Error("Set proxy fail");
+    // }
   }
   @Action
   async UnsetProxy() {
     try {
+     await transponder(ipcRenderer, WorkflowEnum.UNSET_PROXY);
       // await this.unsetProxy();
     } catch (error) {
       return LogModule.SetConsole({ message: error, level: "error" });
@@ -148,24 +152,32 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Action
   async CloseSelenium() {
-    if (this.worker) await this.worker.closeSelenium();
+    // if (this.worker) await this.worker.closeSelenium();
+     await transponder(ipcRenderer, WorkflowEnum.CLOSE_SELENIUM);
   }
   @Action
   async InputSignInInformation() {
-    await this.worker.inputSignInInformation();
+     await transponder(ipcRenderer, WorkflowEnum.INPUT_SIGN_IN_INFORMATION);
+    // await this.worker.inputSignInInformation();
   }
   @Action
   async SubmitToSignIn() {
-    await this.worker.submitToSignIn();
+     await transponder(ipcRenderer, WorkflowEnum.SUBMIT_TO_SIGN_IN);
+    // await this.worker.submitToSignIn();
   }
   @Action
   async SendUSBKey() {
-    await this.worker.sendUSBKey();
+     await transponder(ipcRenderer, WorkflowEnum.SEND_USB_KEY);
+    // await this.worker.sendUSBKey();
   }
   @Action
   async CheckIfLoginSuccess() {
     const isManualLogin = AppModule.isManualLogin;
-    if (await this.worker.checkIfLoginSuccess({ isManualLogin })) {
+
+    if (
+      // await this.worker.checkIfLoginSuccess({ isManualLogin })
+     await transponder(ipcRenderer, WorkflowEnum.CHECK_IF_LOGIN_SUCCESS, { isManualLogin })
+    ) {
       AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
       AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
       AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
@@ -183,7 +195,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async GetCookie() {
     try {
-      await this.worker.getCookie();
+     await transponder(ipcRenderer, WorkflowEnum.GET_COOKIE);
     } catch (error) {
       LogModule.SetLog({ message: error, level: "error" });
       throw error;
@@ -192,7 +204,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async GetBankBalance() {
     try {
-      await this.worker.getBalance();
+     await transponder(ipcRenderer, WorkflowEnum.GET_BALANCE);
     } catch (error) {
       LogModule.SetLog({ level: "error", message: "Fail to get balance" });
       LogModule.SetLog({ level: "error", message: error });
@@ -200,23 +212,23 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Action
   async GoTransferPage() {
-    await this.worker.goTransferPage();
+     await transponder(ipcRenderer, WorkflowEnum.GO_TRANSFER_PAGE);
   }
   @Action
   async FillTransferFrom() {
-    await this.worker.fillTransferFrom();
+     await transponder(ipcRenderer, WorkflowEnum.FILL_TRANSFER_INFORMATION);
   }
   @Action
   async FillNote() {
-    await this.worker.fillNote();
+     await transponder(ipcRenderer, WorkflowEnum.FILL_NOTE);
   }
   @Action
   async ConfirmTransaction() {
-    await this.worker.confirmTransaction();
+     await transponder(ipcRenderer, WorkflowEnum.CONFIRM_TRANSACTION);
   }
   @Action
   async CheckIfSuccess() {
-    await this.worker.checkIfSuccess();
+     await transponder(ipcRenderer, WorkflowEnum.CHECK_IF_SUCCESS);
   }
   @Action
   async RunSelectedFlow(flowName: WorkflowEnum) {

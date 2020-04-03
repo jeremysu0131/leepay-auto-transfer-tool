@@ -1,6 +1,7 @@
 export enum WorkflowEnum {
   SET_IE_ENVIRONMENT = "Set IE environment",
   SET_PROXY = "Set proxy",
+  UNSET_PROXY = "Unet proxy",
   LAUNCH_SELENIUM = "Launch IE",
   CLOSE_SELENIUM = "Close IE",
   // LOGIN_TO_BANK= "Login to bank website",

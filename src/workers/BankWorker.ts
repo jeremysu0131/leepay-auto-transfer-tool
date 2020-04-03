@@ -29,17 +29,17 @@ export default class BankWorker {
     // this.card = null;
   }
 
-  async setIEEnvironment() {
-    var isSet = await setIEEnvironment();
-
-    // WorkerModule.UPDATE_FLOW_STATUS({
-    //   name: WorkflowEnum.SET_IE_ENVIRONMENT,
-    //   status: isSet ? WorkflowStatusEnum.SUCCESS : WorkflowStatusEnum.FAIL
-    // });
-    return isSet;
+  async setIEEnvironment(): Promise<boolean> {
+    try {
+      await setIEEnvironment();
+      return true;
+    } catch (error) {
+      logger.log({ level: "error", message: error });
+      return false;
+    }
   }
 
-  async setProxy() {
+  async setProxy(): Promise<boolean> {
     try {
       await setProxy(this.card.proxy);
 
@@ -50,15 +50,18 @@ export default class BankWorker {
     }
   }
 
-  async unsetProxy() {
+  async unsetProxy(): Promise<boolean> {
+    try {
     await unsetProxy();
     logger.log({ message: "Proxy unset", level: "info" });
+    return true;
+    } catch (error) {
+     return false; 
+    }
   }
 
-  async launchSelenium() {
+  async launchSelenium(): Promise<boolean> {
     try {
-      console.log("call");
-
       const driver = await new Builder()
         .withCapabilities({
           ignoreZoomSetting: true
@@ -66,10 +69,9 @@ export default class BankWorker {
         })
         .forBrowser("ie")
         .build();
-      console.log("call");
       this.instance.setDriver(driver);
+      this.instance.setTask(this.taskDetail);
 
-      console.log("call");
       const { width, height } = screen.getPrimaryDisplay().workAreaSize;
       await this.instance
         .getDriver()
@@ -92,7 +94,7 @@ export default class BankWorker {
     }
   }
 
-  async closeSelenium() {
+  async closeSelenium(): Promise<boolean> {
     if (this.instance.getDriver()) await this.instance.getDriver().quit();
 
     logger.log({ message: "Selenium closed", level: "info" });
@@ -111,7 +113,7 @@ export default class BankWorker {
     }
   }
 
-  async submitToSignIn() {
+  async submitToSignIn(): Promise<boolean> {
     try {
       await this.instance.submitToSignIn();
 
@@ -122,7 +124,7 @@ export default class BankWorker {
     }
   }
 
-  async sendUSBKey() {
+  async sendUSBKey(): Promise<boolean> {
     try {
       await this.instance.sendUSBKey();
 
@@ -152,7 +154,7 @@ export default class BankWorker {
     }
   }
 
-  async getCookie() {
+  async getCookie(): Promise<boolean> {
     try {
       //   store.commit("SET_COOKIE", data.cookie);
       //   store.commit("SET_SESSION", data.session);
@@ -165,7 +167,7 @@ export default class BankWorker {
     }
   }
 
-  async goTransferPage() {
+  async goTransferPage(): Promise<boolean> {
     this.taskStartAt = new Date();
 
     try {
@@ -181,7 +183,7 @@ export default class BankWorker {
     }
   }
 
-  async fillTransferFrom() {
+  async fillTransferFrom(): Promise<boolean> {
     try {
       if (this.taskDetail === null) {
         throw new Error("You didn't select the task");
@@ -196,7 +198,7 @@ export default class BankWorker {
     }
   }
 
-  async fillNote() {
+  async fillNote(): Promise<boolean> {
     try {
       await this.instance.fillNote();
 
@@ -206,7 +208,7 @@ export default class BankWorker {
       return false;
     }
   }
-  async confirmTransaction() {
+  async confirmTransaction(): Promise<boolean> {
     try {
       await this.instance.checkBankReceivedTransferInformation();
       await this.instance.sendPasswordToPerformTransaction();
@@ -219,7 +221,7 @@ export default class BankWorker {
     }
   }
 
-  async checkIfSuccess() {
+  async checkIfSuccess(): Promise<boolean> {
     try {
       var isCheckSuccess = await this.instance.checkIfTransactionSuccess();
       calculateTransferTime(this.taskStartAt);
@@ -245,7 +247,7 @@ export default class BankWorker {
     }
   }
 
-  async getBalance() {
+  async getBalance(): Promise<boolean> {
     await this.instance.getBalance();
     logger.log({ message: "Balance got", level: "info" });
   }

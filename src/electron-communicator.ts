@@ -2,8 +2,6 @@ import { IpcMain, Event, IpcRenderer } from "electron";
 import BankWorker from "./workers/BankWorker";
 import TaskDetailModel from "./models/taskDetailModel";
 
-var worker;
-
 //  const communicator = (ipcMain: IpcMain) => {
 //   ipcMain.on("asynchronous-message", async(event: Event, arg: any) => {
 //     console.log(arg);
@@ -23,9 +21,11 @@ var worker;
 //   });
 // };
 
-export const transponder = (ipcRenderer: IpcRenderer, arg: any) => {
-  ipcRenderer.once("asynchronous-reply", (event: Event, arg: any) => {
-    console.log(arg);
+export const transponder = async(ipcRenderer: IpcRenderer, flowName: any, flowArgs?:any):Promise<boolean> => {
+  return new Promise((resolve) => {
+  ipcRenderer.once("asynchronous-reply", (event: Event, isFlowExecutedSuccess: boolean) => {
+    resolve(isFlowExecutedSuccess);
   });
-  ipcRenderer.send("asynchronous-message", arg);
+  ipcRenderer.send("asynchronous-message", flowName, flowArgs);
+  });
 };

@@ -1,4 +1,5 @@
 import { WebDriver } from "selenium-webdriver";
+import TaskDetailModel from "../models/taskDetailModel";
 
 /**
  * 此介面僅提供銀行網頁互動
@@ -11,6 +12,9 @@ export interface IWorkerAdapter {
 
   getDriver(): WebDriver;
   setDriver(driver: WebDriver): void;
+
+  getTask():TaskDetailModel;
+  setTask(task:TaskDetailModel):void;
 
   /**
    * 進入銀行登入頁面

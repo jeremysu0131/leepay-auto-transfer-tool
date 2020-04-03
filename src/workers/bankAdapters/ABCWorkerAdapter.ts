@@ -24,7 +24,7 @@ import logger from "../utils/logger";
 export class ABCWorkerAdapter implements IWorkerAdapter {
   private driver: WebDriver;
   private bankUrl: string;
-  private card: any;
+  // private card: any;
   private task: TaskDetailModel;
   private charge: string;
   private transactionTime: Dayjs;
@@ -33,7 +33,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   constructor() {
     this.driver = {} as WebDriver;
     this.bankUrl = "https://perbank.abchina.com/EbankSite/startup.do";
-    this.card = {};
+    // this.card = {};
     this.task = {} as TaskDetailModel;
     this.charge = "";
     this.transactionTime = dayjs();
@@ -61,6 +61,12 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       广州发展银行: "广州发展银行",
       浦发银行: "浦东发展银行"
     };
+  }
+  getTask(): TaskDetailModel {
+    return this.task;
+  }
+  setTask(task: TaskDetailModel): void {
+    this.task = task;
   }
   checkSignInInformationCorrectly(): Promise<boolean> {
     throw new Error("Method not implemented.");
@@ -133,9 +139,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     );
   }
   async inputPassword() {
-    if (this.card.accountPassword) {
+    if (this.task.remitterAccount.loginPassword) {
       WindowFocusTool.focusAndCheckIE();
-      await KeySender.sendText(this.card.accountPassword, 3 * 1000, 250);
+      await KeySender.sendText(this.task.remitterAccount.loginPassword, 3 * 1000, 250);
     } else {
       throw new Error("Account password is null");
     }
