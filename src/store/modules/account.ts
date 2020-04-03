@@ -77,14 +77,23 @@ class Card extends VuexModule implements IAccountState {
     this.currentDetail.balanceInOnlineBank = balance;
   }
   @Action
-  async GetId(accountCode: string):Promise<number> {
+  async GetId(accountCode: string): Promise<number> {
     var { data } = await AccountApi.getList();
-
-    var account = (data.data as Array<{key:number, value:string}>)
-      .find((account) => account.value.indexOf(accountCode) !== -1);
+    var account = (data.data as Array<{ key: number; value: string }>).find(
+      account => account.value.indexOf(accountCode) !== -1
+    );
 
     if (!account) throw new Error("Get account id fail");
     return account.key;
+  }
+
+  @Action
+  async GetProxy(accountId: number): Promise<string> {
+    var response = await AccountApi.getAssignedProxy(accountId);
+    var data = response.data.data;
+    if (data.length === 0) throw new Error("Proxy not assigned to this account");
+    var proxy = data[0].value.split("http://")[1];
+    return proxy;
   }
   //   @Mutation
   // private   SET_SELECTED_CARD( account:object)  {

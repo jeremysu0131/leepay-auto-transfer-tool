@@ -58,8 +58,9 @@ class Task extends VuexModule implements ITaskState {
     var tasks: TaskModel[] = [];
     try {
       var { data } = await TaskApi.getAll();
+      console.log(data.data);
       (data.data as [])
-        .filter((task: any) => task.workflow === "Partial Withdraw")
+        .filter((task: any) => task.task === "FT-P")
         .forEach((task: any) => {
           tasks.push({
             id: task.id,
@@ -72,12 +73,8 @@ class Task extends VuexModule implements ITaskState {
               code: "",
               chineseName: ""
             },
-            remitterAccount: task.field4,
-            payeeAccount: task.toAcct,
-            merchant: {
-              id: task.merchantId,
-              name: task.merchantName
-            },
+            remitterAccountCode: task.field7,
+            payeeAccountCode: task.toAcct,
             pendingTime: task.pendingTime,
             ref: task.ref,
             remark: task.remarks,

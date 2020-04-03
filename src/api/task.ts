@@ -16,13 +16,11 @@ export function getAll() {
 
 export function getDetail(data:{taskId: number, ref: string, bankId:number}) {
   return request({
-    url: "/adminWF!loadPartialWithdrawPayment.do",
-    method: "GET",
+    url: "/adminWF!loadTrans.do",
+    method: "POST",
     params: {
       "task.id": data.taskId,
-      "task.ref": data.ref,
-      "task.state.state": null,
-      bankId: data.bankId
+      "task.ref": data.ref
     }
   });
 }
@@ -33,7 +31,7 @@ export function lock(taskId: number) {
     method: "GET",
     params: {
       "task.id": taskId,
-      taskName: "WP-A"
+      taskName: "FT-P"
     }
   });
 }

@@ -41,12 +41,12 @@ export function getDetailById(id: number) {
   });
 }
 
-export function getAssignedProxy(cardID: number) {
+export function getAssignedProxy(accountId: number) {
   return request({
     url: "/adminAcct!listAssignProxy.do",
     method: "GET",
     params: {
-      acctId: cardID
+      acctId: accountId 
     }
   });
 }

@@ -9,9 +9,8 @@ export default class TaskModel {
   assignedAt = Date;
   bank=new BankModel();
   transferFee = 0;
-  remitterAccount = "";
-  payeeAccount = "";
-  merchant = new MerchantModel();
+  remitterAccountCode = "";
+  payeeAccountCode = "";
   pendingTime = 0;
   remark = "";
   ref="";

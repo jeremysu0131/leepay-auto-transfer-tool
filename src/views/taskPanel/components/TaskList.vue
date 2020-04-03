@@ -37,7 +37,7 @@
       />
       <!-- FIXME to check if this field correctlly -->
       <el-table-column
-        prop="remitterAccount"
+        prop="remitterAccountCode"
         label="From Account"
         align="center"
         width="120"
@@ -276,8 +276,9 @@ export default class extends Mixins(TaskOperationMixin) {
     }
   }
   private async getTaskDetail(task: TaskModel) {
-    var accountId = await AccountModule.GetId(task.remitterAccount);
+    var accountId = await AccountModule.GetId(task.remitterAccountCode);
     var taskDetail = await TaskModule.GetDetail(task, accountId);
+    taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
     return taskDetail;
   }
   private confirmExecution(taskID: number, executedTasks: any) {
