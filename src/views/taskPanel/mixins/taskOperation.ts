@@ -11,29 +11,40 @@ export default class TaskOperationMixin extends Vue {
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
   public async startTask() {
+    this.loginToBankWebsite();
+    this.executeTransferTask();
+  }
+  private async loginToBankWebsite() {
     try {
       var taskDetail = TaskModule.selectedDetail;
-      // if (
-      //   taskDetail.remitterAccount.code.indexOf("ABC") > 0 ||
-      //   taskDetail.remitterAccount.code.indexOf("ICBC") > 0
-      // ) {
-      //   var isProcessSuccess = WorkerModule.RunAutoLoginFlows();
+      const { remitterAccount } = taskDetail;
+      await WorkerModule.SetWorker(remitterAccount);
+      if (
+        remitterAccount.code.indexOf("ABC") > 0 ||
+        remitterAccount.code.indexOf("ICBC") > 0
+      ) {
+        var isProcessSuccess = await WorkerModule.RunAutoLoginFlows();
 
-      //   if (isProcessSuccess) {
-      //     this.$store.commit("HANDLE_TASK_PROCESSING", false);
-      //   } else {
-      //     new Audio(require("@/assets/sounds/alarm.mp3")).play();
-      //     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
-      //   }
-      // } else {
-      await WorkerModule.SetWorker(TaskModule.selectedDetail.remitterAccount);
-      await WorkerModule.RunAutoLoginFlows();
-      // }
+        if (isProcessSuccess) {
+          this.$store.commit("HANDLE_TASK_PROCESSING", false);
+        } else {
+          new Audio(require("@/assets/sounds/alarm.mp3")).play();
+          this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
+        }
+      } else {
+        await WorkerModule.RunManualLoginFlows();
+      }
     } catch (error) {
-      LogModule.SetConsole({
-        message: error.message,
-        level: "error"
-      });
+      LogModule.SetConsole({ message: error.message, level: "error" });
+      throw error;
+    }
+  }
+  private async executeTransferTask() {
+    try {
+      await WorkerModule.RunAutoTransferFlows();
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: "error" });
+      throw error;
     }
   }
   public async unlockTask(task: any) {

@@ -32,10 +32,6 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   public worker = {} as BankWorker;
 
   @Mutation
-  SET_WORKER(worker: BankWorker) {
-    this.worker = worker;
-  }
-  @Mutation
   SET_SIGN_IN_WORKFLOW(isManualSignIn: boolean) {
     this.signInWorkflow = signInWorkflowEnum(isManualSignIn);
   }
@@ -63,7 +59,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   //   state.workflow = workflowEnum(bankCode);
   // },
   @Action
-  public async SetWorker(remitterAccount:RemitterAccountModel) {
+  public async SetWorker(remitterAccount: RemitterAccountModel) {
     try {
       transponder(ipcRenderer, WorkflowEnum.SET_WORKER, remitterAccount);
     } catch (error) {
@@ -81,7 +77,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
       await this.InputSignInInformation();
       await this.SubmitToSignIn();
       await this.SendUSBKey();
-      await this.CheckIfLoginSuccess();
+      return await this.CheckIfLoginSuccess();
     } catch (error) {
       LogModule.SetLog({ message: error, level: "error" });
       LogModule.SetConsole({
@@ -89,6 +85,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
         message:
           'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
       });
+      return false;
     } finally {
       AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
     }
@@ -109,8 +106,31 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
 
   @Action
-  async SetIEEnvironment() {
-     await transponder(ipcRenderer, WorkflowEnum.SET_IE_ENVIRONMENT);
+  async RunAutoTransferFlows() {
+    try {
+      await this.GoTransferPage();
+      await this.FillTransferFrom();
+      await this.FillNote();
+      await this.ConfirmTransaction();
+      return await this.CheckIfSuccess();
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+      return false;
+    }
+  }
+  @Action
+  public async RunManualTransferFlows() {
+    try {
+      await this.GoTransferPage();
+      await this.FillTransferFrom();
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+    }
+  }
+
+  @Action
+  private async SetIEEnvironment() {
+    await transponder(ipcRenderer, WorkflowEnum.SET_IE_ENVIRONMENT);
     // if (!(await this.worker.setIEEnvironment())) {
     //   throw new Error("Set IE enviroment fail");
     // }
@@ -118,7 +138,6 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async UnsetWorker() {
     await this.CloseSelenium();
-    this.SET_WORKER({} as BankWorker);
     // commit("SET_WORKFLOW", null);
   }
   @Action
@@ -130,53 +149,55 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     }
   }
   @Action
-  async SetProxy() {
-     await transponder(ipcRenderer, WorkflowEnum.SET_PROXY);
+  private async SetProxy() {
+    await transponder(ipcRenderer, WorkflowEnum.SET_PROXY);
     // if (!(await this.worker.setProxy())) {
     //   throw new Error("Set proxy fail");
     // }
   }
   @Action
-  async UnsetProxy() {
+  private async UnsetProxy() {
     try {
-     await transponder(ipcRenderer, WorkflowEnum.UNSET_PROXY);
+      await transponder(ipcRenderer, WorkflowEnum.UNSET_PROXY);
       // await this.unsetProxy();
     } catch (error) {
       return LogModule.SetConsole({ message: error, level: "error" });
     }
   }
   @Action
-  async LaunchSelenium() {
-     await transponder(ipcRenderer, WorkflowEnum.LAUNCH_SELENIUM);
+  private async LaunchSelenium() {
+    await transponder(ipcRenderer, WorkflowEnum.LAUNCH_SELENIUM);
   }
   @Action
-  async CloseSelenium() {
+  private async CloseSelenium() {
     // if (this.worker) await this.worker.closeSelenium();
-     await transponder(ipcRenderer, WorkflowEnum.CLOSE_SELENIUM);
+    await transponder(ipcRenderer, WorkflowEnum.CLOSE_SELENIUM);
   }
   @Action
-  async InputSignInInformation() {
-     await transponder(ipcRenderer, WorkflowEnum.INPUT_SIGN_IN_INFORMATION);
+  private async InputSignInInformation() {
+    await transponder(ipcRenderer, WorkflowEnum.INPUT_SIGN_IN_INFORMATION);
     // await this.worker.inputSignInInformation();
   }
   @Action
-  async SubmitToSignIn() {
-     await transponder(ipcRenderer, WorkflowEnum.SUBMIT_TO_SIGN_IN);
+  private async SubmitToSignIn() {
+    await transponder(ipcRenderer, WorkflowEnum.SUBMIT_TO_SIGN_IN);
     // await this.worker.submitToSignIn();
   }
   @Action
-  async SendUSBKey() {
-     await transponder(ipcRenderer, WorkflowEnum.SEND_USB_KEY);
+  private async SendUSBKey() {
+    await transponder(ipcRenderer, WorkflowEnum.SEND_USB_KEY);
     // await this.worker.sendUSBKey();
   }
   @Action
   async CheckIfLoginSuccess() {
     const isManualLogin = AppModule.isManualLogin;
+    var isLoginSuccess = await transponder(
+      ipcRenderer,
+      WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
+      { isManualLogin }
+    );
 
-    if (
-      // await this.worker.checkIfLoginSuccess({ isManualLogin })
-     await transponder(ipcRenderer, WorkflowEnum.CHECK_IF_LOGIN_SUCCESS, { isManualLogin })
-    ) {
+    if (isLoginSuccess) {
       AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
       AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
       AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
@@ -185,16 +206,18 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
       AppModule.HANDLE_SHOWING_TAB("tasks");
 
       // If selected card is empty, means this is called by relogin
-      if (AccountModule.selected.id) {
-        // AccountModule.SetCurrentCard();
-      }
+      // if (AccountModule.selected.id) {
+      // AccountModule.SetCurrentCard();
+      // }
       await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
+      return true;
     }
+    return false;
   }
   @Action
-  async GetCookie() {
+  private async GetCookie() {
     try {
-     await transponder(ipcRenderer, WorkflowEnum.GET_COOKIE);
+      await transponder(ipcRenderer, WorkflowEnum.GET_COOKIE);
     } catch (error) {
       LogModule.SetLog({ message: error, level: "error" });
       throw error;
@@ -203,31 +226,31 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async GetBankBalance() {
     try {
-     await transponder(ipcRenderer, WorkflowEnum.GET_BALANCE);
+      await transponder(ipcRenderer, WorkflowEnum.GET_BALANCE);
     } catch (error) {
       LogModule.SetLog({ level: "error", message: "Fail to get balance" });
       LogModule.SetLog({ level: "error", message: error });
     }
   }
   @Action
-  async GoTransferPage() {
-     await transponder(ipcRenderer, WorkflowEnum.GO_TRANSFER_PAGE);
+  private async GoTransferPage() {
+    await transponder(ipcRenderer, WorkflowEnum.GO_TRANSFER_PAGE);
   }
   @Action
-  async FillTransferFrom() {
-     await transponder(ipcRenderer, WorkflowEnum.FILL_TRANSFER_INFORMATION);
+  private async FillTransferFrom() {
+    await transponder(ipcRenderer, WorkflowEnum.FILL_TRANSFER_INFORMATION);
   }
   @Action
-  async FillNote() {
-     await transponder(ipcRenderer, WorkflowEnum.FILL_NOTE);
+  private async FillNote() {
+    await transponder(ipcRenderer, WorkflowEnum.FILL_NOTE);
   }
   @Action
-  async ConfirmTransaction() {
-     await transponder(ipcRenderer, WorkflowEnum.CONFIRM_TRANSACTION);
+  private async ConfirmTransaction() {
+    await transponder(ipcRenderer, WorkflowEnum.CONFIRM_TRANSACTION);
   }
   @Action
-  async CheckIfSuccess() {
-     await transponder(ipcRenderer, WorkflowEnum.CHECK_IF_SUCCESS);
+  private async CheckIfSuccess() {
+    await transponder(ipcRenderer, WorkflowEnum.CHECK_IF_SUCCESS);
   }
   @Action
   async RunSelectedFlow(flowName: WorkflowEnum) {

@@ -281,37 +281,6 @@ export default class extends Mixins(TaskOperationMixin) {
     taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
     return taskDetail;
   }
-  private confirmExecution(taskID: number, executedTasks: any) {
-    var message = "Previous executed record:" + "<br>";
-    executedTasks.forEach((executedTask: any, index: number) => {
-      message +=
-        `${index + 1}.` +
-        `At <span style="font-weight:bold">${dayjs(
-          executedTask.createAt
-        ).format("HH:mm:ss")}</span>` +
-        `, Note: <span style="font-weight:bold">${executedTask.reason ||
-          executedTask.note}</span>` +
-        "<br>";
-    });
-    return MessageBox.prompt(
-      message +
-        '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
-      executedTasks.message,
-      {
-        inputPattern: /\S+/,
-        inputErrorMessage: "The reason can't be empty",
-        type: "warning",
-        dangerouslyUseHTMLString: true
-      }
-    )
-      .then(async({ value }: any) => {
-        // await this.recordExecutingTask(taskID, "leepay", value, this.name);
-        return true;
-      })
-      .catch(() => {
-        return false;
-      });
-  }
   private isMoreButtonDisabled(row: any) {
     if (row.status !== "I") return true;
     return false;
