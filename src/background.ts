@@ -1,10 +1,11 @@
 "use strict";
 
-import { app, protocol, BrowserWindow } from "electron";
+import { app, protocol, BrowserWindow, ipcMain } from "electron";
 import {
   createProtocol,
   installVueDevtools
 } from "vue-cli-plugin-electron-builder/lib";
+import { communicator } from "./electron-communicator";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -12,15 +13,20 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 let win: BrowserWindow | null;
 
 // Scheme must be registered before the app is ready
-protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { secure: true, standard: true } }]);
+protocol.registerSchemesAsPrivileged([
+  { scheme: "app", privileges: { secure: true, standard: true } }
+]);
 
 function createWindow() {
   // Create the browser window.
-  win = new BrowserWindow({ width: 800,
+  win = new BrowserWindow({
+    width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: true, webSecurity: false
-    } });
+      nodeIntegration: true,
+      webSecurity: false
+    }
+  });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -35,6 +41,7 @@ function createWindow() {
   win.on("closed", () => {
     win = null;
   });
+  communicator(ipcMain);
 }
 
 // Quit when all windows are closed.
@@ -57,7 +64,7 @@ app.on("activate", () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", async() => {
+app.on("ready", async () => {
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

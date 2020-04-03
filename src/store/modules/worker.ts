@@ -17,6 +17,8 @@ import { AppModule } from "./app";
 import TaskModel from "../../models/taskModel";
 import { TaskModule } from "./task";
 import TaskDetailModel from "../../models/taskDetailModel";
+import { transponder } from "../../electron-communicator";
+import { ipcRenderer } from "electron";
 
 export interface IWorkerState {
   worker: BankWorker;
@@ -63,10 +65,11 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   public async SetWorker(taskDetail: TaskDetailModel) {
     try {
-      console.log(taskDetail);
-      var bankWorker = new BankWorker(taskDetail);
-      console.log("worker factory", bankWorker);
-      this.SET_WORKER(bankWorker);
+      transponder(ipcRenderer, "set worker");
+      // console.log(taskDetail);
+      // var bankWorker = new BankWorker(taskDetail);
+      // console.log("worker factory", bankWorker);
+      // this.SET_WORKER(bankWorker);
       // commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);
     } catch (error) {
       console.log(error);
