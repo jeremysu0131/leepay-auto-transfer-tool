@@ -22,7 +22,8 @@ export default class BankWorker {
   constructor(taskDetail: TaskDetailModel) {
     this.taskStartAt = new Date();
     this.instance = WorkerAdapterFactory.createWorkerAdapter(
-      taskDetail.remitterAccount.code
+      // taskDetail.remitterAccount.code
+      "ABC"
     );
     this.taskDetail = taskDetail;
     // this.card = null;

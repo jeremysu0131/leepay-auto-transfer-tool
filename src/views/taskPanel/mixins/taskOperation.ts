@@ -27,7 +27,7 @@ export default class TaskOperationMixin extends Vue {
       //   }
       // } else {
       await WorkerModule.SetWorker(TaskModule.selectedDetail);
-      // await WorkerModule.RunManualLoginFlows();
+      await WorkerModule.RunManualLoginFlows();
       // }
     } catch (error) {
       LogModule.SetConsole({

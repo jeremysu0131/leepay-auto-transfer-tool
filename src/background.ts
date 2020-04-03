@@ -1,27 +1,99 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, ipcMain } from "electron";
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  ipcMain,
+  IpcMain,
+  Event
+} from "electron";
 import {
   createProtocol,
   installVueDevtools
 } from "vue-cli-plugin-electron-builder/lib";
-import { communicator } from "./electron-communicator";
+import TaskDetailModel from "./models/taskDetailModel";
+import BankWorker from "./workers/BankWorker";
+import { WorkflowEnum } from "./workers/utils/workflowHelper";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win: BrowserWindow | null;
+let worker: BankWorker;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } }
 ]);
 
+const workerCommunicator = (ipcMain: IpcMain) => {
+  ipcMain.on("asynchronous-message", async(event: Event, arg: any) => {
+    switch (arg) {
+      case "SET_WORKER":
+        worker = new BankWorker({} as TaskDetailModel);
+        break;
+      case WorkflowEnum.CLOSE_SELENIUM:
+        await worker.closeSelenium();
+        break;
+      case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
+        await worker.checkIfLoginSuccess({});
+        break;
+      case WorkflowEnum.CHECK_IF_SUCCESS:
+        await worker.checkIfSuccess();
+        break;
+      case WorkflowEnum.CONFIRM_TRANSACTION:
+        await worker.confirmTransaction();
+        break;
+      case WorkflowEnum.FILL_NOTE:
+        await worker.fillNote();
+        break;
+      case WorkflowEnum.FILL_TRANSFER_INFORMATION:
+        await worker.fillTransferFrom();
+        break;
+      case WorkflowEnum.GET_BALANCE:
+        await worker.getBalance();
+        break;
+      case WorkflowEnum.GET_COOKIE:
+        await worker.getCookie();
+        break;
+      case WorkflowEnum.GO_TRANSFER_PAGE:
+        await worker.goTransferPage();
+        break;
+      case WorkflowEnum.INPUT_SIGN_IN_INFORMATION:
+        await worker.inputSignInInformation();
+        break;
+      case WorkflowEnum.LAUNCH_SELENIUM:
+        await worker.launchSelenium();
+        break;
+      case WorkflowEnum.SEND_USB_KEY:
+        await worker.sendUSBKey();
+        break;
+      case WorkflowEnum.SET_IE_ENVIRONMENT:
+        await worker.setIEEnvironment();
+        break;
+      case WorkflowEnum.SET_PROXY:
+        await worker.setProxy();
+        break;
+      case WorkflowEnum.SUBMIT_TO_SIGN_IN:
+        await worker.submitToSignIn();
+        break;
+
+      default:
+        console.log("rund");
+        break;
+    }
+
+    event.sender.send("asynchronous-reply", "c reply");
+  });
+};
+
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
     width: 800,
     height: 600,
+    fullscreen: true,
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false
@@ -41,7 +113,7 @@ function createWindow() {
   win.on("closed", () => {
     win = null;
   });
-  communicator(ipcMain);
+  workerCommunicator(ipcMain);
 }
 
 // Quit when all windows are closed.
@@ -81,6 +153,7 @@ if (isDevelopment) {
   if (process.platform === "win32") {
     process.on("message", data => {
       if (data === "graceful-exit") {
+        worker.closeSelenium();
         app.quit();
       }
     });

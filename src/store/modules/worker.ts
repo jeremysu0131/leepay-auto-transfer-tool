@@ -66,10 +66,6 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   public async SetWorker(taskDetail: TaskDetailModel) {
     try {
       transponder(ipcRenderer, "SET_WORKER");
-      // console.log(taskDetail);
-      // console.log("worker factory", bankWorker);
-      // this.SET_WORKER(bankWorker);
-      // commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);
     } catch (error) {
       console.log(error);
     }
@@ -103,7 +99,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
     try {
       // await this.SetIEEnviroment();
-      await this.SetProxy();
+      // await this.SetProxy();
       await this.LaunchSelenium();
     } catch (error) {
       return LogModule.SetLog({ message: error, level: "error" });
@@ -148,7 +144,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Action
   async LaunchSelenium() {
-    await this.worker.launchSelenium();
+     await transponder(ipcRenderer, WorkflowEnum.LAUNCH_SELENIUM);
   }
   @Action
   async CloseSelenium() {
