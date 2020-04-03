@@ -2,6 +2,7 @@
   <div>
     <top-header />
     <task-panel />
+    <workflow-dialog />
   </div>
 </template>
 
@@ -14,16 +15,18 @@ import AccountPanel from "@/views/accountPanel/index.vue";
 import TaskPanel from "@/views/taskPanel/index.vue";
 import ResizeMixin from "./mixin/resize";
 import { TaskModule } from "../store/modules/task";
+import WorkflowDialog from "@/views/workflow/index.vue";
 
 @Component({
   name: "Layout",
   components: {
     TaskPanel,
-    TopHeader
+    TopHeader,
+    WorkflowDialog
   }
 })
 export default class extends mixins(ResizeMixin) {
-  private taskPanelLabel="Task";
+  private taskPanelLabel = "Task";
   get showingTab() {
     return AppModule.showingTab;
   }

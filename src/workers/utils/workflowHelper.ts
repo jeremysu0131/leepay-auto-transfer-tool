@@ -18,12 +18,12 @@ export enum WorkflowEnum {
   CONFIRM_TRANSACTION = "Confirm transaction",
   CHECK_IF_SUCCESS = "Check if transfer success"
 }
-export enum WorkflowStatusEnum {
-  PENDING = "pending",
-  RUNNING = "running",
-  SUCCESS = "success",
-  FAIL = "fail"
-}
+// export enum WorkflowStatusEnum {
+//   PENDING = "pending",
+//   RUNNING = "running",
+//   SUCCESS = "success",
+//   FAIL = "fail"
+// }
 
 /**
  * Get workflow of sign in

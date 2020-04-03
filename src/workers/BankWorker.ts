@@ -1,7 +1,7 @@
 import { screen } from "electron";
 import { Builder } from "selenium-webdriver";
 import { setProxy, unsetProxy, setIEEnvironment } from "./utils/regeditTool";
-import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
+import { WorkflowEnum } from "./utils/workflowHelper";
 import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 import { IWorkerAdapter } from "./IWorkerAdapter";
 import TaskDetailModel from "./models/taskDetailModel";

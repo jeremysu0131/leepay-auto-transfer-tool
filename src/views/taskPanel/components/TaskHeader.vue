@@ -73,12 +73,12 @@ export default class extends Mixins(TaskOperationMixin) {
     this.fetchInvervalID = setInterval(async() => {
       /// Start check if interval delay
       var nowTime = +dayjs() / 1000;
-      if (lastTime < nowTime - 2) {
-        LogModule.SetLog({
-          level: "error",
-          message: `Interval delay, last: ${lastTime}, now: ${nowTime}`
-        });
-      }
+      // if (lastTime < nowTime - 2) {
+      //   LogModule.SetLog({
+      //     level: "error",
+      //     message: `Interval delay, last: ${lastTime}, now: ${nowTime}`
+      //   });
+      // }
       lastTime = nowTime;
       /// End check if interval delay
 

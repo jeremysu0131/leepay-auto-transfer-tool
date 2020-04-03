@@ -70,6 +70,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   async RunAutoLoginFlows() {
     AppModule.HANDLE_TASK_AUTO_PROCESS(true);
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
+    this.SET_SIGN_IN_WORKFLOW(false);
     try {
       await this.SetIEEnvironment();
       await this.SetProxy();
@@ -94,6 +95,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async RunManualLoginFlows() {
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
+    this.SET_SIGN_IN_WORKFLOW(true);
     try {
       // await this.SetIEEnviroment();
       // await this.SetProxy();
