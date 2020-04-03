@@ -4,10 +4,9 @@ import { setProxy, unsetProxy, setIEEnvironment } from "./utils/regeditTool";
 import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
 import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 import { IWorkerAdapter } from "./IWorkerAdapter";
-import TaskDetailModel from "../models/taskDetailModel";
-import { Options } from "selenium-webdriver/ie";
+import TaskDetailModel from "./models/taskDetailModel";
 import logger from "./utils/logger";
-// var path = require("iedriver").path;
+import RemitterAccountModel from "../models/remitterAccountModel";
 
 /**
  * Bank Worker
@@ -16,17 +15,16 @@ import logger from "./utils/logger";
 export default class BankWorker {
   private taskStartAt: Date;
   private instance: IWorkerAdapter;
-  private card: any;
+  private remitterAccount:RemitterAccountModel;
   private taskDetail: TaskDetailModel;
 
-  constructor(taskDetail: TaskDetailModel) {
-    this.taskStartAt = new Date();
+  constructor(remitterAccount: RemitterAccountModel) {
     this.instance = WorkerAdapterFactory.createWorkerAdapter(
-      // taskDetail.remitterAccount.code
-      "ABC"
+      remitterAccount.code
     );
-    this.taskDetail = taskDetail;
-    // this.card = null;
+    this.taskStartAt = new Date();
+    this.remitterAccount = remitterAccount;
+    this.taskDetail = new TaskDetailModel();
   }
 
   async setIEEnvironment(): Promise<boolean> {
@@ -41,7 +39,7 @@ export default class BankWorker {
 
   async setProxy(): Promise<boolean> {
     try {
-      await setProxy(this.card.proxy);
+      await setProxy(this.remitterAccount.proxy);
 
       return true;
     } catch (error) {
@@ -86,18 +84,18 @@ export default class BankWorker {
 
       await this.instance.launchSelenium();
 
-      logger.log({ message: "Selenium launched", level: "info" });
+      logger.debug("Selenium launched");
+      return true;
     } catch (error) {
-      console.log(error);
-
-      throw error;
+      logger.error(error);
+      return false;
     }
   }
 
   async closeSelenium(): Promise<boolean> {
     if (this.instance.getDriver()) await this.instance.getDriver().quit();
-
     logger.log({ message: "Selenium closed", level: "info" });
+    return true;
   }
 
   async inputSignInInformation(): Promise<boolean> {
@@ -118,6 +116,7 @@ export default class BankWorker {
       await this.instance.submitToSignIn();
 
       logger.log({ message: "Bank Logged In", level: "info" });
+      return true;
     } catch (error) {
       logger.log({ level: "error", message: error.toString() });
       return false;
@@ -129,6 +128,7 @@ export default class BankWorker {
       await this.instance.sendUSBKey();
 
       logger.log({ message: "USB key sent", level: "info" });
+      return true;
     } catch (error) {
       logger.log({ level: "error", message: error.toString() });
       return false;
@@ -161,6 +161,7 @@ export default class BankWorker {
       // setCookieAndSession(await this.instance.getCookie());
 
       logger.log({ message: "Got cookie and session", level: "info" });
+      return true;
     } catch (error) {
       logger.log({ level: "error", message: error });
       return false;
@@ -177,6 +178,7 @@ export default class BankWorker {
         message: "Redirected to transfer page",
         level: "info"
       });
+      return true;
     } catch (error) {
       logger.log({ level: "error", message: error });
       return false;
@@ -192,6 +194,7 @@ export default class BankWorker {
       await this.instance.fillTransferForm();
 
       logger.log({ message: "Transfer form filled", level: "info" });
+      return true;
     } catch (error) {
       logger.log({ level: "error", message: error });
       return false;
@@ -203,6 +206,7 @@ export default class BankWorker {
       await this.instance.fillNote();
 
       logger.log({ message: "Note filled", level: "info" });
+      return true;
     } catch (error) {
       logger.log({ level: "error", message: error });
       return false;
@@ -215,6 +219,7 @@ export default class BankWorker {
       await this.instance.sendUsbPasswordToPerformTransaction();
 
       logger.log({ message: "Transaction confirmed", level: "info" });
+      return true;
     } catch (error) {
       logger.log({ level: "error", message: error });
       return false;
@@ -250,6 +255,7 @@ export default class BankWorker {
   async getBalance(): Promise<boolean> {
     await this.instance.getBalance();
     logger.log({ message: "Balance got", level: "info" });
+    return true;
   }
 }
 

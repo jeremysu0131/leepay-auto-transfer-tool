@@ -1,5 +1,5 @@
 import { WebDriver } from "selenium-webdriver";
-import TaskDetailModel from "../models/taskDetailModel";
+import TaskDetailModel from "./models/taskDetailModel";
 
 /**
  * 此介面僅提供銀行網頁互動
