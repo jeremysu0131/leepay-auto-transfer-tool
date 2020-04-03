@@ -1,4 +1,3 @@
-import { LogModule } from "../../store/modules/log";
 
 const { exec } = require("child_process");
 const cwd =
@@ -8,15 +7,14 @@ const cwd =
 
 export function setProxy(proxy: string) {
   // if (!proxy) return Promise.reject(new Error("Proxy is null"));
-
   // return new Promise((resolve, reject) => {
-    // var child = exec(
-    //   `BankWorkerTool.exe "REGITSTRY_TOOL" "SET_PROXY" "${proxy}:8800"`,
-    //   // "BankWorkerTool.exe \"REGITSTRY_TOOL\" \"SET_PROXY\" \"4.3.2.1:8800\"",
-    //   { shell: false, cwd }
-    // );
-    // child.on("error", (err: any) => reject(err));
-    // child.on("exit", () => resolve());
+  // var child = exec(
+  //   `BankWorkerTool.exe "REGITSTRY_TOOL" "SET_PROXY" "${proxy}:8800"`,
+  //   // "BankWorkerTool.exe \"REGITSTRY_TOOL\" \"SET_PROXY\" \"4.3.2.1:8800\"",
+  //   { shell: false, cwd }
+  // );
+  // child.on("error", (err: any) => reject(err));
+  // child.on("exit", () => resolve());
   // });
 }
 
@@ -28,7 +26,7 @@ export async function setIEEnvironment() {
   // await setIESecurityZones();
   // return true;
   // } catch (error) {
-  // LogModule.SetLog({ level: "error", message: error });
+  // logger.log({ level: "error", message: error });
   // return false;
   // }
 }
@@ -92,7 +90,7 @@ export async function setIEEnvironment() {
 //             new Error(
 //               `create key 'FEATURE_BFCACHE' failure - ${err.toString()}`
 //             )
-//           ); 
+//           );
 // }
 
 //         return regedit.putValue(
@@ -110,7 +108,7 @@ export async function setIEEnvironment() {
 //                 new Error(
 //                   `set 'FEATURE_BFCACHE' failure - ${putValueError.toString()}`
 //                 )
-//               ); 
+//               );
 // }
 //             return resolve();
 //           }

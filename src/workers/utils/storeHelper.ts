@@ -6,8 +6,8 @@
 //  * @param {('error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly')} object.level
 //  * @param {String} object.message
 //  */
-// export function LogModule.SetLog({ level, message }) {
-//   store.LogModule.SetLog( { level, message });
+// export function logger.log({ level, message }) {
+//   store.logger.log( { level, message });
 // }
 
 // export function setBankBalance(balance) {

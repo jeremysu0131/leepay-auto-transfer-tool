@@ -1,15 +1,25 @@
 import { asyncForEach } from "@/utils/asyncForEach";
 
 // eslint-disable-next-line no-unused-vars
-import { Locator, WebElementPromise, WebElementCondition, WebDriver } from "selenium-webdriver";
-import { LogModule } from "../../store/modules/log";
+import {
+  Locator,
+  WebElementPromise,
+  WebElementCondition,
+  WebDriver
+} from "selenium-webdriver";
+import logger from "./logger";
 
 /**
  * Execute JavaScript
  */
-export async function executeJavaScript(driver:WebDriver, name:string, script:string, delayMilliseconds = 1000) {
+export async function executeJavaScript(
+  driver: WebDriver,
+  name: string,
+  script: string,
+  delayMilliseconds = 1000
+) {
   try {
-    if (!name) throw new Error("You didn't set the name of this execute method");
+    if (!name) { throw new Error("You didn't set the name of this execute method"); }
     await driver.sleep(delayMilliseconds);
     await driver.executeScript(script);
   } catch (error) {
@@ -40,22 +50,25 @@ export async function executeJavaScript(driver:WebDriver, name:string, script:st
  */
 // TODO: To remove
 export async function sendKeys(
-  webElement:WebElementPromise,
+  webElement: WebElementPromise,
   { text = "", replaceRule = "", maxExecuteTimes = 3, ms = 100 },
   executedTimes = 1
 ) {
   try {
     if (!text) throw new Error("You didn't set the text to send");
 
-    await asyncForEach(text.split(""), async(char: string | number | Promise<string | number>) => {
-      await webElement.sendKeys(char);
-      await new Promise(resolve => setTimeout(resolve, ms));
-    });
+    await asyncForEach(
+      text.split(""),
+      async(char: string | number | Promise<string | number>) => {
+        await webElement.sendKeys(char);
+        await new Promise(resolve => setTimeout(resolve, ms));
+      }
+    );
 
     // Check if input correctly
     const inputedValue = await getElementValue(webElement);
     if (text !== inputedValue.replace(replaceRule, "")) {
-      LogModule.SetLog({
+      logger.log({
         level: "warn",
         message: `System has try ${executedTimes} times to send keys but fail`
       });
@@ -90,16 +103,28 @@ export async function sendKeys(
  * 4. 自動增加延遲輸入時間（例：若第一次輸入文字間隔為 100 ms，但檢查後發現輸入錯誤，則第二次會增加延遲的時間至 100ms * 執行次數），透過這樣的方式來增加輸入成功率
  */
 export async function sendKeysV2(
-  driver:WebDriver,
-  webElement:WebElementPromise,
-  { text = "", replaceRule, maxExecuteTimes = 3, ms = 100 }:{text:string, replaceRule?:RegExp, maxExecuteTimes?:number, ms?:number}
+  driver: WebDriver,
+  webElement: WebElementPromise,
+  {
+    text = "",
+    replaceRule,
+    maxExecuteTimes = 3,
+    ms = 100
+  }: {
+    text: string;
+    replaceRule?: RegExp;
+    maxExecuteTimes?: number;
+    ms?: number;
+  }
 ) {
   if (!text) throw new Error("You didn't set the text to send");
 
   while (maxExecuteTimes >= 0) {
     try {
       if (maxExecuteTimes === 0) {
-        throw new Error(`System has not able to send keys correctly, retrying: ${maxExecuteTimes}`);
+        throw new Error(
+          `System has not able to send keys correctly, retrying: ${maxExecuteTimes}`
+        );
       }
 
       await waitUntilElementFocused(driver, webElement);
@@ -107,7 +132,7 @@ export async function sendKeysV2(
       if (await checkInputCorrectly(webElement, text, replaceRule)) break;
 
       await webElement.clear();
-      LogModule.SetLog({
+      logger.log({
         level: "warn",
         message: `System try to send keys but fail retrying: ${maxExecuteTimes}`
       });
@@ -120,7 +145,11 @@ export async function sendKeysV2(
 /**
  * Wait until element focused
  */
-async function waitUntilElementFocused(driver:WebDriver, webElement:WebElementPromise, retryTimes = 3) {
+async function waitUntilElementFocused(
+  driver: WebDriver,
+  webElement: WebElementPromise,
+  retryTimes = 3
+) {
   while (retryTimes >= 0) {
     try {
       if (retryTimes === 0) throw new Error("Element can't be focus");
@@ -136,8 +165,11 @@ async function waitUntilElementFocused(driver:WebDriver, webElement:WebElementPr
 
       if (toFocusElement === activedElement) break;
     } catch (error) {
-      if (error.name === "NoSuchElementError" || error.name === "TimeoutError") {
-        LogModule.SetLog({ level: "warn", message: error });
+      if (
+        error.name === "NoSuchElementError" ||
+        error.name === "TimeoutError"
+      ) {
+        logger.log({ level: "warn", message: error });
       }
       throw error;
     } finally {
@@ -152,17 +184,28 @@ async function waitUntilElementFocused(driver:WebDriver, webElement:WebElementPr
  * @param {string} text
  * @param {number} ms
  */
-async function sendText(webElement:WebElementPromise, text:string, ms:number) {
-  await asyncForEach(text.split(""), async(char: string | number | Promise<string | number>) => {
-    await webElement.sendKeys(char);
-    await new Promise(resolve => setTimeout(resolve, ms));
-  });
+async function sendText(
+  webElement: WebElementPromise,
+  text: string,
+  ms: number
+) {
+  await asyncForEach(
+    text.split(""),
+    async(char: string | number | Promise<string | number>) => {
+      await webElement.sendKeys(char);
+      await new Promise(resolve => setTimeout(resolve, ms));
+    }
+  );
 }
 
 /**
  * Check if input correctly
  */
-async function checkInputCorrectly(webElement:WebElementPromise, text:string, replaceRule?:RegExp):Promise<boolean> {
+async function checkInputCorrectly(
+  webElement: WebElementPromise,
+  text: string,
+  replaceRule?: RegExp
+): Promise<boolean> {
   const inputedValue = await getElementValue(webElement);
   if (text === inputedValue.replace(replaceRule || "", "")) return true;
   return false;
@@ -171,7 +214,10 @@ async function checkInputCorrectly(webElement:WebElementPromise, text:string, re
  * wait focus
  */
 // TODO: To remove
-export async function waitElementFocused(driver:WebDriver, webElement:WebElementPromise) {
+export async function waitElementFocused(
+  driver: WebDriver,
+  webElement: WebElementPromise
+) {
   var retryTime = 3;
   while (retryTime >= 0) {
     try {
@@ -190,27 +236,35 @@ export async function waitElementFocused(driver:WebDriver, webElement:WebElement
       }
       retryTime--;
     } catch (error) {
-      if (error.name === "NoSuchElementError" || error.name === "TimeoutError") {
-        LogModule.SetLog({ level: "warn", message: error });
+      if (
+        error.name === "NoSuchElementError" ||
+        error.name === "TimeoutError"
+      ) {
+        logger.log({ level: "warn", message: error });
       }
       throw error;
     }
   }
 }
 
-export async function getElementValue(webElement:WebElementPromise):Promise<string> {
+export async function getElementValue(
+  webElement: WebElementPromise
+): Promise<string> {
   var value = await webElement.getAttribute("value");
   return value;
 }
 
-export async function waitPageLoad(driver:WebDriver) {
+export async function waitPageLoad(driver: WebDriver) {
   await driver.wait(async() => {
     const readyState = await driver.executeScript("return document.readyState");
     return readyState === "complete";
   });
 }
 
-export async function waitUtilGetText(driver:WebDriver, waitingType:WebElementCondition) {
+export async function waitUtilGetText(
+  driver: WebDriver,
+  waitingType: WebElementCondition
+) {
   var text;
   while (!text) {
     text = await driver.wait(waitingType).getText();
@@ -222,7 +276,7 @@ export async function waitUtilGetText(driver:WebDriver, waitingType:WebElementCo
  *
  * @param {WebDriver} driver
  */
-export async function isElementExist(driver:WebDriver, locator:Locator) {
+export async function isElementExist(driver: WebDriver, locator: Locator) {
   var elements = await driver.findElements(locator);
   if (elements) {
     return true;

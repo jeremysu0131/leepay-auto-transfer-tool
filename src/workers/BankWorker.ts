@@ -2,13 +2,11 @@ import { screen } from "electron";
 import { Builder } from "selenium-webdriver";
 import { setProxy, unsetProxy, setIEEnvironment } from "./utils/regeditTool";
 import { WorkflowEnum, WorkflowStatusEnum } from "./utils/workflowHelper";
-import { LogModule } from "../store/modules/log";
-import { WorkerModule } from "../store/modules/worker";
 import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 import { IWorkerAdapter } from "./IWorkerAdapter";
 import TaskDetailModel from "../models/taskDetailModel";
-import { AccountModule } from "../store/modules/account";
 import { Options } from "selenium-webdriver/ie";
+import logger from "./utils/logger";
 // var path = require("iedriver").path;
 
 /**
@@ -27,15 +25,10 @@ export default class BankWorker {
       taskDetail.remitterAccount.code
     );
     this.taskDetail = taskDetail;
-    this.card = AccountModule.selectedDetail;
+    // this.card = null;
   }
 
   async setIEEnvironment() {
-    WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.SET_IE_ENVIRONMENT,
-      status: WorkflowStatusEnum.RUNNING
-    });
-
     var isSet = await setIEEnvironment();
 
     // WorkerModule.UPDATE_FLOW_STATUS({
@@ -47,40 +40,23 @@ export default class BankWorker {
 
   async setProxy() {
     try {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SET_PROXY,
-        status: WorkflowStatusEnum.RUNNING
-      });
-
       await setProxy(this.card.proxy);
-
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SET_PROXY,
-        status: WorkflowStatusEnum.SUCCESS
-      });
 
       return true;
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SET_PROXY,
-        status: WorkflowStatusEnum.FAIL
-      });
-      LogModule.SetLog({ message: error, level: "error" });
+      logger.log({ message: error, level: "error" });
       return false;
     }
   }
 
   async unsetProxy() {
     await unsetProxy();
-    LogModule.SetLog({ message: "Proxy unset", level: "info" });
+    logger.log({ message: "Proxy unset", level: "info" });
   }
 
   async launchSelenium() {
     try {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.LAUNCH_SELENIUM,
-        status: WorkflowStatusEnum.RUNNING
-      });
+      console.log("call");
 
       const driver = await new Builder()
         .withCapabilities({
@@ -107,17 +83,10 @@ export default class BankWorker {
 
       await this.instance.launchSelenium();
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.LAUNCH_SELENIUM,
-        status: WorkflowStatusEnum.SUCCESS
-      });
-      LogModule.SetLog({ message: "Selenium launched", level: "info" });
+      logger.log({ message: "Selenium launched", level: "info" });
     } catch (error) {
       console.log(error);
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.LAUNCH_SELENIUM,
-        status: WorkflowStatusEnum.FAIL
-      });
+
       throw error;
     }
   }
@@ -125,75 +94,41 @@ export default class BankWorker {
   async closeSelenium() {
     if (this.instance.getDriver()) await this.instance.getDriver().quit();
 
-    LogModule.SetLog({ message: "Selenium closed", level: "info" });
+    logger.log({ message: "Selenium closed", level: "info" });
   }
 
-  async inputSignInInformation(): Promise<void> {
+  async inputSignInInformation(): Promise<boolean> {
     try {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION,
-        status: WorkflowStatusEnum.RUNNING
-      });
       // this.instance.card = useCurrentAccount
       //   ? getCurrentCardDetail()
       //   : getSelectedCardDetail();
       await this.instance.inputSignInInformation();
-
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION,
-        status: WorkflowStatusEnum.SUCCESS
-      });
+      return true;
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION,
-        status: WorkflowStatusEnum.FAIL
-      });
-      throw error;
+      logger.log({ level: "error", message: error.toString() });
+      return false;
     }
   }
 
   async submitToSignIn() {
     try {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SUBMIT_TO_SIGN_IN,
-        status: WorkflowStatusEnum.RUNNING
-      });
       await this.instance.submitToSignIn();
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SUBMIT_TO_SIGN_IN,
-        status: WorkflowStatusEnum.SUCCESS
-      });
-      LogModule.SetLog({ message: "Bank Logged In", level: "info" });
+      logger.log({ message: "Bank Logged In", level: "info" });
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SUBMIT_TO_SIGN_IN,
-        status: WorkflowStatusEnum.FAIL
-      });
-      throw error;
+      logger.log({ level: "error", message: error.toString() });
+      return false;
     }
   }
 
   async sendUSBKey() {
     try {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SEND_USB_KEY,
-        status: WorkflowStatusEnum.RUNNING
-      });
-
       await this.instance.sendUSBKey();
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SEND_USB_KEY,
-        status: WorkflowStatusEnum.SUCCESS
-      });
-      LogModule.SetLog({ message: "USB key sent", level: "info" });
+      logger.log({ message: "USB key sent", level: "info" });
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.SEND_USB_KEY,
-        status: WorkflowStatusEnum.FAIL
-      });
-      throw error;
+      logger.log({ level: "error", message: error.toString() });
+      return false;
     }
   }
 
@@ -205,86 +140,47 @@ export default class BankWorker {
   async checkIfLoginSuccess(globalState: any): Promise<boolean> {
     const workflowName = WorkflowEnum.CHECK_IF_LOGIN_SUCCESS;
     try {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: workflowName,
-        status: WorkflowStatusEnum.RUNNING
-      });
-
       const isLoginSuccess = await this.instance.checkIfLoginSuccess(
         globalState
       );
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: workflowName,
-        status: isLoginSuccess
-          ? WorkflowStatusEnum.SUCCESS
-          : WorkflowStatusEnum.FAIL
-      });
-
       return isLoginSuccess;
     } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
+      logger.log({ level: "error", message: error });
       return false;
     }
   }
 
   async getCookie() {
     try {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.GET_COOKIE,
-        status: WorkflowStatusEnum.RUNNING
-      });
-
       //   store.commit("SET_COOKIE", data.cookie);
       //   store.commit("SET_SESSION", data.session);
       // setCookieAndSession(await this.instance.getCookie());
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.GET_COOKIE,
-        status: WorkflowStatusEnum.SUCCESS
-      });
-
-      LogModule.SetLog({ message: "Got cookie and session", level: "info" });
+      logger.log({ message: "Got cookie and session", level: "info" });
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.GET_COOKIE,
-        status: WorkflowStatusEnum.FAIL
-      });
-      throw error;
+      logger.log({ level: "error", message: error });
+      return false;
     }
   }
 
   async goTransferPage() {
     this.taskStartAt = new Date();
-    WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.GO_TRANSFER_PAGE,
-      status: WorkflowStatusEnum.RUNNING
-    });
+
     try {
       await this.instance.goTransferPage();
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.GO_TRANSFER_PAGE,
-        status: WorkflowStatusEnum.SUCCESS
-      });
-      LogModule.SetLog({
+      logger.log({
         message: "Redirected to transfer page",
         level: "info"
       });
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.GO_TRANSFER_PAGE,
-        status: WorkflowStatusEnum.FAIL
-      });
-      throw error;
+      logger.log({ level: "error", message: error });
+      return false;
     }
   }
 
   async fillTransferFrom() {
-    WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.FILL_TRANSFER_INFORMATION,
-      status: WorkflowStatusEnum.RUNNING
-    });
     try {
       if (this.taskDetail === null) {
         throw new Error("You didn't select the task");
@@ -292,88 +188,50 @@ export default class BankWorker {
 
       await this.instance.fillTransferForm();
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.FILL_TRANSFER_INFORMATION,
-        status: WorkflowStatusEnum.SUCCESS
-      });
-      LogModule.SetLog({ message: "Transfer form filled", level: "info" });
+      logger.log({ message: "Transfer form filled", level: "info" });
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.FILL_TRANSFER_INFORMATION,
-        status: WorkflowStatusEnum.FAIL
-      });
-      throw error;
+      logger.log({ level: "error", message: error });
+      return false;
     }
   }
 
   async fillNote() {
-    WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.FILL_NOTE,
-      status: WorkflowStatusEnum.RUNNING
-    });
     try {
       await this.instance.fillNote();
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.FILL_NOTE,
-        status: WorkflowStatusEnum.SUCCESS
-      });
-      LogModule.SetLog({ message: "Note filled", level: "info" });
+      logger.log({ message: "Note filled", level: "info" });
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.FILL_NOTE,
-        status: WorkflowStatusEnum.FAIL
-      });
-      throw error;
+      logger.log({ level: "error", message: error });
+      return false;
     }
   }
   async confirmTransaction() {
-    WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.CONFIRM_TRANSACTION,
-      status: WorkflowStatusEnum.RUNNING
-    });
     try {
       await this.instance.checkBankReceivedTransferInformation();
       await this.instance.sendPasswordToPerformTransaction();
       await this.instance.sendUsbPasswordToPerformTransaction();
 
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.CONFIRM_TRANSACTION,
-        status: WorkflowStatusEnum.SUCCESS
-      });
-      LogModule.SetLog({ message: "Transaction confirmed", level: "info" });
+      logger.log({ message: "Transaction confirmed", level: "info" });
     } catch (error) {
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.CONFIRM_TRANSACTION,
-        status: WorkflowStatusEnum.FAIL
-      });
-      throw error;
+      logger.log({ level: "error", message: error });
+      return false;
     }
   }
 
   async checkIfSuccess() {
-    WorkerModule.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.CHECK_IF_SUCCESS,
-      status: WorkflowStatusEnum.RUNNING
-    });
     try {
       var isCheckSuccess = await this.instance.checkIfTransactionSuccess();
       calculateTransferTime(this.taskStartAt);
-      WorkerModule.UPDATE_FLOW_STATUS({
-        name: WorkflowEnum.CHECK_IF_SUCCESS,
-        status: isCheckSuccess
-          ? WorkflowStatusEnum.SUCCESS
-          : WorkflowStatusEnum.FAIL
-      });
+
       if (isCheckSuccess) {
         // await markTaskSuccess(this.instance.charge);
-        LogModule.SetLog({
+        logger.log({
           message: "Transfer success, you can start next transaction",
           level: "info"
         });
         return true;
       } else {
-        LogModule.SetLog({
+        logger.log({
           level: "warn",
           message:
             "System can't check the transfer result, please check it manually"
@@ -381,14 +239,14 @@ export default class BankWorker {
         return false;
       }
     } catch (error) {
-      LogModule.SetLog({ message: error, level: "error" });
+      logger.log({ message: error, level: "error" });
       return false;
     }
   }
 
   async getBalance() {
     await this.instance.getBalance();
-    LogModule.SetLog({ message: "Balance got", level: "info" });
+    logger.log({ message: "Balance got", level: "info" });
   }
 }
 
@@ -399,5 +257,5 @@ export default class BankWorker {
 function calculateTransferTime(taskStartAt: Date) {
   // var now = new Date().getTime();
   // var executedTime = parseInt((now - taskStartAt) / 1000).toFixed(0);
-  // LogModule.SetLog({ level: "info", message: `Task executed for ${executedTime} seconds` });
+  // logger.log({ level: "info", message: `Task executed for ${executedTime} seconds` });
 }

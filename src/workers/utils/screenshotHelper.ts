@@ -1,20 +1,19 @@
 import dayjs from "dayjs";
-import { LogModule } from "../../store/modules/log";
+import logger from "./logger";
+import { screen, desktopCapturer } from "electron";
 
 const electron = require("electron");
-const desktopCapturer = electron.desktopCapturer;
-const electronScreen = electron.screen;
 
 const fs = require("fs");
 const path = require("path");
 const folderName = "screenshots";
 const folderPath = path.join(".", folderName);
 
-function getScreenSize() {
-  return electronScreen.getPrimaryDisplay().workAreaSize;
-}
+const getScreenSize = () => {
+  return screen.getPrimaryDisplay().workAreaSize;
+};
 
-function capture(filename: string) {
+const capture = (filename: string) => {
   if (!fs.existsSync(folderPath)) {
     fs.mkdirSync(folderPath);
   }
@@ -22,7 +21,7 @@ function capture(filename: string) {
   desktopCapturer.getSources(
     { types: ["screen"], thumbnailSize: getScreenSize() },
     (error, sources) => {
-      if (error)LogModule.SetLog({ level: "error", message: error.toString() });
+      if (error) logger.log({ level: "error", message: error.toString() });
 
       sources.forEach(function(source) {
         if (source.name === "Entire screen" || source.name === "Screen 1") {
@@ -30,14 +29,14 @@ function capture(filename: string) {
             `${folderPath}/${dayjs().format("YYYYMMDDHHmmss")}-${filename}.png`,
             source.thumbnail.toPNG(),
             (error: { toString: () => any }) => {
-              if (error) LogModule.SetLog({ level: "error", message: error.toString() });
+              if (error) { logger.log({ level: "error", message: error.toString() }); }
             }
           );
         }
       });
     }
   );
-}
+};
 
 /**
  * 查询保存时间超过指定天的文件
@@ -45,7 +44,7 @@ function capture(filename: string) {
  * @param {number} day
  */
 // TODO: Test it
-function clearOldScreenshots(folderPath: any, day = 7) {
+const clearOldScreenshots = (folderPath: any, day = 7) => {
   const result: never[] = [];
   const diffTime = day * 24 * 60 * 60 * 1000;
   const files = fs.readdirSync(folderPath);
@@ -58,6 +57,6 @@ function clearOldScreenshots(folderPath: any, day = 7) {
     }
   });
   return result;
-}
+};
 
 export { capture, clearOldScreenshots };

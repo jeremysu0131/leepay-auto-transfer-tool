@@ -10,7 +10,7 @@ export interface IWorkerAdapter {
   // closeSelenium(): Promise<void>
 
   getDriver(): WebDriver;
-  setDriver(driver:WebDriver): void;
+  setDriver(driver: WebDriver): void;
 
   /**
    * 進入銀行登入頁面
@@ -117,5 +117,5 @@ export interface IWorkerAdapter {
   /**
    * 取得餘額
    */
-  getBalance(): Promise<void>;
+  getBalance(): Promise<number>;
 }

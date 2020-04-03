@@ -65,9 +65,8 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   public async SetWorker(taskDetail: TaskDetailModel) {
     try {
-      transponder(ipcRenderer, "set worker");
+      transponder(ipcRenderer, "SET_WORKER");
       // console.log(taskDetail);
-      // var bankWorker = new BankWorker(taskDetail);
       // console.log("worker factory", bankWorker);
       // this.SET_WORKER(bankWorker);
       // commit("SET_WORKFLOW", getters.card.selectedDetail.accountCode);

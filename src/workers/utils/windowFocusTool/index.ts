@@ -1,5 +1,5 @@
 import { execSync } from "child_process";
-import { LogModule } from "../../../store/modules/log";
+import logger from "../logger";
 
 export function focusAndCheckIE() {
   run();
@@ -15,6 +15,6 @@ function run() {
           : "windowFocusTool"
     });
   } catch (error) {
-    return LogModule.SetLog({ level: "error", message: error });
+     logger.log({ level: "error", message: error });
   }
 }
