@@ -14,11 +14,10 @@ import {
 } from "../../workers/utils/workflowHelper";
 import { LogModule } from "./log";
 import { AppModule } from "./app";
-import TaskModel from "../../models/taskModel";
 import { TaskModule } from "./task";
-import TaskDetailModel from "../../models/taskDetailModel";
 import { transponder } from "../../electron-communicator";
 import { ipcRenderer } from "electron";
+import TaskDetailModel from "../../workers/models/taskDetailModel";
 
 export interface IWorkerState {
   worker: BankWorker;

@@ -6,7 +6,7 @@ import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 import { IWorkerAdapter } from "./IWorkerAdapter";
 import TaskDetailModel from "./models/taskDetailModel";
 import logger from "./utils/logger";
-import RemitterAccountModel from "../models/remitterAccountModel";
+import RemitterAccountModel from "./models/remitterAccountModel";
 
 /**
  * Bank Worker

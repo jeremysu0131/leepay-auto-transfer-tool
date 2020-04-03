@@ -15,8 +15,9 @@ import * as ScreenshotHelper from "../utils/screenshotHelper";
 import * as WindowFocusTool from "../utils/windowFocusTool";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import dayjs, { Dayjs } from "dayjs";
-import TaskDetailModel from "../../models/taskDetailModel";
 import logger from "../utils/logger";
+import TaskDetailModel from "../models/taskDetailModel";
+import RemitterAccountModel from "../models/remitterAccountModel";
 
 /**
  * ABC 銀行 Woker Adapter
@@ -26,6 +27,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   private bankUrl: string;
   // private card: any;
   private task: TaskDetailModel;
+  private remitterAccount:RemitterAccountModel;
   private charge: string;
   private transactionTime: Dayjs;
   private bankMappingList: any;
@@ -34,6 +36,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     this.driver = {} as WebDriver;
     this.bankUrl = "https://perbank.abchina.com/EbankSite/startup.do";
     // this.card = {};
+    this.remitterAccount = new RemitterAccountModel();
     this.task = {} as TaskDetailModel;
     this.charge = "";
     this.transactionTime = dayjs();
@@ -139,9 +142,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     );
   }
   async inputPassword() {
-    if (this.task.remitterAccount.loginPassword) {
+    if (this.remitterAccount.loginPassword) {
       WindowFocusTool.focusAndCheckIE();
-      await KeySender.sendText(this.task.remitterAccount.loginPassword, 3 * 1000, 250);
+      await KeySender.sendText(this.remitterAccount.loginPassword, 3 * 1000, 250);
     } else {
       throw new Error("Account password is null");
     }
@@ -465,7 +468,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           "Focus password box",
           "document.getElementById('agreeBtn').click();"
         );
-        await KeySender.sendText(this.card.queryPassword);
+        await KeySender.sendText(this.remitterAccount.usbPassword);
         await KeySender.sendKey(KeySender.KeyEnum.RETURN, 1000);
 
         var passwordMessage = await this.driver
@@ -535,7 +538,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
    */
   // FIXME: 有時不需要輸入這個欄位, 可以增加一個判斷是否已經到轉帳成功頁面
   async sendUSBPasswordForTransfer() {
-    await KeySender.sendText(this.card.usbPassword, 3 * 3000);
+    await KeySender.sendText(this.remitterAccount.usbPassword, 3 * 3000);
     await KeySender.sendKey(KeySender.KeyEnum.RETURN);
     logger.log({
       level: "info",
@@ -552,7 +555,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         }
 
         await this.driver.sleep(3 * 1000);
-        UsbTrigger.run(this.card.accountCode);
+        UsbTrigger.run(this.remitterAccount.code);
         await this.driver.sleep(3 * 1000);
         // TODO: wait if page load
         // this wait 10 sec it because we need to wait the success page

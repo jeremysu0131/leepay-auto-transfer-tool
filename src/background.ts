@@ -12,10 +12,10 @@ import {
   createProtocol,
   installVueDevtools
 } from "vue-cli-plugin-electron-builder/lib";
-import TaskDetailModel from "./models/taskDetailModel";
 import BankWorker from "./workers/BankWorker";
 import { WorkflowEnum } from "./workers/utils/workflowHelper";
 import logger from "./workers/utils/logger";
+import RemitterAccountModel from "./workers/models/remitterAccountModel";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -37,7 +37,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
         switch (flowName) {
           case WorkflowEnum.SET_WORKER:
             if (worker) worker.closeSelenium();
-            worker = new BankWorker(flowArgs as TaskDetailModel);
+            worker = new BankWorker(flowArgs as RemitterAccountModel);
             return true;
           case WorkflowEnum.CLOSE_SELENIUM:
             return resolve(await worker.closeSelenium());

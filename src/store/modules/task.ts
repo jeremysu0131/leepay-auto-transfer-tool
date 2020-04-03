@@ -12,7 +12,7 @@ import { asyncForEach } from "@/utils/asyncForEach";
 import { AppModule } from "./app";
 import TaskModel from "../../models/taskModel";
 import { LogModule } from "./log";
-import TaskDetailModel from "../../models/taskDetailModel";
+import TaskDetailModel from "@/models/taskDetailModel";
 
 export interface ITaskState {
   list: TaskModel[];
@@ -43,7 +43,7 @@ class Task extends VuexModule implements ITaskState {
     this.selectedDetail = taskDetail;
   }
   @Mutation
-  // This for intergrate with weird api of leepay
+  // This for intergrade with weird api of leepay
   public SET_DATA_FOR_API(data: object) {
     this.dataForAPI = data;
   }
@@ -64,8 +64,8 @@ class Task extends VuexModule implements ITaskState {
           tasks.push({
             id: task.id,
             amount: task.field5,
-            asignee: task.asignee,
-            asigneeId: task.asigneeId,
+            assignee: task.asignee,
+            assigneeId: task.asigneeId,
             assignedAt: task.asigneeAt,
             bank: {
               id: 0,
@@ -117,7 +117,8 @@ class Task extends VuexModule implements ITaskState {
           loginName: data.companyAccountLoginName,
           loginPassword: data.loginPassword,
           code: data.companyBankAccountCode,
-          usbPassword: data.usbPassword
+          usbPassword: data.usbPassword,
+          proxy: ""
         },
         payeeAccount: {
           bank: {

@@ -250,8 +250,8 @@ export default class extends Mixins(TaskOperationMixin) {
     return "";
   }
   private async lockTask(task: TaskModel) {
-    console.log(task.asigneeId, UserModule.id);
-    if (task.asigneeId !== UserModule.id) {
+    console.log(task.assigneeId, UserModule.id);
+    if (task.assigneeId !== UserModule.id) {
       if (!(await TaskModule.Lock(task.id))) {
         return LogModule.SetConsole({
           // title: "Automation Stopped",

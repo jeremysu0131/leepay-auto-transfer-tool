@@ -4,8 +4,8 @@ import BankModel from "./bankModel";
 export default class TaskModel {
   id = 0;
   amount = 0;
-  asignee = "";
-  asigneeId = 0;
+  assignee = "";
+  assigneeId = 0;
   assignedAt = Date;
   bank=new BankModel();
   transferFee = 0;

@@ -1,6 +1,5 @@
 import { IpcMain, Event, IpcRenderer } from "electron";
 import BankWorker from "./workers/BankWorker";
-import TaskDetailModel from "./models/taskDetailModel";
 
 //  const communicator = (ipcMain: IpcMain) => {
 //   ipcMain.on("asynchronous-message", async(event: Event, arg: any) => {
