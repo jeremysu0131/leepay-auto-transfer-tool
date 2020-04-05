@@ -7,7 +7,6 @@ import {
 } from "vuex-module-decorators";
 import store from "@/store";
 import * as TaskApi from "@/api/task";
-import { selectTaskStatus } from "@/utils/persistentState";
 import { asyncForEach } from "@/utils/asyncForEach";
 import { AppModule } from "./app";
 import TaskModel from "../../models/taskModel";
