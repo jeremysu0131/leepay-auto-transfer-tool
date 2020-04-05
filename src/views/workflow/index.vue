@@ -41,7 +41,7 @@ import WorkflowStatusEnum from "@/models/WorkflowStatusEnum";
   }
 })
 export default class extends Vue {
-  dialogVisible = true;
+  dialogVisible = false;
 
   get signInWorkflow() {
     return WorkerModule.signInWorkflow;

@@ -11,8 +11,7 @@ export default class TaskOperationMixin extends Vue {
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
   public async startTask() {
-    this.loginToBankWebsite();
-    this.executeTransferTask();
+  if (await this.loginToBankWebsite()) await this.executeTransferTask();
   }
   private async loginToBankWebsite() {
     try {
@@ -28,15 +27,15 @@ export default class TaskOperationMixin extends Vue {
         if (isProcessSuccess) {
           this.$store.commit("HANDLE_TASK_PROCESSING", false);
         } else {
-          new Audio(require("@/assets/sounds/alarm.mp3")).play();
           this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
         }
+        return isProcessSuccess;
       } else {
         await WorkerModule.RunManualLoginFlows();
       }
     } catch (error) {
       LogModule.SetConsole({ message: error.message, level: "error" });
-      throw error;
+      return false;
     }
   }
   private async executeTransferTask() {

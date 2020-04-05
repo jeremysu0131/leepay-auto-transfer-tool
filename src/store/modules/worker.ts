@@ -152,10 +152,13 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Action
   private async SetProxy() {
-    await transponder(ipcRenderer, WorkflowEnum.SET_PROXY);
-    // if (!(await this.worker.setProxy())) {
-    //   throw new Error("Set proxy fail");
-    // }
+      var { isFlowExecutedSuccess, message } = await transponder(
+        ipcRenderer,
+        WorkflowEnum.SET_PROXY
+      );
+      if (!isFlowExecutedSuccess) {
+        throw new Error("Set proxy fail");
+      }
   }
   @Action
   private async UnsetProxy() {

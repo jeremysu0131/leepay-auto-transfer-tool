@@ -34,50 +34,58 @@ const workerCommunicator = (ipcMain: IpcMain) => {
     async(event: Event, flowName: any, flowArgs: any) => {
       let flowExecutedResult = false;
       logger.debug(flowName);
-      // eslint-disable-next-line no-async-promise-executor
-      await new Promise(async(resolve, reject) => {
-        switch (flowName) {
-          case WorkflowEnum.SET_WORKER:
-            if (worker) worker.closeSelenium();
-            worker = new BankWorker(flowArgs as RemitterAccountModel);
-            return true;
-          case WorkflowEnum.CLOSE_SELENIUM:
-            return resolve(await worker.closeSelenium());
-          case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
-            return resolve(await worker.checkIfLoginSuccess(flowArgs));
-          case WorkflowEnum.CHECK_IF_SUCCESS:
-            return resolve(await worker.checkIfSuccess());
-          case WorkflowEnum.CONFIRM_TRANSACTION:
-            return resolve(await worker.confirmTransaction());
-          case WorkflowEnum.FILL_NOTE:
-            return resolve(await worker.fillNote());
-          case WorkflowEnum.FILL_TRANSFER_INFORMATION:
-            return resolve(await worker.fillTransferFrom());
-          case WorkflowEnum.GET_BALANCE:
-            return resolve(await worker.getBalance());
-          case WorkflowEnum.GET_COOKIE:
-            return resolve(await worker.getCookie());
-          case WorkflowEnum.GO_TRANSFER_PAGE:
-            return resolve(await worker.goTransferPage());
-          case WorkflowEnum.INPUT_SIGN_IN_INFORMATION:
-            return resolve(await worker.inputSignInInformation());
-          case WorkflowEnum.LAUNCH_SELENIUM:
-            return resolve(await worker.launchSelenium());
-          case WorkflowEnum.SEND_USB_KEY:
-            return resolve(await worker.sendUSBKey());
-          case WorkflowEnum.SET_IE_ENVIRONMENT:
-            return resolve(worker.setIEEnvironment());
-          case WorkflowEnum.SET_PROXY:
-            return resolve(await worker.setProxy());
-          case WorkflowEnum.SUBMIT_TO_SIGN_IN:
-            return resolve(await worker.submitToSignIn());
-          default:
-            logger.warn("No such workflow");
-            return resolve(false);
-        }
-      }).then(result => {
-        event.sender.send("asynchronous-reply", result);
-      });
+      try {
+        // eslint-disable-next-line no-async-promise-executor
+        var result = await new Promise(async(resolve, reject) => {
+          try {
+            switch (flowName) {
+              case WorkflowEnum.SET_WORKER:
+                if (worker) worker.closeSelenium();
+                worker = new BankWorker(flowArgs as RemitterAccountModel);
+                return true;
+              case WorkflowEnum.CLOSE_SELENIUM:
+                return resolve(await worker.closeSelenium());
+              case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
+                return resolve(await worker.checkIfLoginSuccess(flowArgs));
+              case WorkflowEnum.CHECK_IF_SUCCESS:
+                return resolve(await worker.checkIfSuccess());
+              case WorkflowEnum.CONFIRM_TRANSACTION:
+                return resolve(await worker.confirmTransaction());
+              case WorkflowEnum.FILL_NOTE:
+                return resolve(await worker.fillNote());
+              case WorkflowEnum.FILL_TRANSFER_INFORMATION:
+                return resolve(await worker.fillTransferFrom());
+              case WorkflowEnum.GET_BALANCE:
+                return resolve(await worker.getBalance());
+              case WorkflowEnum.GET_COOKIE:
+                return resolve(await worker.getCookie());
+              case WorkflowEnum.GO_TRANSFER_PAGE:
+                return resolve(await worker.goTransferPage());
+              case WorkflowEnum.INPUT_SIGN_IN_INFORMATION:
+                return resolve(await worker.inputSignInInformation());
+              case WorkflowEnum.LAUNCH_SELENIUM:
+                return resolve(await worker.launchSelenium());
+              case WorkflowEnum.SEND_USB_KEY:
+                return resolve(await worker.sendUSBKey());
+              case WorkflowEnum.SET_IE_ENVIRONMENT:
+                return resolve(worker.setIEEnvironment());
+              case WorkflowEnum.SET_PROXY:
+                return resolve(await worker.setProxy());
+              case WorkflowEnum.SUBMIT_TO_SIGN_IN:
+                return resolve(await worker.submitToSignIn());
+              default:
+                logger.warn("No such workflow");
+                return resolve(false);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        });
+
+        event.sender.send("asynchronous-reply", { isSuccess: result });
+      } catch (error) {
+        event.sender.send("asynchronous-reply", { isSuccess: false, message: error.toString() });
+      }
     }
   );
 };

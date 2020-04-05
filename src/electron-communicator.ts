@@ -20,10 +20,11 @@ import BankWorker from "./workers/BankWorker";
 //   });
 // };
 
-export const transponder = async(ipcRenderer: IpcRenderer, flowName: any, flowArgs?:any):Promise<boolean> => {
+export const transponder = async(ipcRenderer: IpcRenderer, flowName: any, flowArgs?:any) :Promise<{isFlowExecutedSuccess:boolean, message?:string}> => {
   return new Promise((resolve) => {
-  ipcRenderer.once("asynchronous-reply", (event: Event, isFlowExecutedSuccess: boolean) => {
-    resolve(isFlowExecutedSuccess);
+  ipcRenderer.once("asynchronous-reply", (event: Event,
+     { isFlowExecutedSuccess, message }:{ isFlowExecutedSuccess:boolean, message?:string }) => {
+    resolve({ isFlowExecutedSuccess, message });
   });
   ipcRenderer.send("asynchronous-message", flowName, flowArgs);
   });
