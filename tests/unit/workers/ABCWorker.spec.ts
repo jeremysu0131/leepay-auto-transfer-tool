@@ -18,7 +18,7 @@ describe("ABCWorker:launchSelenium", () => {
   it(
     "isLaunched",
     async() => {
-      var isLaunched = await worker.launchSelenium();
+      var isLaunched = await worker.launchSelenium({ width: 1920, height: 1080 });
       expect(isLaunched).toBe(true);
     }
   );
