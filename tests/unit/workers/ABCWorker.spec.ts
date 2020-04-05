@@ -10,15 +10,24 @@ var remitterAccount = {
   proxy: "10.9.8.7:8800"
 };
 
+jest.setTimeout(50 * 1000);
+
 beforeAll(() => {
   worker = new BankWorker(remitterAccount);
+});
+
+afterAll(() => {
+  worker.closeSelenium();
 });
 
 describe("ABCWorker:launchSelenium", () => {
   it(
     "isLaunched",
     async() => {
-      var isLaunched = await worker.launchSelenium({ width: 1920, height: 1080 });
+      var isLaunched = await worker.launchSelenium({
+        width: 1920,
+        height: 1080
+      });
       expect(isLaunched).toBe(true);
     }
   );
