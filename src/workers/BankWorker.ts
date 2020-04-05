@@ -1,4 +1,3 @@
-import { screen } from "electron";
 import { Builder } from "selenium-webdriver";
 import { setProxy, unsetProxy, setIEEnvironment } from "./utils/regeditTool";
 import { WorkflowEnum } from "./utils/workflowHelper";
@@ -58,19 +57,18 @@ export default class BankWorker {
     }
   }
 
-  async launchSelenium(): Promise<boolean> {
+  async launchSelenium(displaySize:{width:number, height:number}): Promise<boolean> {
     try {
       const driver = await new Builder()
         .withCapabilities({
           ignoreZoomSetting: true
-          // requireWindowFocus: true
         })
         .forBrowser("ie")
         .build();
       this.instance.setDriver(driver);
       this.instance.setTask(this.taskDetail);
 
-      const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+      const { width, height } = displaySize;
       await this.instance
         .getDriver()
         .manage()

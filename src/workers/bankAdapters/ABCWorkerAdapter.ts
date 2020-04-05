@@ -11,7 +11,6 @@ import {
   waitUtilGetText,
   sendKeysV2
 } from "../utils/seleniumHelper";
-import * as ScreenshotHelper from "../utils/screenshotHelper";
 import * as WindowFocusTool from "../utils/windowFocusTool";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import dayjs, { Dayjs } from "dayjs";
@@ -431,7 +430,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
   async confirmTransaction() {
     try {
-      ScreenshotHelper.capture("ABC-" + this.task.id + "-confirmTransaction");
       await this.driver
         .switchTo()
         .frame(
@@ -595,7 +593,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       // Wait page load and also improve success rate of check customer advice
       await this.driver.sleep(3 * 1000);
       await waitPageLoad(this.driver);
-      ScreenshotHelper.capture("ABC-" + this.task.id + "-transactionResult");
 
       await this.getTransactionTime();
 
@@ -711,8 +708,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   // 检测打印回单里的信息
   async checkCustomerAdvice() {
     try {
-      ScreenshotHelper.capture("ABC-" + this.task.id + "-checkCustomerAdvice");
-
       await this.driver.wait(
         until.elementLocated(By.id("contentFrame")),
         10 * 1000
@@ -961,8 +956,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
   async checkTransferRecord() {
     try {
-      ScreenshotHelper.capture("ABC-" + this.task.id + "-checkTransferHistory");
-
       await this.driver.wait(
         until.elementLocated(By.id("contentFrame")),
         10 * 1000

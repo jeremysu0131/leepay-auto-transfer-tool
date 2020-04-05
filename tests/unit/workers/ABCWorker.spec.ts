@@ -15,7 +15,11 @@ beforeAll(() => {
 });
 
 describe("ABCWorker:launchSelenium", () => {
-  it("isLaunched", () => {
-    expect(worker.launchSelenium()).toBe(true);
-  });
+  it(
+    "isLaunched",
+    async() => {
+      var isLaunched = await worker.launchSelenium();
+      expect(isLaunched).toBe(true);
+    }
+  );
 });
