@@ -41,7 +41,6 @@
 <script lang="ts">
 import { Component, Vue, Watch, Mixins } from "vue-property-decorator";
 import dayjs from "dayjs";
-import { saveTaskStatus } from "../../../utils/persistentState";
 import { AccountModule } from "../../../store/modules/account";
 import { TaskModule } from "../../../store/modules/task";
 import { UserModule } from "../../../store/modules/user";
