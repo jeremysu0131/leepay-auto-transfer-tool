@@ -3,12 +3,21 @@ import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
 
 var worker: BankWorker;
 var remitterAccount = {
-  balance: 0,
+  balance: 1,
   code: "T.ABC.001",
   loginName: "test001",
   loginPassword: "testpsw",
   usbPassword: "testpsw",
   proxy: "10.9.8.7:8800"
+};
+var task:TaskDetailModel = {
+  amount: 1,
+  id: 0,
+  payeeAccount: {
+    bank: { },
+    cardNumber: "1234567890",
+    holderName: "JJJJ"
+  }
 };
 
 jest.setTimeout(50 * 1000);
@@ -19,9 +28,10 @@ beforeAll(() => {
 
 afterAll(() => {
   worker.closeSelenium();
+  worker.unsetProxy();
 });
 
-describe("ABCWorker:launchSelenium", () => {
+describe("ABCWorker", () => {
   it("Set IE Environment", async() => {
       var isSuccess = await worker.setIEEnvironment();
       expect(isSuccess).toBe(true);
@@ -44,7 +54,7 @@ describe("ABCWorker:launchSelenium", () => {
     });
 
   it("Set Task", async() => {
-      var isSuccess = await worker.setTask(new TaskDetailModel());
+      var isSuccess = await worker.setTask(task);
       expect(isSuccess).toBe(true);
     });
 });

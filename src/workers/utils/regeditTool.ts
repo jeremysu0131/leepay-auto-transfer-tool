@@ -17,7 +17,16 @@ export function setProxy(proxy: string) {
   });
 }
 
-export function unsetProxy() {}
+export function unsetProxy() {
+  return new Promise((resolve, reject) => {
+    var child = exec(
+      "BankWorkerTool.exe \"REGISTRY_TOOL\" \"UNSET_PROXY\"",
+      { shell: false, cwd }
+    );
+    child.on("error", (err: any) => reject(err));
+    child.on("exit", () => resolve());
+  });
+}
 
 export async function setIEEnvironment() {
   try {
