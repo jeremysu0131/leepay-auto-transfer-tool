@@ -1,4 +1,5 @@
 import BankWorker from "@/workers/BankWorker";
+import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
 
 var worker: BankWorker;
 var remitterAccount = {
@@ -21,14 +22,29 @@ afterAll(() => {
 });
 
 describe("ABCWorker:launchSelenium", () => {
-  it(
-    "isLaunched",
-    async() => {
-      var isLaunched = await worker.launchSelenium({
+  it("Set IE Environment", async() => {
+      var isSuccess = await worker.setIEEnvironment();
+      expect(isSuccess).toBe(true);
+    });
+  it("Set Proxy", async() => {
+      var isSuccess = await worker.setProxy();
+      expect(isSuccess).toBe(true);
+    });
+  it("Launch Selenium", async() => {
+      var isSuccess = await worker.launchSelenium({
         width: 1920,
         height: 1080
       });
-      expect(isLaunched).toBe(true);
-    }
-  );
+      expect(isSuccess).toBe(true);
+    });
+
+  it("Input Sign In Information", async() => {
+      var isSuccess = await worker.inputSignInInformation();
+      expect(isSuccess).toBe(true);
+    });
+
+  it("Set Task", async() => {
+      var isSuccess = await worker.setTask(new TaskDetailModel());
+      expect(isSuccess).toBe(true);
+    });
 });
