@@ -14,6 +14,7 @@ jest.setTimeout(50 * 1000);
 
 beforeAll(() => {
   worker = new BankWorker(remitterAccount);
+  console.log("aaaaa", worker);
 });
 
 afterAll(() => {
