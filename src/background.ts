@@ -33,7 +33,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
     "asynchronous-message",
     async(event: Event, flowName: any, flowArgs: any) => {
       let flowExecutedResult = false;
-      logger.debug(flowName);
+      logger(flowName);
       try {
         // eslint-disable-next-line no-async-promise-executor
         var result = await new Promise(async(resolve, reject) => {
@@ -48,7 +48,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
                 return resolve(await worker.checkIfLoginSuccess(flowArgs));
               case WorkflowEnum.CHECK_IF_SUCCESS:
-                return resolve(await worker.checkIfSuccess());
+                return resolve(await worker.checkIfTransactionSuccess());
               case WorkflowEnum.CONFIRM_TRANSACTION:
                 return resolve(await worker.confirmTransaction());
               case WorkflowEnum.FILL_NOTE:

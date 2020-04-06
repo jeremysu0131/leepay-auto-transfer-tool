@@ -181,6 +181,7 @@ export default class BankWorker {
 
     try {
       await this.instance.goTransferPage();
+      await this.instance.checkIfInTransferPage();
 
       Logger({
         message: "Redirected to transfer page",
@@ -196,6 +197,7 @@ export default class BankWorker {
   async fillTransferFrom(): Promise<boolean> {
     try {
       await this.instance.fillTransferForm();
+      await this.instance.checkTransferInformationCorrectly();
 
       Logger({ message: "Transfer form filled", level: "info" });
       return true;
@@ -208,6 +210,7 @@ export default class BankWorker {
   async fillNote(): Promise<boolean> {
     try {
       await this.instance.fillNote();
+      await this.instance.checkIfNoteFilled();
 
       Logger({ message: "Note filled", level: "info" });
       return true;
@@ -230,7 +233,7 @@ export default class BankWorker {
     }
   }
 
-  async checkIfSuccess(): Promise<boolean> {
+  async checkIfTransactionSuccess(): Promise<boolean> {
     try {
       var isCheckSuccess = await this.instance.checkIfTransactionSuccess();
       calculateTransferTime(this.taskStartAt);
