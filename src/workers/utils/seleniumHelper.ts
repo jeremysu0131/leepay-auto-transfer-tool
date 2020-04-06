@@ -68,10 +68,10 @@ export async function sendKeys(
     // Check if input correctly
     const inputedValue = await getElementValue(webElement);
     if (text !== inputedValue.replace(replaceRule, "")) {
-      logger.log({
-        level: "warn",
-        message: `System has try ${executedTimes} times to send keys but fail`
-      });
+      // logger.log({
+      //   level: "warn",
+      //   message: `System has try ${executedTimes} times to send keys but fail`
+      // });
       await webElement.clear();
       if (executedTimes === maxExecuteTimes) {
         throw new Error(
@@ -132,7 +132,7 @@ export async function sendKeysV2(
       if (await checkInputCorrectly(webElement, text, replaceRule)) break;
 
       await webElement.clear();
-      logger.log({
+      logger({
         level: "warn",
         message: `System try to send keys but fail retrying: ${maxExecuteTimes}`
       });
@@ -169,7 +169,7 @@ async function waitUntilElementFocused(
         error.name === "NoSuchElementError" ||
         error.name === "TimeoutError"
       ) {
-        logger.log({ level: "warn", message: error });
+        logger({ level: "warn", message: error });
       }
       throw error;
     } finally {
@@ -240,7 +240,7 @@ export async function waitElementFocused(
         error.name === "NoSuchElementError" ||
         error.name === "TimeoutError"
       ) {
-        logger.log({ level: "warn", message: error });
+        logger({ level: "warn", message: error });
       }
       throw error;
     }

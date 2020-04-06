@@ -14,7 +14,7 @@ import {
 import * as WindowFocusTool from "../utils/windowFocusTool";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import dayjs, { Dayjs } from "dayjs";
-import logger from "../utils/logger";
+import Logger from "../utils/logger";
 import TaskDetailModel from "../models/taskDetailModel";
 import RemitterAccountModel from "../models/remitterAccountModel";
 
@@ -165,7 +165,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       )
       .getText();
     if (passwordMessage) {
-      logger.log({
+      Logger({
         level: "warn",
         message:
           "Login password sent length incorrectly. Message on bank: " +
@@ -193,11 +193,11 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         await this.driver.wait(element, 30 * 1000);
         await waitPageLoad(this.driver);
       }
-      logger.log({ message: "Signed in.", level: "info" });
+      Logger({ message: "Signed in.", level: "info" });
       return true;
     } catch (error) {
       if (error.name === "TimeoutError") {
-        logger.log({ message: "Sign in fail.", level: "info" });
+        Logger({ message: "Sign in fail.", level: "info" });
         return false;
       }
       throw error;
@@ -331,7 +331,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       try {
         if (retryTimes === 0) {
           const errorMessage = "wait until bank selected fail";
-          logger.log({
+          Logger({
             level: "error",
             message: errorMessage
           });
@@ -344,7 +344,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         var isBankSelected = await getElementValue(bankField);
         // this field  have value mean choose bank successful
         if (isBankSelected.trim()) {
-          logger.log({ level: "info", message: "Bank selected success" });
+          Logger({ level: "info", message: "Bank selected success" });
           break;
         }
         // FIXME
@@ -364,7 +364,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           error.name === "OperationalError" ||
           error.name === "JavascriptError"
         ) {
-          logger.log({
+          Logger({
             level: "warn",
             message: `wait until bank selected fail, ${retryTimes} times, Error: ${error}`
           });
@@ -482,7 +482,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           for (let index = 0; index < 10; index++) {
             await KeySender.sendKey(KeySender.KeyEnum.BACKSPACE, 100);
           }
-          logger.log({
+          Logger({
             level: "warn",
             message: "Query password sent length incorrectly"
           });
@@ -493,8 +493,8 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       } catch (error) {
         // this means usb password showed, so the password input correctly
         if (error.name === "UnexpectedAlertOpenError") {
-          // logger.log({ level: "warn", message: "Catch dialog popup" });
-          logger.log({ level: "info", message: "Query password sent" });
+          // Logger({ level: "warn", message: "Catch dialog popup" });
+          Logger({ level: "info", message: "Query password sent" });
           break;
         }
         throw error;
@@ -522,13 +522,13 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       // Press enter to send usb password
       await KeySender.sendKey(KeySender.KeyEnum.RETURN, 1000);
 
-      logger.log({
+      Logger({
         level: "info",
         message: "Detected confirm prompt and confirm it"
       });
     } catch (error) {
       if (error.name === "TimeoutError") {
-        return logger.log({
+        return Logger({
           level: "info",
           message: "Not detected confirm prompt'"
         });
@@ -544,7 +544,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   async sendUSBPasswordForTransfer() {
     await KeySender.sendText(this.remitterAccount.usbPassword, 3 * 3000);
     await KeySender.sendKey(KeySender.KeyEnum.RETURN);
-    logger.log({
+    Logger({
       level: "info",
       message: "Send USB password success"
     });
@@ -569,18 +569,18 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         );
 
         if (message) {
-          logger.log({ level: "info", message: "USB pressed" });
+          Logger({ level: "info", message: "USB pressed" });
           break;
         }
       } catch (error) {
         if (error.name === "UnexpectedAlertOpenError") {
-          logger.log({
+          Logger({
             level: "warn",
             message: `Waiting for usb press, remaining times: ${retryTimes}`
           });
           continue;
         } else if (error.name === "TimeoutError") {
-          logger.log({
+          Logger({
             level: "warn",
             message: "Can't get the element 'trnTips'"
           });
@@ -617,7 +617,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       if (await this.checkTransferRecord()) return true;
       return false;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     } finally {
       await this.driver.switchTo().defaultContent();
@@ -650,7 +650,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       this.transactionTime = dayjs(transactionTime, "YYYY/MM/DD HH:mm:ss");
     } catch (error) {
       if (error.name === "TimeoutError") {
-        return logger.log({
+        return Logger({
           level: "warn",
           message: "Get the transaction time fail"
         });
@@ -692,14 +692,14 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         ),
         20 * 1000
       );
-      logger.log({
+      Logger({
         level: "info",
         message: "Go customer advice success"
       });
       return true;
     } catch (error) {
       if (error.name === "TimeoutError") {
-        logger.log({
+        Logger({
           level: "warn",
           message: "Go customer advice error"
         });
@@ -766,7 +766,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         .getText();
       this.charge = FormatHelper.amount(this.charge);
 
-      logger.log({
+      Logger({
         level: "info",
         message: `Customer advice - status: ${adviceTitle}, amount: ${amount}, charge: ${
           this.charge
@@ -775,7 +775,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       // If the result shows success, than stop doing following job
       if (adviceTitle.indexOf("成功") !== -1) return true;
       else {
-        logger.log({
+        Logger({
           level: "warn",
           message: "Fail to check if task success in advice"
         });
@@ -818,7 +818,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
       await this.waitUntilTransactionPageLoaded();
 
-      logger.log({
+      Logger({
         level: "info",
         message: "Go transfer record page success"
       });
@@ -873,13 +873,13 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           break;
         }
 
-        logger.log({
+        Logger({
           level: "warn",
           message: `Go transfer record page fail, ${retryTimes} times, No error.`
         });
       } catch (error) {
         if (error.name === "TimeoutError") {
-          logger.log({
+          Logger({
             level: "warn",
             message: `Go transfer record page fail, ${retryTimes} times, Error: ${error}`
           });
@@ -909,7 +909,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         );
       await this.waitUntilTransactionDetailLoaded();
 
-      logger.log({
+      Logger({
         level: "info",
         message: "Query transfer record success"
       });
@@ -947,7 +947,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         return;
       } catch (error) {
         if (error.name === "TimeoutError") {
-          logger.log({
+          Logger({
             level: "warn",
             message: `Queried search detail fail, ${retryTimes} times.`
           });
@@ -1025,7 +1025,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           // amount === FormatHelper.amount(this.task.requestAmount) &&
           status === "成功"
         ) {
-          logger.log({
+          Logger({
             level: "info",
             message:
               `Transfer Record - status: ${status}, amount: ${amount}, ` +
@@ -1036,7 +1036,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       });
       if (isTransferSuccess) return true;
       else {
-        logger.log({
+        Logger({
           level: "info",
           message:
             // `Transfer record match fail, request amount: ${this.task.requestAmount}, ` +

@@ -25,7 +25,7 @@ export async function setIEEnvironment() {
     await setIESecurityZones();
     return true;
   } catch (error) {
-    logger.log({ level: "error", message: error });
+    logger({ level: "error", message: error });
     return false;
   }
 }

@@ -4,9 +4,8 @@ import { WorkflowEnum } from "./utils/workflowHelper";
 import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 import { IWorkerAdapter } from "./IWorkerAdapter";
 import TaskDetailModel from "./models/taskDetailModel";
-import logger from "./utils/logger";
+import Logger from "./utils/logger";
 import RemitterAccountModel from "./models/remitterAccountModel";
-
 /**
  * Bank Worker
  * 提供各種銀行操作功能
@@ -29,7 +28,7 @@ export default class BankWorker {
       this.instance.setTask(task);
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     }
   }
@@ -39,7 +38,7 @@ export default class BankWorker {
       await setIEEnvironment();
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     }
   }
@@ -50,7 +49,7 @@ export default class BankWorker {
 
       return true;
     } catch (error) {
-      logger.log({ message: error, level: "error" });
+      Logger({ message: error, level: "error" });
       return false;
     }
   }
@@ -58,7 +57,7 @@ export default class BankWorker {
   async unsetProxy(): Promise<boolean> {
     try {
       await unsetProxy();
-      logger.log({ message: "Proxy unset", level: "info" });
+      Logger({ message: "Proxy unset", level: "info" });
       return true;
     } catch (error) {
       return false;
@@ -93,17 +92,17 @@ export default class BankWorker {
 
       await this.instance.launchSelenium();
 
-      logger.debug("Selenium launched");
+      Logger({ level: "debug", message: "Selenium launched" });
       return true;
     } catch (error) {
-      logger.error(error);
+      Logger({ level: "error", message: error });
       return false;
     }
   }
 
   async closeSelenium(): Promise<boolean> {
     if (this.instance.getDriver()) await this.instance.getDriver().quit();
-    logger.log({ message: "Selenium closed", level: "info" });
+    Logger({ message: "Selenium closed", level: "info" });
     return true;
   }
 
@@ -115,7 +114,7 @@ export default class BankWorker {
       await this.instance.inputSignInInformation();
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error.toString() });
+      Logger({ level: "error", message: error.toString() });
       return false;
     }
   }
@@ -124,10 +123,10 @@ export default class BankWorker {
     try {
       await this.instance.submitToSignIn();
 
-      logger.log({ message: "Bank Logged In", level: "info" });
+      Logger({ message: "Bank Logged In", level: "info" });
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error.toString() });
+      Logger({ level: "error", message: error.toString() });
       return false;
     }
   }
@@ -136,10 +135,10 @@ export default class BankWorker {
     try {
       await this.instance.sendUSBKey();
 
-      logger.log({ message: "USB key sent", level: "info" });
+      Logger({ message: "USB key sent", level: "info" });
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error.toString() });
+      Logger({ level: "error", message: error.toString() });
       return false;
     }
   }
@@ -158,7 +157,7 @@ export default class BankWorker {
 
       return isLoginSuccess;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     }
   }
@@ -169,10 +168,10 @@ export default class BankWorker {
       //   store.commit("SET_SESSION", data.session);
       // setCookieAndSession(await this.instance.getCookie());
 
-      logger.log({ message: "Got cookie and session", level: "info" });
+      Logger({ message: "Got cookie and session", level: "info" });
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     }
   }
@@ -183,13 +182,13 @@ export default class BankWorker {
     try {
       await this.instance.goTransferPage();
 
-      logger.log({
+      Logger({
         message: "Redirected to transfer page",
         level: "info"
       });
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     }
   }
@@ -198,10 +197,10 @@ export default class BankWorker {
     try {
       await this.instance.fillTransferForm();
 
-      logger.log({ message: "Transfer form filled", level: "info" });
+      Logger({ message: "Transfer form filled", level: "info" });
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     }
   }
@@ -210,10 +209,10 @@ export default class BankWorker {
     try {
       await this.instance.fillNote();
 
-      logger.log({ message: "Note filled", level: "info" });
+      Logger({ message: "Note filled", level: "info" });
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     }
   }
@@ -223,10 +222,10 @@ export default class BankWorker {
       await this.instance.sendPasswordToPerformTransaction();
       await this.instance.sendUsbPasswordToPerformTransaction();
 
-      logger.log({ message: "Transaction confirmed", level: "info" });
+      Logger({ message: "Transaction confirmed", level: "info" });
       return true;
     } catch (error) {
-      logger.log({ level: "error", message: error });
+      Logger({ level: "error", message: error });
       return false;
     }
   }
@@ -238,13 +237,13 @@ export default class BankWorker {
 
       if (isCheckSuccess) {
         // await markTaskSuccess(this.instance.charge);
-        logger.log({
+        Logger({
           message: "Transfer success, you can start next transaction",
           level: "info"
         });
         return true;
       } else {
-        logger.log({
+        Logger({
           level: "warn",
           message:
             "System can't check the transfer result, please check it manually"
@@ -252,14 +251,14 @@ export default class BankWorker {
         return false;
       }
     } catch (error) {
-      logger.log({ message: error, level: "error" });
+      Logger({ message: error, level: "error" });
       return false;
     }
   }
 
   async getBalance(): Promise<boolean> {
     await this.instance.getBalance();
-    logger.log({ message: "Balance got", level: "info" });
+    Logger({ message: "Balance got", level: "info" });
     return true;
   }
 }
@@ -271,5 +270,5 @@ export default class BankWorker {
 function calculateTransferTime(taskStartAt: Date) {
   // var now = new Date().getTime();
   // var executedTime = parseInt((now - taskStartAt) / 1000).toFixed(0);
-  // logger.log({ level: "info", message: `Task executed for ${executedTime} seconds` });
+  // Logger({ level: "info", message: `Task executed for ${executedTime} seconds` });
 }
