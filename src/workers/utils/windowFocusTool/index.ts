@@ -15,6 +15,6 @@ function run() {
           : "windowFocusTool"
     });
   } catch (error) {
-     logger.log({ level: "error", message: error });
+     logger({ level: "error", message: error });
   }
 }

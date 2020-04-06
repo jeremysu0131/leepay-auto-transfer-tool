@@ -50,4 +50,8 @@ if (process.env.NODE_ENV !== "production") {
   );
 }
 
-export default logger;
+var log = ({ level, message }:{ level: string, message: string }) => {
+  logger.log(level, message.toString());
+};
+
+export default log;

@@ -1,9 +1,10 @@
 import dayjs, { Dayjs } from "dayjs";
-import { WebDriver } from "selenium-webdriver";
+import { By, until, WebDriver } from "selenium-webdriver";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import RemitterAccountModel from "../models/remitterAccountModel";
 import TaskDetailModel from "../models/taskDetailModel";
 import * as KeySender from "../utils/keySender";
+import Logger from "../utils/logger";
 import { executeJavaScript } from "../utils/seleniumHelper";
 import * as WindowFocusTool from "../utils/windowFocusTool";
 
@@ -16,12 +17,13 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   private charge: string;
   private transactionTime: Dayjs;
   private bankMappingList: any;
+  private readonly loginFrame = "fQRLGIN";
 
-  constructor(remitterAccount : RemitterAccountModel) {
+  constructor() {
     this.driver = {} as WebDriver;
     this.bankUrl = "http://www.ccb.com/cn/jump/personal_loginbank.html";
     // this.card = {};
-    this.remitterAccount = remitterAccount;
+    this.remitterAccount = new RemitterAccountModel();
     this.task = {} as TaskDetailModel;
     this.charge = "";
     this.transactionTime = dayjs();
@@ -50,6 +52,12 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       浦发银行: "浦东发展银行"
     };
   }
+  getRemitterAccount(): RemitterAccountModel {
+    return this.remitterAccount;
+  }
+  setRemitterAccount(account: RemitterAccountModel): void {
+    this.remitterAccount = account;
+  }
 
   getDriver(): WebDriver {
     return this.driver;
@@ -67,41 +75,107 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     await this.driver.get(this.bankUrl);
   }
   async inputSignInInformation(): Promise<void> {
-    // 輸入登入帳號
-    await this.focusLoginFrameFieldById("USERID");
-    if (this.remitterAccount.loginName) {
-      WindowFocusTool.focusAndCheckIE();
-      await KeySender.sendText(this.remitterAccount.loginName, 3 * 1000, 250);
-    } else {
-      throw new Error("Account name is null");
+    let retryTimes = 0;
+    let MaxRetry = 3;
+    // 切換frame 到登入
+    let frame = await this.driver.wait(
+      until.elementLocated(By.id(this.loginFrame)),
+      10 * 1000
+    );
+    await this.driver.switchTo().frame(frame);
+
+    while (retryTimes < MaxRetry) {
+      // 輸入登入帳號
+      await this.focusLoginFrameFieldById("USERID");
+      if (this.remitterAccount.loginName) {
+        WindowFocusTool.focusAndCheckIE();
+        await this.deleteInput();
+        await KeySender.sendText(this.remitterAccount.loginName, 1 * 1000, 250);
+      } else {
+        throw new Error("Account name is null");
+      }
+
+      // 輸入登入密碼
+      await this.focusLoginFrameFieldById("LOGPASS");
+      if (this.remitterAccount.loginPassword) {
+        WindowFocusTool.focusAndCheckIE();
+        await this.deleteInput();
+        await KeySender.sendText(
+          this.remitterAccount.loginPassword,
+          3 * 1000,
+          250
+        );
+      } else {
+        throw new Error("Account name is null");
+      }
+
+      // 確認輸入資訊
+      const check = await this.checkSignInInformationCorrectly();
+      if (check) {
+        break;
+      } else {
+        retryTimes++;
+      }
     }
-    
-    // 輸入登入密碼
-    // await this.focusLoginFrameFieldById("LOGPASS");
-    // if (this.remitterAccount.loginName) {
-    //   WindowFocusTool.focusAndCheckIE();
-    //   await KeySender.sendText(this.remitterAccount.loginName, 3 * 1000, 250);
-    // } else {
-    //   throw new Error("Account name is null");
-    // }
+    if (retryTimes === MaxRetry) {
+      throw new Error(`"輸入資訊錯誤超過${MaxRetry}次`);
+    }
+  }
+
+  async deleteInput() {
+    for (let index = 0; index < 16; index++) {
+      await KeySender.sendKey(KeySender.KeyEnum.BACKSPACE, 80);
+    }
   }
 
   async focusLoginFrameFieldById(id: string) {
-    console.log("id=" + id);
-    // const result = await this.driver.wait(
-    //   until.elementLocated(By.id(id)),
-    //   20 * 1000
-    // );
-    // console.log(result);
+    await this.driver.wait(
+      until.elementLocated(By.id(id)),
+      20 * 1000
+    );
     await executeJavaScript(
       this.driver,
       `focus input id (${id})`,
-      "window.frames[0].document.getElementById(\"USERID\");"
+      `document.getElementById("${id}").focus();`
     );
   }
 
-  checkSignInInformationCorrectly(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async checkSignInInformationCorrectly(): Promise<boolean> {
+    // 驗證帳號資訊
+    const userElementId = "USERID";
+    WindowFocusTool.focusAndCheckIE();
+
+    var user = await this.driver.wait(
+      until.elementLocated(By.id(userElementId)),
+      20 * 1000
+    );
+    var userText = await user.getAttribute("value");
+    if (userText !== this.remitterAccount.loginName) {
+      Logger({
+        level: "warn",
+        message: `Login user account incorrectly. Message on bank: CCB value : (${userText})`
+      });
+      return false;
+    }
+
+    // 驗證密碼資訊
+
+    const passwordElementId = "LOGPASS";
+    WindowFocusTool.focusAndCheckIE();
+
+    var password = await this.driver.wait(
+      until.elementLocated(By.id(passwordElementId)),
+      20 * 1000
+    );
+    var passwordText = await password.getAttribute("value");
+    if (passwordText !== this.remitterAccount.loginPassword) {
+      Logger({
+        level: "warn",
+        message: `Login password incorrectly. Message on bank: CCB value : (${passwordText})`
+      });
+      return false;
+    }
+    return true;
   }
   submitToSignIn(): Promise<void> {
     throw new Error("Method not implemented.");

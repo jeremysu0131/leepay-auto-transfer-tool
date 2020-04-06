@@ -6,17 +6,16 @@ import {
   BrowserWindow,
   ipcMain,
   IpcMain,
-  Event
+  Event,
+  screen
 } from "electron";
-import {
-  createProtocol,
-  installVueDevtools
-} from "vue-cli-plugin-electron-builder/lib";
+import { createProtocol, installVueDevtools } from "vue-cli-plugin-electron-builder/lib";
 import BankWorker from "./workers/BankWorker";
 import { WorkflowEnum } from "./workers/utils/workflowHelper";
 import logger from "./workers/utils/logger";
 import RemitterAccountModel from "./workers/models/remitterAccountModel";
 const isDevelopment = process.env.NODE_ENV !== "production";
+const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -32,8 +31,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
   ipcMain.on(
     "asynchronous-message",
     async(event: Event, flowName: any, flowArgs: any) => {
-      let flowExecutedResult = false;
-      logger.debug(flowName);
+      logger(flowName);
       try {
         // eslint-disable-next-line no-async-promise-executor
         var result = await new Promise(async(resolve, reject) => {
@@ -48,7 +46,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
                 return resolve(await worker.checkIfLoginSuccess(flowArgs));
               case WorkflowEnum.CHECK_IF_SUCCESS:
-                return resolve(await worker.checkIfSuccess());
+                return resolve(await worker.checkIfTransactionSuccess());
               case WorkflowEnum.CONFIRM_TRANSACTION:
                 return resolve(await worker.confirmTransaction());
               case WorkflowEnum.FILL_NOTE:
@@ -64,7 +62,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.INPUT_SIGN_IN_INFORMATION:
                 return resolve(await worker.inputSignInInformation());
               case WorkflowEnum.LAUNCH_SELENIUM:
-                return resolve(await worker.launchSelenium());
+                return resolve(await worker.launchSelenium({ width: width * (1 / 2), height }));
               case WorkflowEnum.SEND_USB_KEY:
                 return resolve(await worker.sendUSBKey());
               case WorkflowEnum.SET_IE_ENVIRONMENT:
@@ -74,7 +72,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.SUBMIT_TO_SIGN_IN:
                 return resolve(await worker.submitToSignIn());
               default:
-                logger.warn("No such workflow");
+                logger({ level: "warn", message: "No such workflow" });
                 return resolve(false);
             }
           } catch (error) {
@@ -84,7 +82,10 @@ const workerCommunicator = (ipcMain: IpcMain) => {
 
         event.sender.send("asynchronous-reply", { isSuccess: result });
       } catch (error) {
-        event.sender.send("asynchronous-reply", { isSuccess: false, message: error.toString() });
+        event.sender.send("asynchronous-reply", {
+          isSuccess: false,
+          message: error.toString()
+        });
       }
     }
   );
@@ -93,13 +94,15 @@ const workerCommunicator = (ipcMain: IpcMain) => {
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    fullscreen: true,
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false
-    }
+    },
+    height,
+    useContentSize: true,
+    width: width * (1 / 2),
+    x: width * (1 / 2),
+    y: 0
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -153,7 +156,7 @@ app.on("ready", async() => {
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === "win32") {
-    process.on("message", data => {
+    process.on("message", (data) => {
       if (data === "graceful-exit") {
         worker.closeSelenium();
         app.quit();

@@ -1,5 +1,6 @@
 import { WebDriver } from "selenium-webdriver";
 import TaskDetailModel from "./models/taskDetailModel";
+import RemitterAccountModel from "./models/remitterAccountModel";
 
 /**
  * 此介面僅提供銀行網頁互動
@@ -9,6 +10,8 @@ export interface IWorkerAdapter {
   // setProxy(): Promise<boolean>;
   // unsetProxy(): Promise<void>
   // closeSelenium(): Promise<void>
+  getRemitterAccount(): RemitterAccountModel;
+  setRemitterAccount(account: RemitterAccountModel): void;
 
   getDriver(): WebDriver;
   setDriver(driver: WebDriver): void;
