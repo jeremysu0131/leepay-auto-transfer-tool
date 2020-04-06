@@ -14,16 +14,24 @@ import RemitterAccountModel from "./models/remitterAccountModel";
 export default class BankWorker {
   private taskStartAt: Date;
   private instance: IWorkerAdapter;
-  private remitterAccount:RemitterAccountModel;
-  private taskDetail: TaskDetailModel;
 
   constructor(remitterAccount: RemitterAccountModel) {
     this.instance = WorkerAdapterFactory.createWorkerAdapter(
       remitterAccount.code
     );
+    this.instance.setRemitterAccount(remitterAccount);
     this.taskStartAt = new Date();
-    this.remitterAccount = remitterAccount;
-    this.taskDetail = new TaskDetailModel();
+  }
+
+  setTask(task: TaskDetailModel): boolean {
+    try {
+      if (task.amount === 0) throw new Error("Task amount not able to 0");
+      this.instance.setTask(task);
+      return true;
+    } catch (error) {
+      logger.log({ level: "error", message: error });
+      return false;
+    }
   }
 
   async setIEEnvironment(): Promise<boolean> {
@@ -38,7 +46,7 @@ export default class BankWorker {
 
   async setProxy(): Promise<boolean> {
     try {
-      await setProxy(this.remitterAccount.proxy);
+      await setProxy(this.instance.getRemitterAccount().proxy);
 
       return true;
     } catch (error) {
@@ -49,15 +57,18 @@ export default class BankWorker {
 
   async unsetProxy(): Promise<boolean> {
     try {
-    await unsetProxy();
-    logger.log({ message: "Proxy unset", level: "info" });
-    return true;
+      await unsetProxy();
+      logger.log({ message: "Proxy unset", level: "info" });
+      return true;
     } catch (error) {
-     return false; 
+      return false;
     }
   }
 
-  async launchSelenium(displaySize:{width:number, height:number}): Promise<boolean> {
+  async launchSelenium(displaySize: {
+    width: number;
+    height: number;
+  }): Promise<boolean> {
     try {
       const driver = await new Builder()
         .withCapabilities({
@@ -66,7 +77,7 @@ export default class BankWorker {
         .forBrowser("ie")
         .build();
       this.instance.setDriver(driver);
-      this.instance.setTask(this.taskDetail);
+      // this.instance.setTask(this.taskDetail);
 
       const { width, height } = displaySize;
       await this.instance
@@ -185,10 +196,6 @@ export default class BankWorker {
 
   async fillTransferFrom(): Promise<boolean> {
     try {
-      if (this.taskDetail === null) {
-        throw new Error("You didn't select the task");
-      }
-
       await this.instance.fillTransferForm();
 
       logger.log({ message: "Transfer form filled", level: "info" });

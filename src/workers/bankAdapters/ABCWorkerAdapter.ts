@@ -64,6 +64,12 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       浦发银行: "浦东发展银行"
     };
   }
+  getRemitterAccount(): RemitterAccountModel {
+    return this.remitterAccount;
+  }
+  setRemitterAccount(remitterAccount:RemitterAccountModel):void {
+    this.remitterAccount = remitterAccount;
+  }
   getTask(): TaskDetailModel {
     return this.task;
   }
@@ -136,7 +142,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     );
     await executeJavaScript(
       this.driver,
-      "focus password box ",
+      "focus password box",
       "document.getElementById('PowerEnterDiv_powerpass_2').focus();"
     );
   }
