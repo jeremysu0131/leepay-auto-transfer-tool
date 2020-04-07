@@ -33,13 +33,13 @@ export default class BankWorker {
     }
   }
 
-  async setIEEnvironment(): Promise<boolean> {
+  async setIEEnvironment(): Promise<{ isFlowExecutedSuccess:boolean, message?:string }> {
     try {
       await setIEEnvironment();
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 

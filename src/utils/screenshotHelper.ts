@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import logger from "../workers/utils/logger";
 import { screen, desktopCapturer } from "electron";
+import logger from "./logger";
 
 const electron = require("electron");
 
@@ -29,7 +29,9 @@ const capture = (filename: string) => {
             `${folderPath}/${dayjs().format("YYYYMMDDHHmmss")}-${filename}.png`,
             source.thumbnail.toPNG(),
             (error: { toString: () => any }) => {
-              if (error) { logger.log({ level: "error", message: error.toString() }); }
+              if (error) {
+                logger.log({ level: "error", message: error.toString() });
+              }
             }
           );
         }
