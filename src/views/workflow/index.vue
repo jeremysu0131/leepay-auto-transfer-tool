@@ -56,7 +56,8 @@ export default class extends Vue {
   private async handleRowClick(row: any) {
     try {
       if (process.env.NODE_ENV === "development") {
-        WorkerModule.RunSelectedFlow(row.name);
+        var result = await WorkerModule.RunSelectedFlow(row.name);
+        console.log(result);
       }
     } catch (error) {
       this.$store.dispatch("SetConsole", {
@@ -79,6 +80,7 @@ export default class extends Vue {
     }
   }
   private flowStyle(status: WorkflowStatusEnum) {
+    console.log(status);
     switch (status) {
       case WorkflowStatusEnum.RUNNING:
         return { "background-color": "#E6A23C" };

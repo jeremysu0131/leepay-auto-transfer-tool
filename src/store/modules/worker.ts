@@ -19,6 +19,7 @@ import { transponder } from "../../electron-communicator";
 import { ipcRenderer } from "electron";
 import TaskDetailModel from "../../workers/models/taskDetailModel";
 import RemitterAccountModel from "../../workers/models/remitterAccountModel";
+import WorkflowStatusEnum from "../../models/WorkflowStatusEnum";
 
 export interface IWorkerState {
   worker: BankWorker;
@@ -46,13 +47,21 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   //   this.signInWorkflow = signInWorkflow;
   // }
   @Mutation
-  UPDATE_FLOW_STATUS(data: { name: any; status: any }) {
-    this.workflow.forEach(flow => {
-      if (flow.name === data.name) flow.status = data.status;
+  UPDATE_FLOW_STATUS(data: { name: WorkflowEnum; status: WorkflowStatusEnum }) {
+    this.signInWorkflow.forEach(flow => {
+      if (flow.name === data.name) {
+        flow.status = data.status;
+      }
     });
-    var workflow = this.workflow;
-    this.workflow = [];
-    this.workflow = workflow;
+    // var signInWorkflow = this.signInWorkflow;
+    // this.signInWorkflow = [];
+    // this.signInWorkflow = signInWorkflow;
+    // this.workflow.forEach((flow) => {
+    //   if (flow.name === data.name) flow.status = data.status;
+    // });
+    // var workflow = this.workflow;
+    // this.workflow = [];
+    // this.workflow = workflow;
   }
 
   // SET_WORKFLOW: (state, bankCode) => {
@@ -132,11 +141,15 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
 
   @Action
   private async SetIEEnvironment() {
- var { isFlowExecutedSuccess, message } = await transponder(ipcRenderer, WorkflowEnum.SET_IE_ENVIRONMENT);
- console.log(isFlowExecutedSuccess, message);
-    // if (!(await this.worker.setIEEnvironment())) {
-    //   throw new Error("Set IE enviroment fail");
-    // }
+    var result = await transponder(
+      ipcRenderer,
+      WorkflowEnum.SET_IE_ENVIRONMENT
+    );
+    this.UPDATE_FLOW_STATUS({
+      name: WorkflowEnum.SET_IE_ENVIRONMENT,
+      status: WorkflowStatusEnum.SUCCESS
+    });
+    return result;
   }
   @Action
   async UnsetWorker() {
@@ -153,13 +166,13 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Action
   private async SetProxy() {
-      var { isFlowExecutedSuccess, message } = await transponder(
-        ipcRenderer,
-        WorkflowEnum.SET_PROXY
-      );
-      if (!isFlowExecutedSuccess) {
-        throw new Error("Set proxy fail");
-      }
+    var { isFlowExecutedSuccess, message } = await transponder(
+      ipcRenderer,
+      WorkflowEnum.SET_PROXY
+    );
+    if (!isFlowExecutedSuccess) {
+      throw new Error("Set proxy fail");
+    }
   }
   @Action
   private async UnsetProxy() {

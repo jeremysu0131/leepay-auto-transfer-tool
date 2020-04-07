@@ -3,6 +3,7 @@ import { TaskModule } from "@/store/modules/task";
 import { WorkerModule } from "../../../store/modules/worker";
 import { LogModule } from "../../../store/modules/log";
 import { AccountModule } from "../../../store/modules/account";
+import { AppModule } from "../../../store/modules/app";
 @Component
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
@@ -11,7 +12,9 @@ export default class TaskOperationMixin extends Vue {
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
   public async startTask() {
-  if (await this.loginToBankWebsite()) await this.executeTransferTask();
+    WorkerModule.SetWorker(TaskModule.selectedDetail.remitterAccount);
+    AppModule.HANDLE_TASK_PROCESSING(true);
+    // if (await this.loginToBankWebsite()) await this.executeTransferTask();
   }
   private async loginToBankWebsite() {
     try {

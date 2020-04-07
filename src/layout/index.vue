@@ -2,7 +2,7 @@
   <div>
     <top-header />
     <task-panel />
-    <workflow-dialog />
+    <workflow-dialog v-if="workflowDialogVisible" />
   </div>
 </template>
 
@@ -27,6 +27,10 @@ import WorkflowDialog from "@/views/workflow/index.vue";
 })
 export default class extends mixins(ResizeMixin) {
   private taskPanelLabel = "Task";
+
+  get workflowDialogVisible() {
+    return AppModule.task.isProcessing;
+  }
   get showingTab() {
     return AppModule.showingTab;
   }
