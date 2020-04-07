@@ -1,11 +1,11 @@
 import { Builder } from "selenium-webdriver";
-import { setProxy, unsetProxy, setIEEnvironment } from "./utils/regeditTool";
-import { WorkflowEnum } from "./utils/workflowHelper";
-import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 import { IWorkerAdapter } from "./IWorkerAdapter";
+import RemitterAccountModel from "./models/remitterAccountModel";
 import TaskDetailModel from "./models/taskDetailModel";
 import Logger from "./utils/logger";
-import RemitterAccountModel from "./models/remitterAccountModel";
+import { setIEEnvironment, setProxy, unsetProxy } from "./utils/regeditTool";
+import { WorkflowEnum } from "./utils/workflowHelper";
+import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 /**
  * Bank Worker
  * 提供各種銀行操作功能
@@ -259,10 +259,10 @@ export default class BankWorker {
     }
   }
 
-  async getBalance(): Promise<boolean> {
-    await this.instance.getBalance();
-    Logger({ message: "Balance got", level: "info" });
-    return true;
+  async getBalance(): Promise<number> {
+    const balance = await this.instance.getBalance();
+    Logger({ message: `Balance got ${balance}`, level: "info" });
+    return balance;
   }
 }
 

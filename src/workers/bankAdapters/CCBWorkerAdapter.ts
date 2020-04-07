@@ -3,6 +3,7 @@ import { By, until, WebDriver } from "selenium-webdriver";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import RemitterAccountModel from "../models/remitterAccountModel";
 import TaskDetailModel from "../models/taskDetailModel";
+import * as FormatHelper from "../utils/formatHelper";
 import * as KeySender from "../utils/keySender";
 import Logger from "../utils/logger";
 import { executeJavaScript } from "../utils/seleniumHelper";
@@ -78,18 +79,19 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     let retryTimes = 0;
     let MaxRetry = 3;
     // 切換frame 到登入
+    this.logInfo("switch to login iframe");
     let frame = await this.driver.wait(
       until.elementLocated(By.id(this.loginFrame)),
       10 * 1000
     );
     await this.driver.switchTo().frame(frame);
 
+    this.logInfo("start to fill login input");
     while (retryTimes < MaxRetry) {
       // 輸入登入帳號
       await this.focusLoginFrameFieldById("USERID");
       if (this.remitterAccount.loginName) {
         WindowFocusTool.focusAndCheckIE();
-        await this.deleteInput();
         await KeySender.sendText(this.remitterAccount.loginName, 1 * 1000, 250);
       } else {
         throw new Error("Account name is null");
@@ -99,7 +101,6 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       await this.focusLoginFrameFieldById("LOGPASS");
       if (this.remitterAccount.loginPassword) {
         WindowFocusTool.focusAndCheckIE();
-        await this.deleteInput();
         await KeySender.sendText(
           this.remitterAccount.loginPassword,
           3 * 1000,
@@ -122,14 +123,15 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     }
   }
 
-  async deleteInput() {
-    for (let index = 0; index < 16; index++) {
-      await KeySender.sendKey(KeySender.KeyEnum.BACKSPACE, 80);
+  private async deleteInput(num: number = 12) {
+    for (let index = 0; index < num; index++) {
+      await KeySender.sendKey(KeySender.KeyEnum.BACKSPACE, 50);
     }
   }
 
-  async focusLoginFrameFieldById(id: string) {
-    await this.driver.wait(
+  private async focusLoginFrameFieldById(id: string) {
+    this.logInfo(`locate input focus ${id}`);
+    const input = await this.driver.wait(
       until.elementLocated(By.id(id)),
       20 * 1000
     );
@@ -138,9 +140,13 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       `focus input id (${id})`,
       `document.getElementById("${id}").focus();`
     );
+
+    var passwordText = await input.getAttribute("value");
+    await this.deleteInput(passwordText.length);
   }
 
-  async checkSignInInformationCorrectly(): Promise<boolean> {
+  public async checkSignInInformationCorrectly(): Promise<boolean> {
+    this.logInfo("start check input value");
     // 驗證帳號資訊
     const userElementId = "USERID";
     WindowFocusTool.focusAndCheckIE();
@@ -177,16 +183,24 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     }
     return true;
   }
-  submitToSignIn(): Promise<void> {
-    throw new Error("Method not implemented.");
+  public async submitToSignIn(): Promise<void> {
+    try {
+      const webElement = await this.driver.wait(
+        until.elementLocated(By.id("loginButton"))
+      );
+      await webElement.click();
+    } catch (e) {
+      throw new Error("can not find submit button");
+    }
   }
   sendUSBKey(): Promise<void> {
     throw new Error("Method not implemented.");
   }
-  checkIfLoginSuccess(globalState: {
+  async checkIfLoginSuccess(globalState: {
     isManualLogin: boolean;
   }): Promise<boolean> {
-    throw new Error("Method not implemented.");
+    const container = await this.driver.findElement(By.id("idxmaincontainer"));
+    return !!container;
   }
   getCookie(): Promise<void> {
     throw new Error("Method not implemented.");
@@ -224,7 +238,64 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   checkIfTransactionSuccess(): Promise<boolean> {
     throw new Error("Method not implemented.");
   }
-  getBalance(): Promise<number> {
-    throw new Error("Method not implemented.");
+  async getBalance(): Promise<number> {
+    // 跳賺到我的帳戶頁面
+    await this.sleep(5);
+    this.logInfo("start to go balance page");
+    WindowFocusTool.focusAndCheckIE();
+    await executeJavaScript(
+      this.driver,
+      "go balance page",
+      'document.getElementById("MENUV6020101").click()'
+    );
+
+    this.logInfo("start to go balance iframe first");
+    // 切換到餘額結果的 iframe
+    await this.sleep(3);
+    let frame = await this.driver.wait(
+      until.elementLocated(By.id("txmainfrm")),
+      10 * 1000
+    );
+    if (!frame) throw new Error("can not found balance id (txmainfrm) element");
+    await this.driver.switchTo().frame(frame);
+
+    this.logInfo("start to go balance iframe second");
+    frame = await this.driver.wait(
+      until.elementLocated(By.id("result")),
+      10 * 1000
+    );
+    if (!frame) throw new Error("can not found balance (result) element");
+
+    this.logInfo("start to go balance iframe third");
+    await this.driver.switchTo().frame(frame);
+    frame = await this.driver.wait(
+      until.elementLocated(By.id("result")),
+      10 * 1000
+    );
+    if (!frame) throw new Error("can not found balance (result) element - 1");
+    await this.driver.switchTo().frame(frame);
+
+    this.logInfo("start to go balance element");
+    var span = await this.driver.findElement(
+      By.className("font_money table_th_money")
+    );
+    if (!span) {
+      throw new Error(
+        "can not found balance result element span class (font_money table_th_money)"
+      );
+    }
+    const balanceText = await span.getText();
+    const balance = +FormatHelper.amount(balanceText);
+    this.logInfo(`balance value (${balance})`);
+    return balance;
+  }
+
+  async sleep(s: number) {
+    // this.driver.sleep(s * 1000);
+    await new Promise((resolve) => setTimeout(resolve, s * 1000));
+  }
+
+  logInfo(message: string): void {
+    Logger({ level: "info", message: message });
   }
 }
