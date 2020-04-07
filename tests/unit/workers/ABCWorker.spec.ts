@@ -4,11 +4,11 @@ import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
 var worker: BankWorker;
 var remitterAccount = {
   balance: 1,
-  code: "T.ABC.001",
-  loginName: "test001",
-  loginPassword: "testpsw",
-  usbPassword: "testpsw",
-  proxy: "10.9.8.7:8800"
+  code: "5.ABC.235",
+  loginName: "bsodfidd",
+  loginPassword: "zz800525",
+  usbPassword: "800525",
+  proxy: "10.203.0.14:8800"
 };
 var task:TaskDetailModel = {
   amount: 1,
@@ -27,8 +27,8 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  worker.closeSelenium();
-  worker.unsetProxy();
+  // worker.closeSelenium();
+  // worker.unsetProxy();
 });
 
 describe("ABCWorker", () => {

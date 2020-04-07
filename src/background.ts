@@ -9,13 +9,15 @@ import {
   Event,
   screen
 } from "electron";
-import { createProtocol, installVueDevtools } from "vue-cli-plugin-electron-builder/lib";
+import {
+  createProtocol,
+  installVueDevtools
+} from "vue-cli-plugin-electron-builder/lib";
 import BankWorker from "./workers/BankWorker";
 import { WorkflowEnum } from "./workers/utils/workflowHelper";
 import logger from "./workers/utils/logger";
 import RemitterAccountModel from "./workers/models/remitterAccountModel";
 const isDevelopment = process.env.NODE_ENV !== "production";
-const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -62,7 +64,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.INPUT_SIGN_IN_INFORMATION:
                 return resolve(await worker.inputSignInInformation());
               case WorkflowEnum.LAUNCH_SELENIUM:
-                return resolve(await worker.launchSelenium({ width: width * (1 / 2), height }));
+                return resolve(await worker.launchSelenium(flowArgs));
               case WorkflowEnum.SEND_USB_KEY:
                 return resolve(await worker.sendUSBKey());
               case WorkflowEnum.SET_IE_ENVIRONMENT:
@@ -93,15 +95,16 @@ const workerCommunicator = (ipcMain: IpcMain) => {
 
 function createWindow() {
   // Create the browser window.
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   win = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false
     },
     height,
+    width: process.env.NODE_ENV === "production" ? width * (1 / 2) : width,
     useContentSize: true,
-    width: width * (1 / 2),
-    x: width * (1 / 2),
+    x: process.env.NODE_ENV === "production" ? width * (1 / 2) : 0,
     y: 0
   });
 

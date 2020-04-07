@@ -50,7 +50,8 @@ if (process.env.NODE_ENV !== "production") {
   );
 }
 
-var log = ({ level, message }:{ level: string, message: string }) => {
+var log = ({ level, message }: { level: string; message: string }) => {
+  if (!message) message = "";
   logger.log(level, message.toString());
 };
 

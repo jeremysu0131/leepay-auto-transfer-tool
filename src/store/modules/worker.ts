@@ -132,7 +132,8 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
 
   @Action
   private async SetIEEnvironment() {
-    await transponder(ipcRenderer, WorkflowEnum.SET_IE_ENVIRONMENT);
+ var { isFlowExecutedSuccess, message } = await transponder(ipcRenderer, WorkflowEnum.SET_IE_ENVIRONMENT);
+ console.log(isFlowExecutedSuccess, message);
     // if (!(await this.worker.setIEEnvironment())) {
     //   throw new Error("Set IE enviroment fail");
     // }
