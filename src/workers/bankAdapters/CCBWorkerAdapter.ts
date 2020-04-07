@@ -89,7 +89,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     this.logInfo("start to fill login input");
     while (retryTimes < MaxRetry) {
       // 輸入登入帳號
-      await this.focusLoginFrameFieldById("USERID");
+      await this.focusInputById("USERID");
       if (this.remitterAccount.loginName) {
         WindowFocusTool.focusAndCheckIE();
         await KeySender.sendText(this.remitterAccount.loginName, 1 * 1000, 250);
@@ -98,7 +98,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       }
 
       // 輸入登入密碼
-      await this.focusLoginFrameFieldById("LOGPASS");
+      await this.focusInputById("LOGPASS");
       if (this.remitterAccount.loginPassword) {
         WindowFocusTool.focusAndCheckIE();
         await KeySender.sendText(
@@ -129,7 +129,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     }
   }
 
-  private async focusLoginFrameFieldById(id: string) {
+  private async focusInputById(id: string) {
     this.logInfo(`locate input focus ${id}`);
     const input = await this.driver.wait(
       until.elementLocated(By.id(id)),
@@ -205,14 +205,63 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   getCookie(): Promise<void> {
     throw new Error("Method not implemented.");
   }
-  goTransferPage(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async goTransferPage(): Promise<void> {
+    // button id 'txmainfrm' , go transfer page
+    await this.sleep(5);
+    this.logInfo("start to go transfer page");
+    // let frame = await this.driver.wait(
+    //   until.elementLocated(By.id("txmainfrm")),
+    //   10 * 1000
+    // );
+    // if (!frame) throw new Error("can not found balance id (txmainfrm) element");
+    // await this.driver.switchTo().frame(frame);
+    WindowFocusTool.focusAndCheckIE();
+    await executeJavaScript(
+      this.driver,
+      "go transfer page",
+      'document.getElementById("MENUV6030104").click()'
+    );
   }
-  checkIfInTransferPage(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  
+  async checkIfInTransferPage(): Promise<boolean> {
+    // switch to frame txmainfrm
+    await this.sleep(5);
+    this.logInfo("check if receiver name input exist");
+    let frame = await this.driver.wait(
+      until.elementLocated(By.id("txmainfrm")),
+      10 * 1000
+    );
+    if (!frame) throw new Error("can not found transfer frame (txmainfrm)");
+    await this.driver.switchTo().frame(frame);
+
+    const receiverNameInput = await this.driver.findElement(By.id("je63"));
+    return !!receiverNameInput;
   }
-  fillTransferForm(): Promise<void> {
-    throw new Error("Method not implemented.");
+  
+  async fillTransferForm(): Promise<void> {
+    // switchTo transfer frame
+    let frame = await this.driver.wait(
+      until.elementLocated(By.id("txmainfrm")),
+      10 * 1000
+    );
+    if (!frame) throw new Error("can not found transfer frame (txmainfrm)");
+    await this.driver.switchTo().frame(frame);
+    // TODO TR_SKZHMC 姓名 tr id
+    await this.focusInputById("TR_SKZHMC");
+    if (this.remitterAccount.loginPassword) {
+      WindowFocusTool.focusAndCheckIE();
+      await KeySender.sendText(
+        this.remitterAccount.loginPassword,
+        3 * 1000,
+        250
+      );
+    } else {
+      throw new Error("Account name is null");
+    }
+    // TODO TR_SKZHMC 帳號 tr id
+    // TODO TR_SKZHMC 密碼 tr id
+    // TODO txtTranAmt 目標金額 input id
+    // TODO subBut 下一步
   }
   checkTransferInformationCorrectly(): Promise<boolean> {
     throw new Error("Method not implemented.");

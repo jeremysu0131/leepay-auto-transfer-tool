@@ -9,13 +9,15 @@ import {
   Event,
   screen
 } from "electron";
-import { createProtocol, installVueDevtools } from "vue-cli-plugin-electron-builder/lib";
+import {
+  createProtocol,
+  installVueDevtools
+} from "vue-cli-plugin-electron-builder/lib";
 import BankWorker from "./workers/BankWorker";
 import { WorkflowEnum } from "./workers/utils/workflowHelper";
 import logger from "./workers/utils/logger";
 import RemitterAccountModel from "./workers/models/remitterAccountModel";
 const isDevelopment = process.env.NODE_ENV !== "production";
-const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -31,7 +33,8 @@ const workerCommunicator = (ipcMain: IpcMain) => {
   ipcMain.on(
     "asynchronous-message",
     async(event: Event, flowName: any, flowArgs: any) => {
-      logger(flowName);
+      logger({ level: "debug", message: `Running flow name: ${flowName}, args: ${JSON.stringify(flowArgs)}` });
+      // logger(flowName);
       try {
         // eslint-disable-next-line no-async-promise-executor
         var result = await new Promise(async(resolve, reject) => {
@@ -62,11 +65,11 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.INPUT_SIGN_IN_INFORMATION:
                 return resolve(await worker.inputSignInInformation());
               case WorkflowEnum.LAUNCH_SELENIUM:
-                return resolve(await worker.launchSelenium({ width: width * (1 / 2), height }));
+                return resolve(await worker.launchSelenium(flowArgs));
               case WorkflowEnum.SEND_USB_KEY:
                 return resolve(await worker.sendUSBKey());
               case WorkflowEnum.SET_IE_ENVIRONMENT:
-                return resolve(worker.setIEEnvironment());
+                return resolve(await worker.setIEEnvironment());
               case WorkflowEnum.SET_PROXY:
                 return resolve(await worker.setProxy());
               case WorkflowEnum.SUBMIT_TO_SIGN_IN:
@@ -80,11 +83,11 @@ const workerCommunicator = (ipcMain: IpcMain) => {
           }
         });
 
-        event.sender.send("asynchronous-reply", { isSuccess: result });
+        event.sender.send("asynchronous-reply", result);
       } catch (error) {
         event.sender.send("asynchronous-reply", {
-          isSuccess: false,
-          message: error.toString()
+          isFlowExecutedSuccess: false,
+          message: JSON.stringify(error) 
         });
       }
     }
@@ -93,15 +96,16 @@ const workerCommunicator = (ipcMain: IpcMain) => {
 
 function createWindow() {
   // Create the browser window.
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   win = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false
     },
     height,
+    width: process.env.NODE_ENV === "production" ? width * (1 / 2) : width,
     useContentSize: true,
-    width: width * (1 / 2),
-    x: width * (1 / 2),
+    x: process.env.NODE_ENV === "production" ? width * (1 / 2) : 0,
     y: 0
   });
 

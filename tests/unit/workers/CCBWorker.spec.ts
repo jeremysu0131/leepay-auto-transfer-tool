@@ -48,12 +48,17 @@ describe.only("CCBWorker:login", () => {
   });
 
   it("submit", async() => {
-    const result = await worker.submitToSignIn();
+    await worker.submitToSignIn();
   });
 
-  it("getBalance", async() => {
+  it.skip("getBalance", async() => {
     const result = await worker.getBalance();
     console.log(result);
     expect(result).toBeGreaterThan(0);
   }, 300000);
+
+  it("go transfer page", async() => {
+    const result = await worker.goTransferPage();
+    expect(result).toEqual(true);
+   });
 });
