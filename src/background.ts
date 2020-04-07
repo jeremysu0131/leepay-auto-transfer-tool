@@ -33,7 +33,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
   ipcMain.on(
     "asynchronous-message",
     async(event: Event, flowName: any, flowArgs: any) => {
-      logger({ level: "debug", message: `Running flow name: ${flowName}, args: ${flowArgs}` });
+      logger({ level: "debug", message: `Running flow name: ${flowName}, args: ${JSON.stringify(flowArgs)}` });
       // logger(flowName);
       try {
         // eslint-disable-next-line no-async-promise-executor
@@ -83,11 +83,11 @@ const workerCommunicator = (ipcMain: IpcMain) => {
           }
         });
 
-        event.sender.send("asynchronous-reply", { isSuccess: result });
+        event.sender.send("asynchronous-reply", result);
       } catch (error) {
         event.sender.send("asynchronous-reply", {
-          isSuccess: false,
-          message: error.toString()
+          isFlowExecutedSuccess: false,
+          message: JSON.stringify(error) 
         });
       }
     }
