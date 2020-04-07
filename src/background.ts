@@ -33,7 +33,8 @@ const workerCommunicator = (ipcMain: IpcMain) => {
   ipcMain.on(
     "asynchronous-message",
     async(event: Event, flowName: any, flowArgs: any) => {
-      logger(flowName);
+      logger({ level: "debug", message: `Running flow name: ${flowName}, args: ${flowArgs}` });
+      // logger(flowName);
       try {
         // eslint-disable-next-line no-async-promise-executor
         var result = await new Promise(async(resolve, reject) => {
@@ -68,7 +69,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.SEND_USB_KEY:
                 return resolve(await worker.sendUSBKey());
               case WorkflowEnum.SET_IE_ENVIRONMENT:
-                return resolve(worker.setIEEnvironment());
+                return resolve(await worker.setIEEnvironment());
               case WorkflowEnum.SET_PROXY:
                 return resolve(await worker.setProxy());
               case WorkflowEnum.SUBMIT_TO_SIGN_IN:
