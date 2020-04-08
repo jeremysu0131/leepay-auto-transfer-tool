@@ -1,5 +1,6 @@
 import { Builder } from "selenium-webdriver";
 import { IWorkerAdapter } from "./IWorkerAdapter";
+import { BalanceModel } from "./models/BalanceModel";
 import RemitterAccountModel from "./models/remitterAccountModel";
 import TaskDetailModel from "./models/taskDetailModel";
 import { WorkerResponseModel } from "./models/workerResponseModel";
@@ -260,10 +261,10 @@ export default class BankWorker {
     }
   }
 
-  async getBalance(): Promise<WorkerResponseModel> {
-    await this.instance.getBalance();
+  async getBalance(): Promise<BalanceModel> {
+    const balance = await this.instance.getBalance();
     Logger({ message: "Balance got", level: "info" });
-    return { isFlowExecutedSuccess: true };
+    return { isFlowExecutedSuccess: true, balance };
   }
 }
 
