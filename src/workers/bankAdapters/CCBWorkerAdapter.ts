@@ -234,11 +234,12 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     if (!frame) throw new Error("can not found transfer frame (txmainfrm)");
     await this.driver.switchTo().frame(frame);
 
-    const receiverNameInput = await this.driver.findElement(By.id("je63"));
+    const receiverNameInput = await this.driver.findElement(By.id("TR_SKZHMC"));
     return !!receiverNameInput;
   }
   
   async fillTransferForm(): Promise<void> {
+    await this.sleep(1);
     // switchTo transfer frame
     let frame = await this.driver.wait(
       until.elementLocated(By.id("txmainfrm")),
