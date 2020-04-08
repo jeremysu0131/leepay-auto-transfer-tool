@@ -2,6 +2,7 @@ import { Builder } from "selenium-webdriver";
 import { IWorkerAdapter } from "./IWorkerAdapter";
 import RemitterAccountModel from "./models/remitterAccountModel";
 import TaskDetailModel from "./models/taskDetailModel";
+import { WorkerResponseModel } from "./models/workerResponseModel";
 import Logger from "./utils/logger";
 import { setIEEnvironment, setProxy, unsetProxy } from "./utils/regeditTool";
 import { WorkflowEnum } from "./utils/workflowHelper";
@@ -22,18 +23,18 @@ export default class BankWorker {
     this.taskStartAt = new Date();
   }
 
-  setTask(task: TaskDetailModel): boolean {
+  setTask(task: TaskDetailModel): WorkerResponseModel {
     try {
       if (task.amount === 0) throw new Error("Task amount not able to 0");
       this.instance.setTask(task);
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async setIEEnvironment(): Promise<{ isFlowExecutedSuccess:boolean, message?:string }> {
+  async setIEEnvironment(): Promise<WorkerResponseModel> {
     try {
       await setIEEnvironment();
       return { isFlowExecutedSuccess: true };
@@ -43,31 +44,31 @@ export default class BankWorker {
     }
   }
 
-  async setProxy(): Promise<boolean> {
+  async setProxy(): Promise<WorkerResponseModel> {
     try {
       await setProxy(this.instance.getRemitterAccount().proxy);
 
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ message: error, level: "error" });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async unsetProxy(): Promise<boolean> {
+  async unsetProxy(): Promise<WorkerResponseModel> {
     try {
       await unsetProxy();
       Logger({ message: "Proxy unset", level: "info" });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
   async launchSelenium(displaySize: {
     width: number;
     height: number;
-  }): Promise<boolean> {
+  }): Promise<WorkerResponseModel> {
     try {
       const driver = await new Builder()
         .withCapabilities({
@@ -93,53 +94,53 @@ export default class BankWorker {
       await this.instance.launchSelenium();
 
       Logger({ level: "debug", message: "Selenium launched" });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async closeSelenium(): Promise<boolean> {
+  async closeSelenium(): Promise<WorkerResponseModel> {
     if (this.instance.getDriver()) await this.instance.getDriver().quit();
     Logger({ message: "Selenium closed", level: "info" });
-    return true;
+    return { isFlowExecutedSuccess: true };
   }
 
-  async inputSignInInformation(): Promise<boolean> {
+  async inputSignInInformation(): Promise<WorkerResponseModel> {
     try {
       // this.instance.card = useCurrentAccount
       //   ? getCurrentCardDetail()
       //   : getSelectedCardDetail();
       await this.instance.inputSignInInformation();
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error.toString() });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async submitToSignIn(): Promise<boolean> {
+  async submitToSignIn(): Promise<WorkerResponseModel> {
     try {
       await this.instance.submitToSignIn();
 
       Logger({ message: "Bank Logged In", level: "info" });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error.toString() });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async sendUSBKey(): Promise<boolean> {
+  async sendUSBKey(): Promise<WorkerResponseModel> {
     try {
       await this.instance.sendUSBKey();
 
       Logger({ message: "USB key sent", level: "info" });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error.toString() });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
@@ -148,35 +149,35 @@ export default class BankWorker {
    * @param {Object} globalState
    * @param {Boolean} globalState.isManualLogin
    */
-  async checkIfLoginSuccess(globalState: any): Promise<boolean> {
+  async checkIfLoginSuccess(globalState: any): Promise<WorkerResponseModel> {
     const workflowName = WorkflowEnum.CHECK_IF_LOGIN_SUCCESS;
     try {
       const isLoginSuccess = await this.instance.checkIfLoginSuccess(
         globalState
       );
 
-      return isLoginSuccess;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async getCookie(): Promise<boolean> {
+  async getCookie(): Promise<WorkerResponseModel> {
     try {
       //   store.commit("SET_COOKIE", data.cookie);
       //   store.commit("SET_SESSION", data.session);
       // setCookieAndSession(await this.instance.getCookie());
 
       Logger({ message: "Got cookie and session", level: "info" });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async goTransferPage(): Promise<boolean> {
+  async goTransferPage(): Promise<WorkerResponseModel> {
     this.taskStartAt = new Date();
 
     try {
@@ -187,53 +188,53 @@ export default class BankWorker {
         message: "Redirected to transfer page",
         level: "info"
       });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async fillTransferFrom(): Promise<boolean> {
+  async fillTransferFrom(): Promise<WorkerResponseModel> {
     try {
       await this.instance.fillTransferForm();
       await this.instance.checkTransferInformationCorrectly();
 
       Logger({ message: "Transfer form filled", level: "info" });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async fillNote(): Promise<boolean> {
+  async fillNote(): Promise<WorkerResponseModel> {
     try {
       await this.instance.fillNote();
       await this.instance.checkIfNoteFilled();
 
       Logger({ message: "Note filled", level: "info" });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
-  async confirmTransaction(): Promise<boolean> {
+  async confirmTransaction(): Promise<WorkerResponseModel> {
     try {
       await this.instance.checkBankReceivedTransferInformation();
       await this.instance.sendPasswordToPerformTransaction();
       await this.instance.sendUsbPasswordToPerformTransaction();
 
       Logger({ message: "Transaction confirmed", level: "info" });
-      return true;
+      return { isFlowExecutedSuccess: true };
     } catch (error) {
       Logger({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async checkIfTransactionSuccess(): Promise<boolean> {
+  async checkIfTransactionSuccess(): Promise<WorkerResponseModel> {
     try {
       var isCheckSuccess = await this.instance.checkIfTransactionSuccess();
       calculateTransferTime(this.taskStartAt);
@@ -244,25 +245,25 @@ export default class BankWorker {
           message: "Transfer success, you can start next transaction",
           level: "info"
         });
-        return true;
+        return { isFlowExecutedSuccess: true };
       } else {
         Logger({
           level: "warn",
           message:
             "System can't check the transfer result, please check it manually"
         });
-        return false;
+        return { isFlowExecutedSuccess: false, message: "Fail to check if transaction success" };
       }
     } catch (error) {
       Logger({ message: error, level: "error" });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
 
-  async getBalance(): Promise<number> {
-    const balance = await this.instance.getBalance();
-    Logger({ message: `Balance got ${balance}`, level: "info" });
-    return balance;
+  async getBalance(): Promise<WorkerResponseModel> {
+    await this.instance.getBalance();
+    Logger({ message: "Balance got", level: "info" });
+    return { isFlowExecutedSuccess: true };
   }
 }
 
