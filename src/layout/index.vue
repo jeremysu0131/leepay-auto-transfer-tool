@@ -1,7 +1,25 @@
 <template>
   <div>
     <top-header />
-    <task-panel />
+    <el-tabs
+      v-model="showingTab"
+      type="border-card"
+      class="tabs"
+    >
+      <el-tab-pane
+        name="accounts"
+        label="Accounts"
+      >
+        <account-panel />
+      </el-tab-pane>
+      <el-tab-pane
+        name="tasks"
+        :label="taskPanelLabel"
+        :disabled="!task.isVisible"
+      >
+        <task-panel />
+      </el-tab-pane>
+    </el-tabs>
     <workflow-dialog v-if="workflowDialogVisible" />
   </div>
 </template>
@@ -20,6 +38,7 @@ import WorkflowDialog from "@/views/workflow/index.vue";
 @Component({
   name: "Layout",
   components: {
+    AccountPanel,
     TaskPanel,
     TopHeader,
     WorkflowDialog

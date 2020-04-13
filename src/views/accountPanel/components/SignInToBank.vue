@@ -58,9 +58,6 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import { workflowStatusEnum } from "../../../../worker/utils/workflowHelper";
-import { getDetailById } from "@/api/card";
 export default {
   data() {
     return {

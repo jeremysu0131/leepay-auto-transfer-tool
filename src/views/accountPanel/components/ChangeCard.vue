@@ -59,49 +59,47 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from "vuex";
-import { getDetailById } from "@/api/card";
-export default {
-  data() {
-    return {};
-  },
-  computed: {
-    ...mapGetters(["app", "card"]),
-    currentCard() {
-      return this.card.current;
-    },
-    selectedCard() {
-      return this.card.selected;
-    },
-    accountStatus() {
-      return this.app.account;
-    }
-  },
-  methods: {
-    async handleManualLogin() {
-      await this.resetAccountStatus();
-      this.$store.commit("HANDLE_MANUAL_LOGIN", true);
-      this.$store.commit("SET_SIGN_IN_WORKFLOW", true);
-      this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "sign-in-to-bank");
-      this.$store.dispatch("RunManualLoginFlows");
-    },
-    async handleAutoLogin() {
-      await this.resetAccountStatus();
-      this.$store.commit("HANDLE_MANUAL_LOGIN", false);
-      this.$store.commit("SET_SIGN_IN_WORKFLOW", true);
-      this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "sign-in-to-bank");
-      this.$store.dispatch("RunAutoLoginFlows");
-    },
-    handleCancel() {
-      this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "bank-card-search");
-    },
-    async resetAccountStatus() {
-      this.$store.commit("HANDLE_TASK_FETCHABLE", false);
-      this.$store.commit("HANDLE_ACCOUNT_SIGN_IN_SUCCESS", false);
-    }
+<script lang="ts">
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { AccountModule } from "../../../store/modules/account";
+import { AppModule } from "../../../store/modules/app";
+import { WorkerModule } from "../../../store/modules/worker";
+@Component({
+  name: "ChangeCard"
+})
+export default class extends Vue {
+  currentAccount() {
+    return AccountModule.current;
   }
-};
+  selectedAccount() {
+    return AccountModule.selected;
+  }
+  accountStatus() {
+    return AppModule.account;
+  }
+
+  async handleManualLogin() {
+    await this.resetAccountStatus();
+    AppModule.HANDLE_MANUAL_LOGIN(true);
+    WorkerModule.SET_SIGN_IN_WORKFLOW(true);
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
+    WorkerModule.RunManualLoginFlows();
+  }
+  async handleAutoLogin() {
+    await this.resetAccountStatus();
+    AppModule.HANDLE_MANUAL_LOGIN(true);
+    WorkerModule.SET_SIGN_IN_WORKFLOW(true);
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
+    WorkerModule.RunAutoLoginFlows();
+  }
+  handleCancel() {
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
+  }
+  async resetAccountStatus() {
+   AppModule.HANDLE_TASK_FETCHABLE(false);
+   AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(false);
+  }
+}
 </script>
 
 <style lang="scss">
