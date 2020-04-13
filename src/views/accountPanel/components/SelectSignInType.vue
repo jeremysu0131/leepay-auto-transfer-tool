@@ -48,12 +48,12 @@ import { AccountModule } from "../../../store/modules/account";
 import { AppModule } from "../../../store/modules/app";
 import { WorkerModule } from "../../../store/modules/worker";
 import { mixins } from "vue-class-component";
-import signInType from "../mixins/signInType";
+import signInTypeMixins from "../mixins/signInType";
 
 @Component({
   name: "SelectSignInType"
 })
-export default class extends mixins(signInType) {
+export default class extends mixins(signInTypeMixins) {
   private get app() {
     return AppModule;
   }

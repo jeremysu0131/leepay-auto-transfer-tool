@@ -47,7 +47,7 @@ class App extends VuexModule implements IAppState {
   };
   public device = DeviceType.Desktop;
   public platform = "leepay";
-  public showingTab = "tasks";
+  public showingTab = "accounts";
   public isManualLogin = true;
   public isProxySet = false;
   public task = {
