@@ -77,6 +77,20 @@ class Card extends VuexModule implements IAccountState {
     this.currentDetail.balanceInOnlineBank = balance;
   }
   @Action
+  async Search(accountCode: string): Promise<{ id: number; code: string, balance:number }[]> {
+    var { data } = await AccountApi.getList();
+    return (data.data as Array<{ key: number; value: string }>)
+      .filter(account => account.value.indexOf(accountCode) !== -1)
+      .map(account => {
+        const [code, balance] = account.value.split("-");
+        return {
+          id: account.key,
+          code: code.trim(),
+          balance: parseFloat(balance.trim())
+        };
+      });
+  }
+  @Action
   async GetId(accountCode: string): Promise<number> {
     var { data } = await AccountApi.getList();
     var account = (data.data as Array<{ key: number; value: string }>).find(
@@ -91,7 +105,9 @@ class Card extends VuexModule implements IAccountState {
   async GetProxy(accountId: number): Promise<string> {
     var response = await AccountApi.getAssignedProxy(accountId);
     var data = response.data.data;
-    if (data.length === 0) throw new Error("Proxy not assigned to this account");
+    if (data.length === 0) {
+      throw new Error("Proxy not assigned to this account");
+    }
     var proxy = data[0].value.split("http://")[1];
     return proxy;
   }

@@ -35,7 +35,7 @@
       <el-table
         ref="acctCodeTable"
         size="mini"
-        :data="tableData"
+        :data="accountList"
         style="width: 100%"
         :height="tableHeight"
         highlight-current-row
@@ -43,17 +43,19 @@
         @current-change="handleCurrentChange"
       >
         <el-table-column
-          prop="accountCode"
-          label="Account"
+          prop="code"
+          label="Account Code"
         />
         <el-table-column
           prop="balance"
           label="Balance"
-        />
-        <el-table-column
-          prop="bank.bankName"
-          label="Channel Group"
-        />
+        >
+          <template
+            slot-scope="scope"
+          >
+            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.balance) }}
+          </template>
+        </el-table-column>
       </el-table>
     </div>
     <div class="bank-card-search__footer">
@@ -90,9 +92,9 @@ export default class extends Vue {
   private isSearchingCard = false;
   private isSigningInBank = false;
   private selectedBankCard = "";
-  private tableData = [];
+  private accountList = [] as any;
   private form = {
-    accountCode: process.env.NODE_ENV === "development" ? "L.ICBC.329" : ""
+    accountCode: process.env.NODE_ENV === "development" ? "ICBC" : ""
   };
 
   // ...mapGetters(["app", "card", "worker"]),
@@ -113,17 +115,7 @@ export default class extends Vue {
   private async searchCardByBankCode() {
     try {
       this.isSearchingCard = true;
-      // this.tableData = codeList.data.value
-      //   .map((card: any) => {
-      //     return {
-      //       id: card.id,
-      //       accountCode: card.bankAcctCode,
-      //       bankCode: card.bank.bankCode
-      //     };
-      //   })
-      //   .filter(
-      //     (card: any) => card.accountCode.indexOf(this.form.accountCode) !== -1
-      //   );
+      this.accountList = await AccountModule.Search(this.form.accountCode);
     } catch (error) {
       console.log(error);
     } finally {

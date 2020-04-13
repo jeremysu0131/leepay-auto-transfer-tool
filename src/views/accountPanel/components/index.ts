@@ -1,4 +1,4 @@
-export { default as BankCardSearch } from "./BankCardSearch.vue";
+export { default as AccountSearch } from "./AccountSearch.vue";
 // export { default as ChangeCard } from "./ChangeCard.vue";
 // export { default as SelectSignInType } from "./SelectSignInType.vue";
 // export { default as SignInToBank } from "./SignInToBank.vue";
