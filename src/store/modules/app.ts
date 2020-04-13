@@ -127,8 +127,8 @@ class App extends VuexModule implements IAppState {
 
   @Mutation
   // Account
-  // bank-card-search, select-sign-in-type, sign-in-to-bank
-  public HANDLE_ACCOUNT_SHOWING_PAGE(status = "bank-card-search") {
+  // account-search, select-sign-in-type, sign-in-to-bank
+  public HANDLE_ACCOUNT_SHOWING_PAGE(status = "account-search") {
     this.account.showingPage = status;
   }
   @Mutation
@@ -162,7 +162,7 @@ class App extends VuexModule implements IAppState {
       isProcessing: false
     };
     this.account = {
-      showingPage: "bank-card-search",
+      showingPage: "account-search",
       signInSuccessAt: new Date(),
       isSignInSuccess: false,
       isProcessingSignIn: false

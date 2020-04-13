@@ -80,7 +80,7 @@ export default class extends Vue {
     return AppModule.account;
   }
   async handleUnselect() {
-    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
     AppModule.HANDLE_TASK_AUTO_PROCESS(false);
     AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(false);
     AppModule.HANDLE_TASK_VISIBLE(false);
@@ -94,7 +94,7 @@ export default class extends Vue {
     ]);
   }
   handleCancel() {
-    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
   }
 }
 </script>

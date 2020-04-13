@@ -1,12 +1,16 @@
 <template>
   <div class="select-sign-in-type">
     <div class="select-sign-in-type__title">
-      <span>Account: {{ account.selected.accountCode }}</span>
+      <span>Account: {{ selectedAccount.code }}</span>
     </div>
     <div class="select-sign-in-type__body">
       <div class="select-sign-in-type__body-prompt">
-        <span>Balance:{{ account.selectedDetail.balanceInSystem? new Intl.NumberFormat('zh-CN', {style: 'currency' ,currency: 'CNY'}).format(account.selectedDetail.balanceInSystem) :'-' }},</span>
-        <span>Channel Group: {{ account.selectedDetail.channelGroup||'N/A' }}</span>
+        <span>
+          Balance:{{ selectedAccount.balance?
+            new Intl.NumberFormat('zh-CN', {style: 'currency' ,currency: 'CNY'}).format(
+              selectedAccount.balance ) :'-' }},
+        </span>
+        <span>Channel Group: {{ selectedAccount.channelGroup||'N/A' }}</span>
       </div>
       <div class="select-sign-in-type__body-prompt">
         Please confirm account selected and choose the method of Login.
@@ -50,18 +54,18 @@ import signInType from "../mixins/signInType";
   name: "SelectSignInType"
 })
 export default class extends mixins(signInType) {
-  private app() {
+  private get app() {
     return AppModule;
   }
-  private account() {
-    return AccountModule;
+  private get selectedAccount() {
+    return AccountModule.selected;
   }
-  private worker() {
+  private get worker() {
     return WorkerModule;
   }
 
   cancel() {
-    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
   }
 }
 </script>

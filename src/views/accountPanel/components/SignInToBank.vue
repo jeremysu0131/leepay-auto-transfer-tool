@@ -128,7 +128,7 @@ export default {
         .catch(() => {});
     },
     handleSignInSuccess() {
-      this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "bank-card-search");
+      this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "account-search");
       this.$store.commit("HANDLE_ACCOUNT_SIGN_IN_SUCCESS", true);
       this.$store.commit("SET_SIGN_IN_SUCCESS_TIME", new Date());
 
@@ -138,7 +138,7 @@ export default {
       this.$store.dispatch("SetCurrentCard");
     },
     cancel() {
-      this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "bank-card-search");
+      this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "account-search");
     },
     async handleRowClick(val) {
       try {

@@ -18,20 +18,19 @@
         <span style="font-weight: bold">{{ card.currentDetail.channelGroup || ' - ' }}</span>
       </div>
     </div>
-    <account-search>
-    <!-- <account-search v-show="showingPage==='account-search'" /> -->
-    <!-- <select-sign-in-type v-if="app.account.showingPage==='select-sign-in-type'" />
-    <sign-in-to-bank v-if="app.account.showingPage==='sign-in-to-bank'" />
-    <unselect-card v-if="app.account.showingPage==='unselect-card'" />
-    <change-card v-if="app.account.showingPage==='change-card'" /> -->
-    </account-search>
+    <account-search v-show="showingPage==='account-search'" />
+    <select-sign-in-type v-if="showingPage==='select-sign-in-type'" />
+    <!-- <sign-in-to-bank v-if="app.account.showingPage==='sign-in-to-bank'" /> -->
+    <!-- <unselect-card v-if="app.account.showingPage==='unselect-card'" /> -->
+    <!-- <change-card v-if="app.account.showingPage==='change-card'" /> -->
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { AccountSearch
-// ChangeCard, SelectSignInType, SignInToBank, UnselectCard
+, SelectSignInType
+// ChangeCard,  SignInToBank, UnselectCard
  } from "./components";
 import { AppModule } from "../../store/modules/app";
 import { AccountModule } from "../../store/modules/account";
@@ -39,9 +38,9 @@ import { AccountModule } from "../../store/modules/account";
 @Component({
   name: "Layout",
   components: {
-    AccountSearch
+    AccountSearch,
     // ChangeCard,
-    // SelectSignInType,
+    SelectSignInType
     // SignInToBank,
     // UnselectCard
   }
@@ -55,7 +54,7 @@ export default class extends Vue {
   }
 
   private handleSelect() {
-    this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "bank-card-search");
+    this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "account-search");
   }
   private handleUnselectCurrentCard() {
     this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "unselect-card");

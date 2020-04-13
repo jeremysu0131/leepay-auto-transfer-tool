@@ -1,13 +1,13 @@
 <template>
-  <div class="bank-card-search">
-    <div class="bank-card-search__body">
-      <div class="bank-card-search__prompt">
+  <div class="account-search">
+    <div class="account-search__body">
+      <div class="account-search__prompt">
         Please select the account to use
       </div>
       <el-form
         :model="form"
         :inline="true"
-        class="bank-card-search__form"
+        class="account-search__form"
         label-position="left"
         @submit.native.prevent
       >
@@ -58,10 +58,10 @@
         </el-table-column>
       </el-table>
     </div>
-    <div class="bank-card-search__footer">
+    <div class="account-search__footer">
       <el-button
         v-if="!currentAccount.accountCode"
-        class="bank-card-search__footer-button"
+        class="account-search__footer-button"
         :loading="isSigningInBank"
         :disabled="!selectedBankCard"
         @click="handleAccountSelect"
@@ -70,7 +70,7 @@
       </el-button>
       <el-button
         v-if="currentAccount.accountCode"
-        class="bank-card-search__footer-button"
+        class="account-search__footer-button"
         :loading="isSigningInBank"
         :disabled="!selectedBankCard"
         @click="handleBankCardChange"
@@ -96,7 +96,7 @@ export default class extends Vue {
   private selectedBankCard = {} as any;
   private accountList = [] as any;
   private form = {
-    accountCode: process.env.NODE_ENV === "development" ? "ICBC" : ""
+    accountCode: process.env.NODE_ENV === "development" ? "PSS_ICBC_003" : ""
   };
 
   // ...mapGetters(["app", "card", "worker"]),
@@ -107,7 +107,7 @@ export default class extends Vue {
   // }
   // get worker(){
   // }
-  currentAccount() {
+  get currentAccount() {
     return AccountModule.current;
   }
   get tableHeight() {
@@ -125,7 +125,9 @@ export default class extends Vue {
     }
   }
   private async handleAccountSelect() {
-    var account = await AccountModule.GetAccountDetail(this.selectedBankCard.id);
+    var account = await AccountModule.GetAccountDetail(
+      this.selectedBankCard.id
+    );
     account.proxy = await AccountModule.GetProxy(this.selectedBankCard.id);
     AccountModule.SET_SELECTED(account);
 
@@ -145,7 +147,7 @@ export default class extends Vue {
 <style lang="scss" scoped>
 @import "../../../styles/variables.scss";
 
-.bank-card-search {
+.account-search {
   &__body {
     font-size: $fontBase;
   }

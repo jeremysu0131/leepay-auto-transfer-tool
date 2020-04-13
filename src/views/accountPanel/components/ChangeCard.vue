@@ -93,7 +93,7 @@ export default class extends Vue {
     WorkerModule.RunAutoLoginFlows();
   }
   handleCancel() {
-    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
   }
   async resetAccountStatus() {
    AppModule.HANDLE_TASK_FETCHABLE(false);
