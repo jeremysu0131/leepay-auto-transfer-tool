@@ -43,6 +43,8 @@ class Log extends VuexModule implements ILogState {
   @Action
   // Show on application and record log
   public SetConsole(logInfo: ILog) {
+    let { level, message } = logInfo;
+    message = message.toString();
     // this.HANDLE_TASK_AUTO_PROCESS(false);
     this.SET_LOG(logInfo);
 

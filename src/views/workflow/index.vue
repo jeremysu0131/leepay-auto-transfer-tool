@@ -36,6 +36,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { WorkerModule } from "../../store/modules/worker";
 import WorkflowStatusEnum from "@/models/WorkflowStatusEnum";
 import { AppModule } from "../../store/modules/app";
+import { LogModule } from "../../store/modules/log";
 
 @Component({
   name: "WorkflowDialog",
@@ -58,14 +59,11 @@ export default class extends Vue {
   private async handleRowClick(row: any) {
     try {
       if (process.env.NODE_ENV === "development") {
-        var result = await WorkerModule.RunSelectedFlow(row.name);
-        console.log(result);
+        var result = await WorkerModule.RunFlow({ name: row.name, args: { width: 800, height: 600 } });
+        LogModule.SetLog({ level: "debug", message: row.name });
       }
     } catch (error) {
-      this.$store.dispatch("SetConsole", {
-        message: error.toString(),
-        level: "debug"
-      });
+        LogModule.SetConsole({ level: "debug", message: error });
     }
   }
 

@@ -36,7 +36,7 @@ export function signInWorkflowEnum(isManualSignIn: any) {
           message: "",
           name: WorkflowEnum.SET_IE_ENVIRONMENT
         },
-        // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
+        { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
         { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
         {
           status: "pending",
@@ -50,7 +50,7 @@ export function signInWorkflowEnum(isManualSignIn: any) {
           message: "",
           name: WorkflowEnum.SET_IE_ENVIRONMENT
         },
-        // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
+        { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
         { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
         {
           status: "pending",

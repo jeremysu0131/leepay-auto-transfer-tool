@@ -15,7 +15,7 @@ import { LogModule } from "./log";
 import { AppModule } from "./app";
 import { TaskModule } from "./task";
 import { transponder } from "../../electron-communicator";
-import { ipcRenderer } from "electron";
+import { ipcRenderer, screen } from "electron";
 import RemitterAccountModel from "../../workers/models/remitterAccountModel";
 import WorkflowStatusEnum from "../../models/WorkflowStatusEnum";
 
@@ -55,16 +55,20 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Action
   async RunAutoLoginFlows() {
+    const screenSize = screen.getPrimaryDisplay().size;
     AppModule.HANDLE_TASK_AUTO_PROCESS(true);
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
     this.SET_SIGN_IN_WORKFLOW(false);
     try {
-      await this.RunFlow(WorkflowEnum.SET_IE_ENVIRONMENT);
-      await this.RunFlow(WorkflowEnum.SET_PROXY);
-      await this.RunFlow(WorkflowEnum.LAUNCH_SELENIUM);
-      await this.RunFlow(WorkflowEnum.INPUT_SIGN_IN_INFORMATION);
-      await this.RunFlow(WorkflowEnum.SUBMIT_TO_SIGN_IN);
-      await this.RunFlow(WorkflowEnum.SEND_USB_KEY);
+      await this.RunFlow({ name: WorkflowEnum.SET_IE_ENVIRONMENT });
+      await this.RunFlow({ name: WorkflowEnum.SET_PROXY });
+      await this.RunFlow({
+        name: WorkflowEnum.LAUNCH_SELENIUM,
+        args: screenSize
+      });
+      await this.RunFlow({ name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION });
+      await this.RunFlow({ name: WorkflowEnum.SUBMIT_TO_SIGN_IN });
+      await this.RunFlow({ name: WorkflowEnum.SEND_USB_KEY });
       return await this.CheckIfLoginSuccess();
     } catch (error) {
       LogModule.SetLog({ message: error, level: "error" });
@@ -80,12 +84,16 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Action
   async RunManualLoginFlows() {
+    const screenSize = screen.getPrimaryDisplay().size;
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
     this.SET_SIGN_IN_WORKFLOW(true);
     try {
-      await this.RunFlow(WorkflowEnum.SET_IE_ENVIRONMENT);
-      await this.RunFlow(WorkflowEnum.SET_PROXY);
-      await this.RunFlow(WorkflowEnum.LAUNCH_SELENIUM);
+      await this.RunFlow({ name: WorkflowEnum.SET_IE_ENVIRONMENT });
+      await this.RunFlow({ name: WorkflowEnum.SET_PROXY });
+      await this.RunFlow({
+        name: WorkflowEnum.LAUNCH_SELENIUM,
+        args: screenSize
+      });
     } catch (error) {
       LogModule.SetLog({ message: error, level: "error" });
     } finally {
@@ -95,46 +103,56 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async RunAutoTransferFlows() {
     try {
-      await this.RunFlow(WorkflowEnum.GO_TRANSFER_PAGE);
-      await this.RunFlow(WorkflowEnum.FILL_TRANSFER_INFORMATION);
-      await this.RunFlow(WorkflowEnum.FILL_NOTE);
-      await this.RunFlow(WorkflowEnum.CONFIRM_TRANSACTION);
-      return await this.RunFlow(WorkflowEnum.CHECK_IF_SUCCESS);
+      await this.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
+      await this.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
+      await this.RunFlow({ name: WorkflowEnum.FILL_NOTE });
+      await this.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
+      return await this.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS });
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       return false;
     }
   }
   @Action
-  public async RunManualTransferFlows() {
+  async RunManualTransferFlows() {
     try {
-      await this.RunFlow(WorkflowEnum.GO_TRANSFER_PAGE);
-      await this.RunFlow(WorkflowEnum.FILL_TRANSFER_INFORMATION);
+      await this.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
+      await this.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     }
   }
 
   @Action
-  private async RunFlow(flowName: WorkflowEnum) {
+  async RunFlow(flow: { name: WorkflowEnum; args?: object }) {
+    console.log(flow.name, flow.args);
     this.UPDATE_FLOW_STATUS({
-      name: flowName,
+      name: flow.name,
       status: WorkflowStatusEnum.RUNNING
     });
 
-    var { isFlowExecutedSuccess, message } = await transponder(
-      ipcRenderer,
-      flowName
-    );
+    /* eslint-disable no-return-await */
+    switch (flow.name) {
+      case flow.name:
+        var { isFlowExecutedSuccess, message } = await transponder(
+          ipcRenderer,
+          flow.name,
+          flow.args
+        );
 
-    this.UPDATE_FLOW_STATUS({
-      name: flowName,
-      status: isFlowExecutedSuccess
-        ? WorkflowStatusEnum.SUCCESS
-        : WorkflowStatusEnum.FAIL
-    });
+        this.UPDATE_FLOW_STATUS({
+          name: flow.name,
+          status: isFlowExecutedSuccess
+            ? WorkflowStatusEnum.SUCCESS
+            : WorkflowStatusEnum.FAIL
+        });
+        if (!isFlowExecutedSuccess) throw new Error(message);
+        break;
 
-    if (!isFlowExecutedSuccess) throw new Error(message);
+      default:
+        throw new Error("No such workflow");
+    }
+    /* eslint-enable no-return-await */
   }
   // TODO
   @Action
@@ -190,17 +208,6 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
       LogModule.SetLog({ level: "error", message: "Fail to get balance" });
       LogModule.SetLog({ level: "error", message: error });
     }
-  }
-  @Action
-  async RunSelectedFlow(flowName: WorkflowEnum) {
-    /* eslint-disable no-return-await */
-    switch (flowName) {
-      case flowName:
-        return this.RunFlow(flowName);
-      default:
-        throw new Error("No such workflow");
-    }
-    /* eslint-enable no-return-await */
   }
 }
 export const WorkerModule = getModule(WorkerModuleStatic);
