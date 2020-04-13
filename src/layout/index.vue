@@ -2,9 +2,10 @@
   <div>
     <top-header />
     <el-tabs
-      v-model="showingTab"
+      :value="showingTab"
       type="border-card"
       class="tabs"
+      @tab-click="handleTabClick"
     >
       <el-tab-pane
         name="accounts"
@@ -56,6 +57,10 @@ export default class extends mixins(ResizeMixin) {
   get task() {
     return TaskModule;
   }
+  private handleTabClick({ name }: { name: string }) {
+    AppModule.HANDLE_SHOWING_TAB("account");
+  }
+
   @Watch("task.list")
   onTaskListChanged() {
     this.$nextTick(() => {
@@ -66,10 +71,6 @@ export default class extends mixins(ResizeMixin) {
         this.taskPanelLabel = `Tasks ( total: ${totalTasks} )`;
       }
     });
-  }
-
-  private handleClickOutside() {
-    AppModule.CloseSideBar(false);
   }
 }
 </script>
