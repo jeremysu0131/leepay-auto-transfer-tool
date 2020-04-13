@@ -40,7 +40,7 @@
         :height="tableHeight"
         highlight-current-row
         border
-        @current-change="handleCurrentChange"
+        @current-change="handleSelectedRow"
       >
         <el-table-column
           prop="code"
@@ -64,7 +64,7 @@
         class="bank-card-search__footer-button"
         :loading="isSigningInBank"
         :disabled="!selectedBankCard"
-        @click="handleBankCardSelect"
+        @click="handleAccountSelect"
       >
         Select
       </el-button>
@@ -87,11 +87,13 @@
 import { Component, Vue, Watch, Prop } from "vue-property-decorator";
 import { AppModule } from "@/store/modules/app";
 import { AccountModule } from "../../../store/modules/account";
+import RemitterAccountModel from "../../../models/remitterAccountModel";
+import { WorkerModule } from "../../../store/modules/worker";
 @Component({ name: "BankCardSearch" })
 export default class extends Vue {
   private isSearchingCard = false;
   private isSigningInBank = false;
-  private selectedBankCard = "";
+  private selectedBankCard = {} as any;
   private accountList = [] as any;
   private form = {
     accountCode: process.env.NODE_ENV === "development" ? "ICBC" : ""
@@ -122,23 +124,19 @@ export default class extends Vue {
       this.isSearchingCard = false;
     }
   }
-  private async handleBankCardSelect() {
-    this.$store.commit("SET_SELECTED_CARD", this.selectedBankCard);
-    await this.getSelectedCardDetail();
-    this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "select-sign-in-type");
+  private async handleAccountSelect() {
+    var account = await AccountModule.GetAccountDetail(this.selectedBankCard.id);
+    account.proxy = await AccountModule.GetProxy(this.selectedBankCard.id);
+    AccountModule.SET_SELECTED(account);
+
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("select-sign-in-type");
+    await WorkerModule.SetWorker(account);
   }
   private async handleBankCardChange() {
-    this.$store.commit("SET_SELECTED_CARD", this.selectedBankCard);
-    await this.getSelectedCardDetail();
-    this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "change-card");
+    // this.$store.commit("SET_SELECTED_CARD", this.selectedBankCard);
+    // this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "change-card");
   }
-  private async getSelectedCardDetail() {
-    const isSetSuccess = await this.$store.dispatch("SetSelectedCardDetail");
-    if (!isSetSuccess) return;
-
-    await this.$store.dispatch("SetWorker");
-  }
-  private handleCurrentChange(val: any) {
+  private handleSelectedRow(val: any) {
     this.selectedBankCard = val;
   }
 }

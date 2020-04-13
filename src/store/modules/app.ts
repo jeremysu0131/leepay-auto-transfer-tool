@@ -31,6 +31,12 @@ export interface IAppState {
     isAutoProcess: boolean;
     isProcessing: boolean;
   };
+   account : {
+    showingPage: string,
+    signInSuccessAt: Date,
+    isSignInSuccess: boolean,
+    isProcessingSignIn:boolean
+  };
 }
 
 @Module({ dynamic: true, store, name: "app" })
@@ -57,7 +63,7 @@ class App extends VuexModule implements IAppState {
     isProcessing: false
   };
   public account = {
-    showingPage: "bank-card-search",
+    showingPage: "account-search",
     signInSuccessAt: new Date(),
     isSignInSuccess: false,
     isProcessingSignIn: false

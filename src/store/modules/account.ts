@@ -7,43 +7,19 @@ import {
   getModule
 } from "vuex-module-decorators";
 import store from "@/store";
+import RemitterAccountModel from "../../models/remitterAccountModel";
+import { LogModule } from "./log";
 
 export interface IAccountState {
-  selected: {};
-  selectedDetail: {};
+  selected: RemitterAccountModel;
+  // selectedDetail: {};
   current: {};
   currentDetail: {};
 }
 
 @Module({ dynamic: true, store, name: "card" })
 class Card extends VuexModule implements IAccountState {
-  public selected = {
-    id: "",
-    accountCode: "",
-    bankCode: "",
-    balanceInSystem: 0,
-    balanceInOnlineBank: 0,
-    accountName: "",
-    accountPassword: "",
-    queryPassword: "",
-    usbPassword: "",
-    proxy: "",
-    cookie: "",
-    session: ""
-  };
-  public selectedDetail = {
-    id: 0,
-    accountCode: "",
-    bankCode: "",
-    balanceInSystem: 0,
-    balanceInOnlineBank: 0,
-    channelGroup: "",
-    accountName: "",
-    accountPassword: "",
-    usbPassword: "",
-    queryPassword: "",
-    proxy: ""
-  };
+  public selected = new RemitterAccountModel();
   public current = {
     id: "",
     accountCode: "",
@@ -76,8 +52,14 @@ class Card extends VuexModule implements IAccountState {
   SET_BANK_BALANCE(balance: number) {
     this.currentDetail.balanceInOnlineBank = balance;
   }
+  @Mutation
+  SET_SELECTED(account: RemitterAccountModel) {
+    this.selected = account;
+  }
   @Action
-  async Search(accountCode: string): Promise<{ id: number; code: string, balance:number }[]> {
+  async Search(
+    accountCode: string
+  ): Promise<{ id: number; code: string; balance: number }[]> {
     var { data } = await AccountApi.getList();
     return (data.data as Array<{ key: number; value: string }>)
       .filter(account => account.value.indexOf(accountCode) !== -1)
@@ -102,21 +84,37 @@ class Card extends VuexModule implements IAccountState {
   }
 
   @Action
+  async GetAccountDetail(accountId: number): Promise<RemitterAccountModel> {
+    var response = await AccountApi.getDetailById(accountId);
+    const detail = response.data.data[0];
+
+    if (!detail) throw new Error("Get account detail fail");
+    var account = new RemitterAccountModel();
+    account.id = accountId;
+    account.balance = detail.balance;
+    account.code = detail.acctCode;
+    account.loginName = detail.acctUsername;
+    account.loginPassword = detail.acctPassword;
+    account.usbPassword = detail.acctUSBPass;
+
+    return account;
+  }
+
+  @Action({ rawError: true })
   async GetProxy(accountId: number): Promise<string> {
     var response = await AccountApi.getAssignedProxy(accountId);
     var data = response.data.data;
     if (data.length === 0) {
-      throw new Error("Proxy not assigned to this account");
+      LogModule.SetConsole({
+        level: "error",
+        message: "Proxy not assigned to this account"
+      });
+      return "";
+    } else {
+      var proxy = data[0].value.split("http://")[1];
+      return proxy;
     }
-    var proxy = data[0].value.split("http://")[1];
-    return proxy;
   }
-  //   @Mutation
-  // private   SET_SELECTED_CARD( account:object)  {
-  //       this.selected.id = account.id;
-  //       this.selected.accountCode = account.accountCode;
-  //       this.selected.bankCode = account.bankCode;
-  //     }
   //   @Mutation
   //  private   UNSET_SELECTED_CARD() {
   //       this.selected = {};

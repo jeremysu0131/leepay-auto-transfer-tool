@@ -19,8 +19,6 @@
             @click="handleRowClick(flow)"
           >
             <td>
-              <!-- <svg-icon :icon-class="iconClass(flow.status)" /> -->
-
               <svg-icon :name="iconClass(flow.status)" />
             </td>
             <td>{{ flow.name }}</td>
@@ -80,7 +78,6 @@ export default class extends Vue {
     }
   }
   private flowStyle(status: WorkflowStatusEnum) {
-    console.log(status);
     switch (status) {
       case WorkflowStatusEnum.RUNNING:
         return { "background-color": "#E6A23C" };

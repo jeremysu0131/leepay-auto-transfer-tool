@@ -6,7 +6,7 @@
         <span style="font-weight: bold">{{ card.currentDetail.accountCode|| ' - ' }}</span>
       </div>
       <el-button
-        v-if="card.current.accountCode && app.account.showingPage !== 'unselect-card'"
+        v-if="card.current.accountCode && showingPage !== 'unselect-card'"
         class="info-header__unselect-button"
         size="mini"
         @click="handleUnselectCurrentCard"
@@ -18,11 +18,13 @@
         <span style="font-weight: bold">{{ card.currentDetail.channelGroup || ' - ' }}</span>
       </div>
     </div>
-    <account-search v-show="app.account.showingPage==='account-search'" />
+    <account-search>
+    <!-- <account-search v-show="showingPage==='account-search'" /> -->
     <!-- <select-sign-in-type v-if="app.account.showingPage==='select-sign-in-type'" />
     <sign-in-to-bank v-if="app.account.showingPage==='sign-in-to-bank'" />
     <unselect-card v-if="app.account.showingPage==='unselect-card'" />
     <change-card v-if="app.account.showingPage==='change-card'" /> -->
+    </account-search>
   </div>
 </template>
 
@@ -45,8 +47,8 @@ import { AccountModule } from "../../store/modules/account";
   }
 })
 export default class extends Vue {
-  get app() {
-    return AppModule;
+  get showingPage() {
+    return AppModule.account.showingPage;
   }
   get card() {
     return AccountModule;

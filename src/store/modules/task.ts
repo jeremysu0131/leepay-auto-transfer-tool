@@ -97,6 +97,7 @@ class Task extends VuexModule implements ITaskState {
     accountId: number
   ): Promise<TaskDetailModel> {
     try {
+      console.log("task call");
       var response = await TaskApi.getDetail({
         taskId: task.id,
         bankId: accountId,
