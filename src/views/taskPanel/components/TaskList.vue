@@ -259,7 +259,7 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private async lockTask(task: TaskModel) {
     console.log(task.assigneeId, UserModule.id);
-    if (task.assigneeId !== UserModule.id) {
+    if (+task.assigneeId !== +UserModule.id) {
       if (!(await TaskModule.Lock(task.id))) {
         return LogModule.SetConsole({
           // title: "Automation Stopped",
@@ -275,7 +275,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
-      // await this.lockTask(task);
+      await this.lockTask(task);
       var taskDetail = await this.getTaskDetail(task);
       TaskModule.SET_SELECTED_DETAIL(taskDetail);
       await this.startTask();
