@@ -39,6 +39,14 @@
         Cancel
       </el-button>
     </div>
+
+    <el-dialog
+      title="Login Flow"
+      :visible.sync="dialogVisible"
+      :before-close="handleClose"
+    >
+      <workflow v-if="dialogVisible" />
+    </el-dialog>
   </div>
 </template>
 
@@ -47,13 +55,17 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { AccountModule } from "../../../store/modules/account";
 import { AppModule } from "../../../store/modules/app";
 import { WorkerModule } from "../../../store/modules/worker";
-import { mixins } from "vue-class-component";
 import signInTypeMixins from "../mixins/signInType";
+import Workflow from "@/components/Workflow/index.vue";
 
 @Component({
-  name: "SelectSignInType"
+  name: "SelectSignInType",
+  components: {
+    Workflow
+  }
 })
-export default class extends mixins(signInTypeMixins) {
+export default class extends Vue {
+  private dialogVisible = false;
   private get app() {
     return AppModule;
   }
@@ -62,6 +74,23 @@ export default class extends mixins(signInTypeMixins) {
   }
   private get worker() {
     return WorkerModule;
+  }
+
+  handleClose() {
+    this.dialogVisible = false;
+  }
+  signInAutomatically() {
+    WorkerModule.SET_AUTO_SIGN_IN_WORKFLOW();
+    this.dialogVisible = true;
+    // AppModule.HANDLE_MANUAL_LOGIN(false);
+    // AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
+    WorkerModule.RunAutoLoginFlows();
+  }
+  signInManually() {
+    AppModule.HANDLE_MANUAL_LOGIN(true);
+    WorkerModule.SET_MANUAL_SIGN_IN_WORKFLOW();
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
+    WorkerModule.RunManualLoginFlows();
   }
 
   cancel() {

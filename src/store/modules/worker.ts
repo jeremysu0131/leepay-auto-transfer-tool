@@ -8,8 +8,9 @@ import {
 } from "vuex-module-decorators";
 import store from "@/store";
 import {
-  signInWorkflowEnum,
-  WorkflowEnum
+  WorkflowEnum,
+  manualSignInWorkflowEnum,
+  autoSignInWorkflowEnum
 } from "../../workers/utils/workflowHelper";
 import { LogModule } from "./log";
 import { AppModule } from "./app";
@@ -31,12 +32,16 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   public worker = {} as BankWorker;
 
   @Mutation
-  SET_SIGN_IN_WORKFLOW(isManualSignIn: boolean) {
-    this.signInWorkflow = signInWorkflowEnum(isManualSignIn);
+  SET_AUTO_SIGN_IN_WORKFLOW() {
+    this.workflow = autoSignInWorkflowEnum();
+  }
+  @Mutation
+  SET_MANUAL_SIGN_IN_WORKFLOW() {
+    this.workflow = manualSignInWorkflowEnum();
   }
   @Mutation
   UPDATE_FLOW_STATUS(data: { name: WorkflowEnum; status: WorkflowStatusEnum }) {
-    this.signInWorkflow.forEach(flow => {
+    this.workflow.forEach(flow => {
       if (flow.name === data.name) {
         flow.status = data.status;
       }
@@ -48,9 +53,13 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   public async SetWorker(remitterAccount: RemitterAccountModel) {
     try {
-      transponder(ipcRenderer, WorkflowEnum.SET_WORKER, remitterAccount);
+      await this.RunFlow({
+        name: WorkflowEnum.SET_WORKER,
+        args: remitterAccount
+      });
+      //  await transponder(ipcRenderer, WorkflowEnum.SET_WORKER, remitterAccount);
     } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetLog({ level: "error", message: error.stack });
     }
   }
   @Action
@@ -58,7 +67,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     const screenSize = screen.getPrimaryDisplay().size;
     AppModule.HANDLE_TASK_AUTO_PROCESS(true);
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
-    this.SET_SIGN_IN_WORKFLOW(false);
+    // this.SET_SIGN_IN_WORKFLOW(false);
     try {
       await this.RunFlow({ name: WorkflowEnum.SET_IE_ENVIRONMENT });
       await this.RunFlow({ name: WorkflowEnum.SET_PROXY });
@@ -86,7 +95,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   async RunManualLoginFlows() {
     const screenSize = screen.getPrimaryDisplay().size;
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
-    this.SET_SIGN_IN_WORKFLOW(true);
+    // this.SET_SIGN_IN_WORKFLOW(true);
     try {
       await this.RunFlow({ name: WorkflowEnum.SET_IE_ENVIRONMENT });
       await this.RunFlow({ name: WorkflowEnum.SET_PROXY });
@@ -123,9 +132,12 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     }
   }
 
-  @Action
+  @Action({ rawError: true })
   async RunFlow(flow: { name: WorkflowEnum; args?: object }) {
-    console.log(flow.name, flow.args);
+    LogModule.SetLog({
+      level: "debug",
+      message: `Flow name: ${flow.name}, Args: ${JSON.stringify(flow.args)}`
+    });
     this.UPDATE_FLOW_STATUS({
       name: flow.name,
       status: WorkflowStatusEnum.RUNNING
@@ -139,6 +151,10 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
           flow.name,
           flow.args
         );
+        LogModule.SetLog({
+          level: "debug",
+          message: `Flow executed result: ${isFlowExecutedSuccess}, message: ${message}`
+        });
 
         this.UPDATE_FLOW_STATUS({
           name: flow.name,

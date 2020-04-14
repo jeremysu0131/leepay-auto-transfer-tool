@@ -89,7 +89,7 @@
             </div>
           </div>
         </div>
-        <div class="workflow">
+        <!-- <div class="workflow">
           <table class="workflow-table">
             <thead>
               <tr>
@@ -113,7 +113,7 @@
               </tr>
             </tbody>
           </table>
-        </div>
+        </div> -->
       </div>
       <div
         v-if="selectedTask&&selectedTask.id"

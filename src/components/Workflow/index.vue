@@ -1,32 +1,25 @@
 <template>
-  <el-dialog
-    title="Shipping address"
-    :visible.sync="dialogVisible"
-    :fullscreen="true"
-    :before-close="handleClose"
-  >
-    <div class="workflow">
-      <table class="workflow-table">
-        <thead>
-          <th>Status</th>
-          <th>Step name</th>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(flow,index) in signInWorkflow"
-            :key="index"
-            :style="flowStyle(flow.status)"
-            @click="handleRowClick(flow)"
-          >
-            <td>
-              <svg-icon :name="iconClass(flow.status)" />
-            </td>
-            <td>{{ flow.name }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </el-dialog>
+  <div class="workflow">
+    <table class="workflow-table">
+      <thead>
+        <th>Status</th>
+        <th>Step name</th>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(flow,index) in workflow"
+          :key="index"
+          :style="flowStyle(flow.status)"
+          @click="handleRowClick(flow)"
+        >
+          <td>
+            <svg-icon :name="iconClass(flow.status)" />
+          </td>
+          <td>{{ flow.name }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <script lang="ts">
@@ -37,31 +30,22 @@ import { AppModule } from "../../store/modules/app";
 import { LogModule } from "../../store/modules/log";
 
 @Component({
-  name: "WorkflowDialog",
-  mounted() {
-    WorkerModule.SET_SIGN_IN_WORKFLOW(true);
-  }
+  name: "Workflow"
 })
 export default class extends Vue {
-  get dialogVisible() {
-    return AppModule.task.isProcessing;
-  }
+  private workflow = WorkerModule.workflow;
 
-  get signInWorkflow() {
-    return WorkerModule.signInWorkflow;
-  }
-
-  private handleClose() {
-    AppModule.HANDLE_TASK_PROCESSING(false);
-  }
   private async handleRowClick(row: any) {
     try {
       if (process.env.NODE_ENV === "development") {
-        var result = await WorkerModule.RunFlow({ name: row.name, args: { width: 800, height: 600 } });
+        var result = await WorkerModule.RunFlow({
+          name: row.name,
+          args: { width: 800, height: 600 }
+        });
         LogModule.SetLog({ level: "debug", message: row.name });
       }
     } catch (error) {
-        LogModule.SetConsole({ level: "debug", message: error });
+      LogModule.SetConsole({ level: "debug", message: error });
     }
   }
 

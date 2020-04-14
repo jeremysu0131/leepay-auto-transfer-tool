@@ -131,8 +131,8 @@ export default class extends Vue {
     account.proxy = await AccountModule.GetProxy(this.selectedBankCard.id);
     AccountModule.SET_SELECTED(account);
 
-    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("select-sign-in-type");
     await WorkerModule.SetWorker(account);
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("select-sign-in-type");
   }
   private async handleBankCardChange() {
     // this.$store.commit("SET_SELECTED_CARD", this.selectedBankCard);

@@ -1,5 +1,5 @@
 export enum WorkflowEnum {
-  SET_WORKER="SET_WORKER",
+  SET_WORKER = "SET_WORKER",
   SET_IE_ENVIRONMENT = "Set IE environment",
   SET_PROXY = "Set proxy",
   UNSET_PROXY = "Unet proxy",
@@ -25,49 +25,48 @@ export enum WorkflowEnum {
 //   FAIL = "fail"
 // }
 
-/**
- * Get workflow of sign in
- */
-export function signInWorkflowEnum(isManualSignIn: any) {
-  return isManualSignIn
-    ? [
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.SET_IE_ENVIRONMENT
-        },
-        { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
-        { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
-        }
-      ]
-    : [
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.SET_IE_ENVIRONMENT
-        },
-        { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
-        { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION
-        },
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.SUBMIT_TO_SIGN_IN
-        },
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
-        }
-      ];
+export function autoSignInWorkflowEnum() {
+  return [
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.SET_IE_ENVIRONMENT
+    },
+    { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
+    { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION
+    },
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.SUBMIT_TO_SIGN_IN
+    },
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
+    }
+  ];
+}
+
+export function manualSignInWorkflowEnum() {
+  return [
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.SET_IE_ENVIRONMENT
+    },
+    { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
+    { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
+    }
+  ];
 }
 
 /**
