@@ -33,7 +33,9 @@ import { LogModule } from "../../store/modules/log";
   name: "Workflow"
 })
 export default class extends Vue {
-  private workflow = WorkerModule.workflow;
+  get workflow() {
+    return WorkerModule.workflow;
+  }
 
   private async handleRowClick(row: any) {
     try {
