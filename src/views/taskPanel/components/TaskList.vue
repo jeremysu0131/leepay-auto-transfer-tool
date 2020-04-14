@@ -10,11 +10,12 @@
       :stripe="true"
       :border="true"
       :row-class-name="selectedRowClass"
+      :default-sort="{prop: 'priority', order: 'descending'}"
     >
       <el-table-column
         prop="id"
         label="ID"
-        width="90"
+        width="80"
         align="center"
       />
       <el-table-column
@@ -27,7 +28,15 @@
         prop="pendingTime"
         label="Pending(min.)"
         align="center"
-        width="110"
+        width="130"
+        sortable
+      />
+      <el-table-column
+        prop="priority"
+        label="Priority"
+        align="center"
+        width="90"
+        sortable
       />
       <el-table-column
         prop="workflow"
@@ -36,12 +45,12 @@
         width="120"
       />
       <!-- FIXME to check if this field correctlly -->
-      <el-table-column
+      <!-- <el-table-column
         prop="remitterAccountCode"
         label="From Account"
         align="center"
         width="120"
-      />
+      /> -->
       <!-- FIXME to check if this field correctlly -->
       <el-table-column
         prop="amount"

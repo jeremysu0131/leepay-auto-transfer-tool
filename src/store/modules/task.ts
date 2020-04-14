@@ -74,6 +74,7 @@ class Task extends VuexModule implements ITaskState {
             remitterAccountCode: task.field7,
             payeeAccountCode: task.toAcct,
             pendingTime: task.pendingTime,
+            priority: task.priority,
             ref: task.ref,
             remark: task.remarks,
             createdAt: task.createdAt,
