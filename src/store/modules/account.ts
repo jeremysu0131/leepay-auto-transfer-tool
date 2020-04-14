@@ -13,48 +13,25 @@ import { LogModule } from "./log";
 export interface IAccountState {
   selected: RemitterAccountModel;
   // selectedDetail: {};
-  current: {};
-  currentDetail: {};
+  current: RemitterAccountModel;
 }
 
 @Module({ dynamic: true, store, name: "card" })
-class Card extends VuexModule implements IAccountState {
+class Account extends VuexModule implements IAccountState {
   public selected = new RemitterAccountModel();
-  public current = {
-    id: "",
-    accountCode: "",
-    bankCode: "",
-    balanceInSystem: 0,
-    balanceInOnlineBank: 0,
-    accountName: "",
-    accountPassword: "",
-    queryPassword: "",
-    usbPassword: "",
-    proxy: "",
-    cookie: "",
-    session: ""
-  };
-  public currentDetail = {
-    id: 0,
-    accountCode: "",
-    bankCode: "",
-    balanceInSystem: 0,
-    balanceInOnlineBank: 0,
-    channelGroup: "",
-    accountName: "",
-    accountPassword: "",
-    usbPassword: "",
-    queryPassword: "",
-    proxy: ""
-  };
+  public current = new RemitterAccountModel();
 
   @Mutation
   SET_BANK_BALANCE(balance: number) {
-    this.currentDetail.balanceInOnlineBank = balance;
+    this.current.balanceInBank = balance;
   }
   @Mutation
   SET_SELECTED(account: RemitterAccountModel) {
     this.selected = account;
+  }
+  @Mutation
+  SET_CURRENT(account: RemitterAccountModel) {
+    this.current = account;
   }
   @Action
   async GetAvailableAccount(): Promise<
@@ -231,12 +208,6 @@ class Card extends VuexModule implements IAccountState {
   //     }
 
   //     // Move selected card to current card
-  //     async SetCurrentCard() {
-  //       commit("SET_CURRENT_CARD", getters.card.selected);
-  //       commit("SET_CURRENT_CARD_DETAIL", getters.card.selectedDetail);
-  //       commit("UNSET_SELECTED_CARD");
-  //       commit("UNSET_SELECTED_CARD_DETAIL");
-  //     }
   //     async UnsetCurrentCard({ commit }) {
   //       commit("UNSET_CURRENT_CARD");
   //     }
@@ -276,4 +247,4 @@ class Card extends VuexModule implements IAccountState {
   //   }
 }
 
-export const AccountModule = getModule(Card);
+export const AccountModule = getModule(Account);

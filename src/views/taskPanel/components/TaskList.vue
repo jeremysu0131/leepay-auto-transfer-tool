@@ -20,7 +20,7 @@
       <el-table-column
         prop="createdAt"
         label="Request Time"
-        width="140"
+        width="150"
         align="center"
       />
       <el-table-column

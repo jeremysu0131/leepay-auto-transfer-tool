@@ -3,10 +3,10 @@
     <div class="info-header">
       <div class="info-header__current-account">
         <span>Current Account:</span>
-        <span style="font-weight: bold">{{ card.currentDetail.accountCode|| ' - ' }}</span>
+        <span style="font-weight: bold">{{ account.current.code|| ' - ' }}</span>
       </div>
       <el-button
-        v-if="card.current.accountCode && showingPage !== 'unselect-card'"
+        v-if="account.current.code && showingPage !== 'unselect-card'"
         class="info-header__unselect-button"
         size="mini"
         @click="handleUnselectCurrentCard"
@@ -14,8 +14,8 @@
         Unselect
       </el-button>
       <div class="info-header__group">
-        <span>Account Group:</span>
-        <span style="font-weight: bold">{{ card.currentDetail.channelGroup || ' - ' }}</span>
+        <!-- <span>Account Group:</span> -->
+        <!-- <span style="font-weight: bold">{{ account.current || ' - ' }}</span> -->
       </div>
     </div>
     <account-search v-show="showingPage==='account-search'" />
@@ -51,7 +51,7 @@ export default class extends Vue {
   get showingPage() {
     return AppModule.account.showingPage;
   }
-  get card() {
+  get account() {
     return AccountModule;
   }
 

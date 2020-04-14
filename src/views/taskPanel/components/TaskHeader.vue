@@ -2,7 +2,7 @@
   <div class="task-list__container-header">
     <div class="current-account">
       <span>Current Account:</span>
-      <span style="font-weight: bold;">{{ card.currentDetail.accountCode || "" }}</span>
+      <span style="font-weight: bold;">{{ account.current.code || "" }}</span>
     </div>
 
     <div class="bo-balance">
@@ -113,14 +113,13 @@ export default class extends Mixins(TaskOperationMixin) {
     }, 1 * 1000);
   }
   beforeDestroy() {
-    console.log("distory interval");
     clearInterval(this.fetchInvervalID);
   }
 
   get app() {
     return AppModule;
   }
-  get card() {
+  get account() {
     return AccountModule;
   }
   get task() {
@@ -134,20 +133,20 @@ export default class extends Mixins(TaskOperationMixin) {
   }
 
   get balanceInSystem() {
-    if (this.card.currentDetail.balanceInSystem) {
+    if (this.account.current.balance) {
       return new Intl.NumberFormat("zh-CN", {
         style: "currency",
         currency: "CNY"
-      }).format(this.card.currentDetail.balanceInSystem);
+      }).format(this.account.current.balance);
     }
     return "-";
   }
   get balanceInOnlineBank() {
-    if (this.card.currentDetail.balanceInOnlineBank) {
+    if (this.account.current.balanceInBank) {
       return new Intl.NumberFormat("zh-CN", {
         style: "currency",
         currency: "CNY"
-      }).format(this.card.currentDetail.balanceInOnlineBank);
+      }).format(this.account.current.balanceInBank);
     }
     return "-";
   }
@@ -175,7 +174,7 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private checkBankCookieExpired() {
     if (this.isWarnedBankTokenExpire) return;
-    if (this.card.current.accountCode.indexOf("ABC") === -1) return;
+    if (this.account.current.code.indexOf("ABC") === -1) return;
 
     return (
       dayjs().subtract(30, "minute") > dayjs(this.app.account.signInSuccessAt)

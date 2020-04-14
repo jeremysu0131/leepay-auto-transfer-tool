@@ -43,6 +43,7 @@ import { AccountModule } from "../../../store/modules/account";
 import Workflow from "@/components/Workflow/index.vue";
 import { AppModule } from "../../../store/modules/app";
 import { WorkerModule } from "@/store/modules/worker";
+import RemitterAccountModel from "@/models/remitterAccountModel";
 @Component({
   name: "SignInToBank",
   components: {
@@ -107,14 +108,16 @@ export default class extends Vue {
       .catch(() => {});
   }
   handleSignInSuccess() {
-    this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "account-search");
-    this.$store.commit("HANDLE_ACCOUNT_SIGN_IN_SUCCESS", true);
-    this.$store.commit("SET_SIGN_IN_SUCCESS_TIME", new Date());
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
+    AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
+    AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
 
-    this.$store.commit("HANDLE_TASK_VISIBLE", true);
-    this.$store.commit("HANDLE_TASK_FETCHABLE", true);
-    this.$store.commit("HANDLE_SHOWING_TAB", "tasks");
-    this.$store.dispatch("SetCurrentCard");
+    AppModule.HANDLE_TASK_VISIBLE(true);
+    AppModule.HANDLE_TASK_FETCHABLE(true);
+    AppModule.HANDLE_SHOWING_TAB("tasks");
+    AccountModule.SET_CURRENT(AccountModule.selected);
+    AccountModule.SET_SELECTED(new RemitterAccountModel());
+    // AccountModule.set("SetCurrentCard");
   }
   cancel() {
     this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "account-search");

@@ -15,7 +15,7 @@
       <el-tab-pane
         name="tasks"
         :label="taskPanelLabel"
-        :disabled="!task.isVisible"
+        :disabled="!taskTabVisible"
       >
         <task-panel />
       </el-tab-pane>
@@ -52,6 +52,9 @@ export default class extends mixins(ResizeMixin) {
   }
   get showingTab() {
     return AppModule.showingTab;
+  }
+  get taskTabVisible() {
+return AppModule.task.isVisible;
   }
   get task() {
     return TaskModule;

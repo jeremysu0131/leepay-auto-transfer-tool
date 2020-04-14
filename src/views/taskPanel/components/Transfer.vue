@@ -21,7 +21,7 @@
               {{ lastSelectedTask.id }}
             </div>
             <div v-if="lastSelectedTask && lastSelectedTask.bank">
-              {{ card.currentDetail.channelGroup || ' - ' }}
+              <!-- {{ card.currentDetail.channelGroup || ' - ' }} -->
             </div>
             <div v-if="lastSelectedTask">
               {{ lastSelectedTask.merchantName }}
@@ -70,7 +70,7 @@
               {{ selectedTask.id }}
             </div>
             <div v-if="selectedTask">
-              {{ card.currentDetail.channelGroup || ' - ' }}
+              <!-- {{ card.currentDetail.channelGroup || ' - ' }} -->
             </div>
             <div v-if="selectedTask">
               {{ selectedTask.merchantName }}
