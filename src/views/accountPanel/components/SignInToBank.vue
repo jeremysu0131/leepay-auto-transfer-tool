@@ -117,7 +117,7 @@ export default class extends Vue {
     AppModule.HANDLE_SHOWING_TAB("tasks");
     AccountModule.SET_CURRENT(AccountModule.selected);
     AccountModule.SET_SELECTED(new RemitterAccountModel());
-    // AccountModule.set("SetCurrentCard");
+    WorkerModule.UNSET_WORKFLOW();
   }
   cancel() {
     this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "account-search");
