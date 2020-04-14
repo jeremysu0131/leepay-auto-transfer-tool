@@ -89,6 +89,7 @@
             </div>
           </div>
         </div>
+        <workflow />
         <!-- <div class="workflow">
           <table class="workflow-table">
             <thead>
@@ -169,10 +170,14 @@ import { AccountModule } from "../../../store/modules/account";
 import { TaskModule } from "../../../store/modules/task";
 import { WorkerModule } from "../../../store/modules/worker";
 import TaskOperationMixin from "../mixins/taskOperation";
+import Workflow from "@/components/Workflow/index.vue";
 
 @Component({
   name: "Transfer",
-  mixins: [TaskOperationMixin]
+  mixins: [TaskOperationMixin],
+  components: {
+    Workflow
+  }
 })
 export default class extends Mixins(TaskOperationMixin) {
  private isHandlingSuccess= false;

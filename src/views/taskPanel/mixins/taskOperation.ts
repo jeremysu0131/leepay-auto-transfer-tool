@@ -12,7 +12,6 @@ export default class TaskOperationMixin extends Vue {
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
   public async startTask() {
-    WorkerModule.SetWorker(TaskModule.selectedDetail.remitterAccount);
     AppModule.HANDLE_TASK_PROCESSING(true);
     // if (await this.loginToBankWebsite()) await this.executeTransferTask();
   }
