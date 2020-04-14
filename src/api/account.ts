@@ -7,6 +7,18 @@ export function getList() {
   });
 }
 
+export function getAvailableAccount() {
+  return request({
+    url: "/adminAcct!listWithdraw.do",
+    method: "GET",
+    params: {
+      page: 1,
+      start: 0,
+      limit: 50
+    }
+  });
+}
+
 export function getBoBalance(id: number) {
   return request({
     url: "/ps-ops-console/api/bank/account/monitor/searchAccountBalances",

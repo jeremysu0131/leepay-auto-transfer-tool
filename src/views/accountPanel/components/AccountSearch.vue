@@ -4,7 +4,7 @@
       <div class="account-search__prompt">
         Please select the account to use
       </div>
-      <el-form
+      <!-- <el-form
         :model="form"
         :inline="true"
         class="account-search__form"
@@ -29,7 +29,7 @@
             Search
           </el-button>
         </el-form-item>
-      </el-form>
+      </el-form>-->
     </div>
     <div>
       <el-table
@@ -99,6 +99,9 @@ export default class extends Vue {
     accountCode: process.env.NODE_ENV === "development" ? "PSS_ICBC_003" : ""
   };
 
+  async mounted() {
+    this.accountList = await AccountModule.GetAvailableAccount();
+  }
   // ...mapGetters(["app", "card", "worker"]),
   get app() {
     return AppModule;
@@ -114,16 +117,16 @@ export default class extends Vue {
     // top header, tab margin, tab content, info header, bank search prompt, search, footer, others
     return window.innerHeight - 50 - 16 - 30 - 65 - 74 - 57 - 56 - 30;
   }
-  private async searchCardByBankCode() {
-    try {
-      this.isSearchingCard = true;
-      this.accountList = await AccountModule.Search(this.form.accountCode);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      this.isSearchingCard = false;
-    }
-  }
+  // private async searchCardByBankCode() {
+  //   try {
+  //     this.isSearchingCard = true;
+  //     this.accountList = await AccountModule.Search(this.form.accountCode);
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     this.isSearchingCard = false;
+  //   }
+  // }
   private async handleAccountSelect() {
     var account = await AccountModule.GetAccountDetail(
       this.selectedBankCard.id

@@ -57,6 +57,20 @@ class Card extends VuexModule implements IAccountState {
     this.selected = account;
   }
   @Action
+  async GetAvailableAccount(): Promise<
+    Array<{ id: number; code: string; balance: number }>
+  > {
+    var { data } = await AccountApi.getAvailableAccount();
+    return (data.data as Array<{ id: number; name: string }>).map(account => {
+      const [code, balance] = account.name.split("-");
+      return {
+        id: account.id,
+        code: code.trim(),
+        balance: parseFloat(balance.trim())
+      };
+    });
+  }
+  @Action
   async Search(
     accountCode: string
   ): Promise<{ id: number; code: string; balance: number }[]> {

@@ -33,7 +33,7 @@ import AccountPanel from "@/views/accountPanel/index.vue";
 import TaskPanel from "@/views/taskPanel/index.vue";
 import ResizeMixin from "./mixin/resize";
 import { TaskModule } from "../store/modules/task";
-import WorkflowDialog from "@/views/workflow/index.vue";
+import WorkflowDialog from "@/components/Workflow/index.vue";
 
 @Component({
   name: "Layout",

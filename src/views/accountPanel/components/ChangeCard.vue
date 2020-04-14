@@ -81,14 +81,12 @@ export default class extends Vue {
   async handleManualLogin() {
     await this.resetAccountStatus();
     AppModule.HANDLE_MANUAL_LOGIN(true);
-    WorkerModule.SET_SIGN_IN_WORKFLOW(true);
     AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
     WorkerModule.RunManualLoginFlows();
   }
   async handleAutoLogin() {
     await this.resetAccountStatus();
     AppModule.HANDLE_MANUAL_LOGIN(true);
-    WorkerModule.SET_SIGN_IN_WORKFLOW(true);
     AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
     WorkerModule.RunAutoLoginFlows();
   }
