@@ -10,9 +10,18 @@ const logFolderLocation =
     ? "/var/logs/bank-auto-transfer"
     : "./logs";
 
+const errorStackTracerFormat = _format(info => {
+  if (info.meta && info.meta instanceof Error) {
+    info.message = `${info.message} ${info.meta.stack}`;
+  }
+  return info;
+});
+
 const logger = createLogger({
   level: "debug",
   format: _format.combine(
+    _format.splat(),
+    errorStackTracerFormat(),
     _format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     _format.json()
   ),
@@ -20,7 +29,7 @@ const logger = createLogger({
     // - Write to all logs with level `info` and below to `combined.log`
     new _transports.DailyRotateFile({
       level: "info",
-      filename: join(logFolderLocation, "info-%DATE%.log"),
+      filename: join(logFolderLocation, "application-%DATE%.log"),
       datePattern: "YYYY-MM-DD",
       maxFiles: "7d",
       zippedArchive: true
@@ -33,7 +42,7 @@ const logger = createLogger({
   ],
   exceptionHandlers: [
     new _transports.File({
-      filename: join(logFolderLocation, "exceptions.log")
+      filename: join(logFolderLocation, "application-exceptions.log")
     })
   ]
 });
@@ -45,7 +54,12 @@ const logger = createLogger({
 if (process.env.NODE_ENV !== "production") {
   logger.add(
     new _transports.Console({
-      format: _format.combine(_format.json())
+      format: _format.combine(
+        _format.splat(),
+        errorStackTracerFormat(),
+        _format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+        _format.json()
+      )
     })
   );
 }
