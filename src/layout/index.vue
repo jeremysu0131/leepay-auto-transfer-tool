@@ -20,7 +20,6 @@
         <task-panel />
       </el-tab-pane>
     </el-tabs>
-    <workflow-dialog v-if="workflowDialogVisible" />
   </div>
 </template>
 
@@ -33,38 +32,33 @@ import AccountPanel from "@/views/accountPanel/index.vue";
 import TaskPanel from "@/views/taskPanel/index.vue";
 import ResizeMixin from "./mixin/resize";
 import { TaskModule } from "../store/modules/task";
-import WorkflowDialog from "@/components/Workflow/index.vue";
 
 @Component({
   name: "Layout",
   components: {
     AccountPanel,
     TaskPanel,
-    TopHeader,
-    WorkflowDialog
+    TopHeader
   }
 })
 export default class extends mixins(ResizeMixin) {
   private taskPanelLabel = "Task";
 
-  get workflowDialogVisible() {
-    return AppModule.task.isProcessing;
-  }
   get showingTab() {
     return AppModule.showingTab;
   }
   get taskTabVisible() {
-return AppModule.task.isVisible;
+    return AppModule.task.isVisible;
   }
-  get task() {
-    return TaskModule;
+  get taskList() {
+    return TaskModule.list;
   }
 
   @Watch("task.list")
   onTaskListChanged() {
     this.$nextTick(() => {
-      if (this.task.list) {
-        const totalTasks = this.task.list.length;
+      if (this.taskList) {
+        const totalTasks = this.taskList.length;
         // const processingTasks = this.task.list.filter(task => task.toolStatus === "processing").length;
         // this.taskPanelLabel = `Tasks ( total: ${totalTasks} / processing: ${processingTasks} )`;
         this.taskPanelLabel = `Tasks ( total: ${totalTasks} )`;
