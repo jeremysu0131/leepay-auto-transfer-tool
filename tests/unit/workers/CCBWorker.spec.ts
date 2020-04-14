@@ -27,9 +27,16 @@ describe("CCBWorker", () => {
   });
 
   afterAll(async() => {
-    await worker.closeSelenium();
+    // await worker.closeSelenium();
   });
   it("login:setAccount", async() => {
+    const bank = { chineseName: "中国邮政储蓄银行" } as BankModel;
+    const payAccount = {
+      holderName: "康贻龙",
+      cardNumber: "6217993000391513895",
+      bank
+    } as PayeeAccountModel;
+    worker.setTask({ id: 20200414, amount: 0.1, payeeAccount: payAccount } as TaskDetailModel);
     const result = await worker.inputSignInInformation();
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });
@@ -40,7 +47,7 @@ describe("CCBWorker", () => {
     expect(success.isFlowExecutedSuccess).toEqual(true);
   });
 
-  it.skip("get Balance", async() => {
+  it("get Balance", async() => {
     const result = await worker.getBalance();
     expect(result.balance).toBeGreaterThan(0);
   });
@@ -51,19 +58,17 @@ describe("CCBWorker", () => {
   });
 
   it("transfer:fill transfer form", async() => {
-    const bank = { chineseName: "中国农业银行" } as BankModel;
-    const payAccount = {
-      holderName: "植鎏颖",
-      cardNumber: "6230520850012468076",
-      bank
-    } as PayeeAccountModel;
-    worker.setTask({ amount: 1, payeeAccount: payAccount } as TaskDetailModel);
     const result = await worker.fillTransferFrom();
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });
 
   it("transfer:confirm transfer form", async() => {
     const result = await worker.confirmTransaction();
+    expect(result.isFlowExecutedSuccess).toEqual(true);
+  });
+
+  it("transfer:check transaction result", async() => {
+    const result = await worker.checkIfTransactionSuccess();
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });
 });

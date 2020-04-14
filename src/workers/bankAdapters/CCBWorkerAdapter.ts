@@ -1,11 +1,14 @@
 import dayjs, { Dayjs } from "dayjs";
+import * as fs from "fs";
 import { By, until, WebDriver } from "selenium-webdriver";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import RemitterAccountModel from "../models/remitterAccountModel";
 import TaskDetailModel from "../models/taskDetailModel";
 import * as FormatHelper from "../utils/formatHelper";
+import * as KeySender from "../utils/keySender";
 import Logger from "../utils/logger";
-import { executeJavaScript, sendKeysV2, waitPageLoad, waitPageLoadCondition, waitUtilGetText } from "../utils/seleniumHelper";
+import { executeJavaScript, sendKeysV2, waitAndSwitchToTargetFrame, waitPageLoad, waitPageLoadCondition, waitUtilGetText } from "../utils/seleniumHelper";
+import * as UsbTrigger from "../utils/usbTrigger";
 import * as WindowFocusTool from "../utils/windowFocusTool";
 
 export class CCBWorkerAdapter implements IWorkerAdapter {
@@ -185,8 +188,8 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     );
   }
 
-  sendUSBKey(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async sendUSBKey(): Promise<void> {
+    await UsbTrigger.run(this.remitterAccount.code);
   }
 
   async checkIfLoginSuccess(globalState: {
@@ -245,9 +248,12 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     await this.driver.switchTo().frame(frame);
 
     const receiverNameInput = await this.driver.wait(
-      until.elementLocated(By.id("TR_SKZHMC")), this.wattingTime
+      until.elementLocated(By.id("TR_SKZHMC")),
+      this.wattingTime
     );
-    if (!receiverNameInput) throw new Error("transfer page check element (TR_SKZHMC) not found");
+    if (!receiverNameInput) {
+      throw new Error("transfer page check element (TR_SKZHMC) not found");
+    }
     await this.driver.switchTo().defaultContent();
     return !!receiverNameInput;
   }
@@ -264,7 +270,8 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     if (!trElement) throw new Error(`not found ${name} input column in view`);
     // const input = this.driver.findElement(By.tagName("input"));
     await sendKeysV2(this.driver, trElement.findElement(By.tagName("input")), {
-      text, replaceRule: new RegExp(/\s/g)
+      text,
+      replaceRule: new RegExp(/\s/g)
     });
     const value = await trElement.findElement(By.tagName("input"));
     const valueText = await value.getAttribute("value");
@@ -306,7 +313,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       "TR_SKZH",
       task.payeeAccount.cardNumber
     );
-    
+
     // RECVBRANCH1 bank value 選擇轉出銀行
     await this.waitUntilBankSelected();
 
@@ -319,7 +326,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       ),
       { text: task.amount.toString() }
     );
-    
+
     // subBut 下一步
     const nextButton = this.driver.wait(until.elementLocated(By.id("subBut")));
     if (!nextButton) throw new Error("transfer next step Button is not found");
@@ -332,7 +339,10 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     // 等待載入, 確認進到下一個頁面
     const trxFrameCondition = until.elementLocated(By.id("txmainfrm"));
     await waitPageLoadCondition(this.driver, trxFrameCondition);
-    const trxFrame = await this.driver.wait(await trxFrameCondition, this.wattingTime);
+    const trxFrame = await this.driver.wait(
+      trxFrameCondition,
+      this.wattingTime
+    );
     await this.driver.switchTo().frame(trxFrame);
     await waitPageLoad(this.driver);
     const checkTransactionPage = await this.driver.wait(
@@ -411,34 +421,294 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   }
   async checkBankReceivedTransferInformation(): Promise<boolean> {
     const task = this.getTask();
-    // 切換到目標 iframe 
-    const transactionFrame = await until.elementLocated(By.id("txmainfrm")); 
-    const trxFrame = await this.driver.wait(transactionFrame, this.wattingTime);
-    await this.driver.switchTo().frame(trxFrame);
+    // 切換到目標 iframe
+    const transactionFrameCon = await until.elementLocated(By.id("txmainfrm"));
+    await waitPageLoadCondition(this.driver, transactionFrameCon);
+    await waitAndSwitchToTargetFrame(
+      "切換到目標 iframe",
+      this.driver,
+      transactionFrameCon
+    );
     // 取得所有帳號欄位 card_menoy1 在做塞選
-    const accountElement = await this.driver.wait(until.elementsLocated(By.className("card_menoy1")), this.wattingTime);
-    const accounts = await Promise.all(accountElement.map(async x => x.getText()));
-    const distAccount = accounts.find(x => x.replace(/\s/g, "") === task.payeeAccount.cardNumber);
+    const accountElement = await this.driver.wait(
+      until.elementsLocated(By.className("card_menoy1")),
+      this.wattingTime
+    );
+    const accounts = await Promise.all(
+      accountElement.map(async x => x.getText())
+    );
+    const distAccount = accounts.find(
+      x => x.replace(/\s/g, "") === task.payeeAccount.cardNumber
+    );
     if (!distAccount) throw new Error("not equals dist account");
     // 取得所有轉帳金額欄位
-    const amountElement = await this.driver.wait(until.elementsLocated(By.className("font_money")), this.wattingTime);
-    const amounts = await Promise.all(amountElement.map(async x => x.getText()));
+    const amountElement = await this.driver.wait(
+      until.elementsLocated(By.className("font_money")),
+      this.wattingTime
+    );
+    const amounts = await Promise.all(
+      amountElement.map(async x => x.getText())
+    );
     const amount = amounts.find(x => +FormatHelper.amount(x) === task.amount);
     if (!amount) throw new Error("not equals dist amount");
+    const buttons = await this.driver.wait(
+      until.elementsLocated(
+        By.css("div#pbd > div.border_box > div.pbd_operation_std > input.btn")
+      ),
+      this.wattingTime
+    );
+    let confirmButton;
+    for (const e of buttons) {
+      const value = await e.getAttribute("value");
+      if (!value) continue;
+      if (value === "确 认") {
+        confirmButton = e;
+        this.logInfo("found confirm button");
+        break;
+      }
+    }
+    if (!confirmButton) throw new Error("not found confirm button");
+    this.logInfo("confirm button click");
+    await confirmButton.click();
+    await waitPageLoad(this.driver);
+
     return true;
   }
   /**
-   *  CCB 不需要再次輸入密碼 
+   *  等待 Loading 並輸入密碼
    * */
   async sendPasswordToPerformTransaction(): Promise<void> {
+    await KeySender.sendText(this.remitterAccount.usbPassword);
+    await KeySender.sendKey(KeySender.KeyEnum.RETURN);
+    this.logInfo("Send USB password success");
   }
-  
+
+  /**
+   * 輸入玩U頓密碼後要觸發機械手臂 (測試中暫不執行)
+   */
   async sendUsbPasswordToPerformTransaction(): Promise<void> {
-    
+    // var retryTimes = 20;
+    // while (retryTimes >= 0) {
+    //   try {
+    //     if (retryTimes === 0) {
+    //       throw new Error("USB didn't press, please restart the task");
+    //     }
+    //     this.sleep(3);
+    //     this.sendUSBKey();
+    //     this.sleep(3);
+    //     const waitingCon = until.elementLocated(By.id("trnTips"));
+    //     await waitPageLoadCondition(this.driver, waitingCon);
+    //     var message = await this.driver.wait(waitingCon, 10 * 1000);
+    //     if (message) {
+    //       this.logInfo("USB pressed");
+    //       break;
+    //     }
+    //   } catch (error) {
+    //     if (error.name === "UnexpectedAlertOpenError") {
+    //       this.logWarn(`Waiting for usb press, remaining times: ${retryTimes}`);
+    //       continue;
+    //     } else if (error.name === "TimeoutError") {
+    //       this.logWarn("Can't get the element 'trnTips'");
+    //       break;
+    //     } else throw error;
+    //   } finally {
+    //     retryTimes--;
+    //   }
+    // }
+    // TODO 等待跳轉 用工具取代計時
+    await this.sleep(60);
+
+    // await this.driver.switchTo().defaultContent();
+    // const frameCon = until.elementLocated(By.id("txfrmcontainer"));
+    // await waitPageLoadCondition(this.driver, frameCon);
+    // await waitAndSwitchToTargetFrame("go target frame", this.driver, frameCon);
+    // await this.driver.wait(until.elementLocated(By.id("pmain")));
+    // await this.driver.wait(until.elementLocated(By.id("err_info")));
+    // 結果頁面 截圖
+    const base64Png = await this.driver.takeScreenshot();
+    if (!base64Png) { 
+      this.logWarn("can not take Screenshot");
+      return;
+    }
+    const fileName = `${this.getTask().id}.png`;
+    this.logInfo(`check result page in file name ${fileName}`);
+    fs.writeFileSync(
+      `./logs/${fileName}`,
+      base64Png.replace(/^data:image\/png;base64,/, ""),
+      { encoding: "base64" }
+    );
   }
-  checkIfTransactionSuccess(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async checkIfTransactionSuccess(): Promise<boolean> {
+    try {
+      // 確認交易回條
+      this.logInfo("check result page start...");
+      await this.driver.switchTo().defaultContent();
+      const frameCon = until.elementLocated(By.id("txmainfrm"));
+      await waitAndSwitchToTargetFrame(
+        "switch to txmainfrm frame",
+        this.driver,
+        frameCon
+      );
+      // check success span .succeed_span
+      try {
+        const successSpans = await this.driver.wait(
+          until.elementsLocated(
+            By.css("div#showINFO > div.pResult > div.succeed_span > p")
+          )
+        );
+        if (successSpans && successSpans.length > 0) {
+          for (const element of successSpans) {
+            const text = await element.getText();
+            if (text.indexOf("转账成功") > -1) {
+              this.logInfo("轉帳成功");
+            }
+          }
+        }
+      } catch (e) {
+        return false;
+      }
+      const successTableElementCon = until.elementLocated(
+        By.css("div#showINFO > div.four_column_table_padLR > table.four_column_table > tbody")
+      );
+      const table = await this.driver.wait(
+        successTableElementCon,
+        this.wattingTime
+      );
+      if (table) {
+        const name = await this.driver.wait(
+          until.elementLocated(
+            By.css(
+              "div#showINFO > div > table.four_column_table > tbody > tr:nth-child(0) > td:nth-child(1)"
+            )
+          )
+        );
+        const account = await this.driver.wait(
+          until.elementLocated(
+            By.css(
+              "div#showINFO > div > table.four_column_table > tbody > tr:nth-child(1) > td:nth-child(1)"
+            )
+          )
+        );
+        const amount = await this.driver.wait(
+          until.elementLocated(
+            By.css(
+              "div#showINFO > div > table.four_column_table > tbody > tr:nth-child(3) > td:nth-child(0)"
+            )
+          )
+        );
+      }
+      return true;
+    } catch (e) {
+      this.logWarn(e);
+      return false;
+    }
   }
+  async checkIfTransactionList(): Promise<boolean> {
+    try {
+      // go my account page #MENUV6020101
+      this.logInfo("go to transaction detail page MENUV6020101");
+      await waitPageLoadCondition(
+        this.driver,
+        until.elementLocated(By.id("MENUV6020101"))
+      );
+      const nextButton = await this.driver.wait(
+        until.elementLocated(By.id("MENUV6020101")),
+        this.wattingTime
+      );
+
+      if (!nextButton) {
+        throw new Error("transfer list page Button is not found");
+      }
+      await executeJavaScript(
+        this.driver,
+        "click transfer list page button",
+        "document.getElementById('MENUV6020101').click()"
+      );
+      // go transaction list frame #txmainfrm -> #result -> #result
+      // 切換到目標 iframe #txmainfrm
+      this.logInfo("switch to frame");
+      const transactionFrameCon = until.elementLocated(By.id("txmainfrm"));
+      await waitPageLoadCondition(this.driver, transactionFrameCon);
+      await waitAndSwitchToTargetFrame(
+        "txmainfrm",
+        this.driver,
+        transactionFrameCon
+      );
+      // 切換到 圖形模式 #tuxing
+      await executeJavaScript(
+        this.driver,
+        "click 圖形模式 button",
+        "document.getElementById('tuxing').click()"
+      );
+      // 切換到目標 iframe #result
+      const resultFrameCon = until.elementLocated(By.id("result"));
+      await waitAndSwitchToTargetFrame("result", this.driver, resultFrameCon);
+      // 切換到目標 iframe #result
+      const result1FrameCon = until.elementLocated(By.id("result"));
+      await waitAndSwitchToTargetFrame("result1", this.driver, result1FrameCon);
+
+      // search detail href .detail pr_5
+      const hrefCon = until.elementLocated(By.className("detail pr_5"));
+      const hrefElement = await this.driver.wait(hrefCon, this.wattingTime);
+      if (!hrefElement) throw new Error("not found detail list href");
+      this.logInfo("click detail link");
+      await executeJavaScript(
+        this.driver,
+        "click transfer list page button",
+        "document.getElementsByClassName('detail pr_5')[0].click()"
+      );
+      // await hrefElement.click();
+      // find pop out window and get body
+      // WindowFocusTool.focusAndCheckIE();
+      await this.getTransactionList();
+      return true;
+    } catch (e) {
+      this.logWarn(e.toString());
+      return false;
+    }
+  }
+
+  async getTransactionList() {
+    try {
+      // window.frames[0].document.getElementById("result").document dev #result
+      const parent = await this.driver.getWindowHandle();
+      const availableWindows = await this.driver.getAllWindowHandles();
+      let newWindow = availableWindows.find(x => x !== parent);
+      if (!newWindow) {
+        throw new Error("not found new window for transacion detail");
+      }
+      await this.driver.switchTo().window(newWindow);
+      WindowFocusTool.focusAndCheckIE();
+      await this.driver.switchTo().frame(0);
+      await waitPageLoad(this.driver);
+      await waitAndSwitchToTargetFrame(
+        "result",
+        this.driver,
+        until.elementLocated(By.id("result"))
+      );
+      const records = await this.driver.wait(
+        until.elementsLocated(
+          By.css("html > body > form#jhform > table > tbody > tr")
+        ),
+        this.wattingTime
+      );
+      const dataPromise = records.map(async x => {
+        const data = await x.findElements(By.tagName("td"));
+        if (!data) return null;
+        const cardNumber = await data[3].getText();
+        const distName = await data[3].getText();
+        const amount = await data[3].getText();
+        return [cardNumber, distName, amount];
+      });
+      const data = await Promise.all(dataPromise);
+      // TODO resolve table body to dictionary
+      console.log(data);
+    } catch (e) {
+      this.logWarn(e.toString());
+      throw e;
+    }
+  }
+
   async getBalance(): Promise<number> {
     // 跳賺到我的帳戶頁面
     this.logInfo("start to go balance page");

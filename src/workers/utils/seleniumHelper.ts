@@ -1,6 +1,6 @@
 import { asyncForEach } from "@/utils/asyncForEach";
 // eslint-disable-next-line no-unused-vars
-import { Locator, WebDriver, WebElementCondition, WebElementPromise } from "selenium-webdriver";
+import { Locator, WebDriver, WebElement, WebElementCondition, WebElementPromise } from "selenium-webdriver";
 import logger from "./logger";
 
 /**
@@ -288,6 +288,33 @@ export async function waitPageLoadCondition(
     }
   }
   logger({ level: "info", message: "page loading success" });
+}
+
+export async function waitAndSwitchToTargetFrame(
+  name: string,
+  driver: WebDriver,
+  condition: WebElementCondition,
+  maxRetry = 2,
+  interval = 1
+): Promise<WebElement> {
+  let count = 0;
+  while (true) {
+    try {
+      logger({ level: "info", message: `(${name}) wait frame loading...` });
+      await waitPageLoad(driver);
+      const element = await driver.wait(condition, 10000);
+      await driver.switchTo().frame(element);
+      logger({ level: "info", message: `(${name}) frame loading and switch success` });
+      return element;
+    } catch (e) {
+      logger({ level: "warn", message: e });
+      if (count >= maxRetry) {
+        throw new Error(`${name} frame is not found`);
+      }
+      count++;
+      await new Promise(resolve => setTimeout(resolve, interval * 1000));
+    }
+  }
 }
 
 export async function waitUtilGetText(
