@@ -20,18 +20,20 @@
     </div>
     <account-search v-show="showingPage==='account-search'" />
     <select-sign-in-type v-if="showingPage==='select-sign-in-type'" />
-    <!-- <sign-in-to-bank v-if="app.account.showingPage==='sign-in-to-bank'" /> -->
-    <!-- <unselect-card v-if="app.account.showingPage==='unselect-card'" /> -->
-    <!-- <change-card v-if="app.account.showingPage==='change-card'" /> -->
+    <sign-in-to-bank v-if="showingPage==='sign-in-to-bank'" />
+    <!-- <unselect-card v-if="showingPage==='unselect-card'" /> -->
+    <!-- <change-card v-if="showingPage==='change-card'" /> -->
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { AccountSearch
-, SelectSignInType
-// ChangeCard,  SignInToBank, UnselectCard
- } from "./components";
+import {
+  AccountSearch,
+  SelectSignInType,
+  SignInToBank
+  // ChangeCard,  , UnselectCard
+} from "./components";
 import { AppModule } from "../../store/modules/app";
 import { AccountModule } from "../../store/modules/account";
 
@@ -40,8 +42,8 @@ import { AccountModule } from "../../store/modules/account";
   components: {
     AccountSearch,
     // ChangeCard,
-    SelectSignInType
-    // SignInToBank,
+    SelectSignInType,
+    SignInToBank
     // UnselectCard
   }
 })

@@ -81,10 +81,11 @@ export default class extends Vue {
   }
   signInAutomatically() {
     WorkerModule.SET_AUTO_SIGN_IN_WORKFLOW();
-    this.dialogVisible = true;
+    // this.dialogVisible = true;
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
     // AppModule.HANDLE_MANUAL_LOGIN(false);
     // AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
-    WorkerModule.RunAutoLoginFlows();
+    // WorkerModule.RunAutoLoginFlows();
   }
   signInManually() {
     AppModule.HANDLE_MANUAL_LOGIN(true);
