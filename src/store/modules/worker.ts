@@ -32,6 +32,10 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   public worker = {} as BankWorker;
 
   @Mutation
+  UNSET_WORKFLOW() {
+    this.workflow = [];
+  }
+  @Mutation
   SET_AUTO_SIGN_IN_WORKFLOW() {
     this.workflow = autoSignInWorkflowEnum();
   }
