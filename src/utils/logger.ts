@@ -52,16 +52,7 @@ const logger = createLogger({
 // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
 //
 if (process.env.NODE_ENV !== "production") {
-  logger.add(
-    new _transports.Console({
-      format: _format.combine(
-        _format.splat(),
-        errorStackTracerFormat(),
-        _format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-        _format.json()
-      )
-    })
-  );
+  logger.add(new _transports.Console());
 }
 
 export default logger;
