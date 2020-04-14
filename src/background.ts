@@ -48,7 +48,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.SET_WORKER:
                 if (worker) worker.closeSelenium();
                 worker = new BankWorker(flowArgs as RemitterAccountModel);
-                return true;
+                return resolve({ isFlowExecutedSuccess: true });
               case WorkflowEnum.CLOSE_SELENIUM:
                 return resolve(await worker.closeSelenium());
               case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
