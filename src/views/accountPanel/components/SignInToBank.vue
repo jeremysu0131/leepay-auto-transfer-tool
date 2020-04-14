@@ -42,6 +42,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { AccountModule } from "../../../store/modules/account";
 import Workflow from "@/components/Workflow/index.vue";
 import { AppModule } from "../../../store/modules/app";
+import { WorkerModule } from "@/store/modules/worker";
 @Component({
   name: "SignInToBank",
   components: {
@@ -55,6 +56,17 @@ export default class extends Vue {
   };
   isFirstTimeCheck = true;
   isChecking = false;
+
+  async mounted() {
+    if (AppModule.isManualLogin) {
+      WorkerModule.SET_MANUAL_SIGN_IN_WORKFLOW();
+      WorkerModule.RunManualLoginFlows();
+    } else {
+      WorkerModule.SET_AUTO_SIGN_IN_WORKFLOW();
+      WorkerModule.RunAutoLoginFlows();
+    }
+  }
+
   get app() {
     return AppModule;
   }
@@ -114,7 +126,6 @@ export default class extends Vue {
 @import "../../../styles/variables.scss";
 
 .sign-in-to-bank {
-
   &__title {
     text-align: center;
     font-size: $fontLarge;
