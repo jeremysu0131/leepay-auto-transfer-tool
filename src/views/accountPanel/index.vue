@@ -21,7 +21,7 @@
     <account-search v-show="showingPage==='account-search'" />
     <select-sign-in-type v-if="showingPage==='select-sign-in-type'" />
     <sign-in-to-bank v-if="showingPage==='sign-in-to-bank'" />
-    <!-- <unselect-card v-if="showingPage==='unselect-card'" /> -->
+    <unselect-card v-if="showingPage==='unselect-card'" />
     <!-- <change-card v-if="showingPage==='change-card'" /> -->
   </div>
 </template>
@@ -32,7 +32,8 @@ import {
   AccountSearch,
   SelectSignInType,
   SignInToBank
-  // ChangeCard,  , UnselectCard
+  // ChangeCard,
+  , UnselectCard
 } from "./components";
 import { AppModule } from "../../store/modules/app";
 import { AccountModule } from "../../store/modules/account";
@@ -43,8 +44,8 @@ import { AccountModule } from "../../store/modules/account";
     AccountSearch,
     // ChangeCard,
     SelectSignInType,
-    SignInToBank
-    // UnselectCard
+    SignInToBank,
+    UnselectCard
   }
 })
 export default class extends Vue {

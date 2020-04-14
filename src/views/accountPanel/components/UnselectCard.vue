@@ -27,40 +27,6 @@
         </el-button>
       </div>
     </div>
-
-    <div
-      v-if="isShowConfirmBlock"
-      class="unselect-card-confirm"
-    >
-      <div class="unselect-card-confirm__body">
-        <div style="color:#f56c6c">
-          There is existing account:
-          <strong>{{ currentAccount.accountCode|| '' }}</strong>, login with new account will close the associated IE window. Any pending tasks of this account will no longer appear on this machine.
-        </div>
-        <div>Please confirm account selected and choose the method of login.</div>
-        <div>Login process will open a new IE window, please do not close it.</div>
-      </div>
-      <div class="unselect-card-confirm__footer">
-        <el-button
-          size="small"
-          @click="handleManualLogin"
-        >
-          Manual Login
-        </el-button>
-        <el-button
-          size="small"
-          :disabled="true"
-        >
-          Auto Login
-        </el-button>
-        <el-button
-          size="small"
-          @click="handleCancelInConfirm"
-        >
-          Cancel
-        </el-button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -69,6 +35,7 @@ import { Component, Vue, Watch, Prop } from "vue-property-decorator";
 import { AppModule } from "@/store/modules/app";
 import { AccountModule } from "@/store/modules/account";
 import { WorkerModule } from "../../../store/modules/worker";
+import RemitterAccountModel from "../../../models/remitterAccountModel";
 
 @Component({ name: "UnselectCard" })
 export default class extends Vue {
@@ -86,12 +53,8 @@ export default class extends Vue {
     AppModule.HANDLE_TASK_VISIBLE(false);
     AppModule.HANDLE_TASK_FETCHABLE(false);
 
-    // this.$store.commit("UNSET_CURRENT_CARD_DETAIL");
-    await Promise.all([
-      WorkerModule.UnsetWorker()
-      // AccountModule.
-      // this.$store.dispatch("UnsetCurrentCard")
-    ]);
+    AccountModule.SET_CURRENT(new RemitterAccountModel());
+    await WorkerModule.UnsetWorker();
   }
   handleCancel() {
     AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
