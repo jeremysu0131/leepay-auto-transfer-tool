@@ -10,7 +10,8 @@ import store from "@/store";
 import {
   WorkflowEnum,
   manualSignInWorkflowEnum,
-  autoSignInWorkflowEnum
+  autoSignInWorkflowEnum,
+  transferWorkflowEnum
 } from "../../workers/utils/workflowHelper";
 import { LogModule } from "./log";
 import { AppModule } from "./app";
@@ -42,6 +43,10 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Mutation
   SET_MANUAL_SIGN_IN_WORKFLOW() {
     this.workflow = manualSignInWorkflowEnum();
+  }
+  @Mutation
+  SET_TRANSFER_WORKFLOW(accountCode:string) {
+    this.workflow = transferWorkflowEnum(accountCode);
   }
   @Mutation
   UPDATE_FLOW_STATUS(data: { name: WorkflowEnum; status: WorkflowStatusEnum }) {

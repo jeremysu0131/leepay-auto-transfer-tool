@@ -18,12 +18,6 @@ export enum WorkflowEnum {
   CONFIRM_TRANSACTION = "Confirm transaction",
   CHECK_IF_SUCCESS = "Check if transfer success"
 }
-// export enum WorkflowStatusEnum {
-//   PENDING = "pending",
-//   RUNNING = "running",
-//   SUCCESS = "success",
-//   FAIL = "fail"
-// }
 
 export function autoSignInWorkflowEnum() {
   return [
@@ -69,12 +63,8 @@ export function manualSignInWorkflowEnum() {
   ];
 }
 
-/**
- * Get workflow
- */
-export function workflowEnum(bankCode?: string | string[] | undefined) {
-  if (!bankCode) return WorkflowEnum;
-  else if (bankCode.indexOf("ABC") !== -1) return ABCWorkflow;
+export function transferWorkflowEnum(bankCode: string) {
+  if (bankCode.indexOf("ABC") !== -1) return ABCWorkflow;
   else if (bankCode.indexOf("BCM") !== -1) return BCMWorkflow;
   else if (bankCode.indexOf("BOB") !== -1) return BOBWorkflow;
   else if (bankCode.indexOf("BOC") !== -1) return BOCWorkflow;
