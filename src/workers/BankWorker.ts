@@ -5,7 +5,12 @@ import RemitterAccountModel from "./models/remitterAccountModel";
 import TaskDetailModel from "./models/taskDetailModel";
 import { WorkerResponseModel } from "./models/workerResponseModel";
 import Logger from "./utils/logger";
-import { setIEEnvironment, setProxy, unsetProxy } from "./utils/regeditTool";
+import {
+  setIEEnvironment,
+  setProxy,
+  unsetProxy,
+  setProxyWhiteList
+} from "./utils/regeditTool";
 import { WorkflowEnum } from "./utils/workflowHelper";
 import { WorkerAdapterFactory } from "./WorkerAdapterFactory";
 /**
@@ -48,6 +53,11 @@ export default class BankWorker {
   async setProxy(): Promise<WorkerResponseModel> {
     try {
       await setProxy(this.instance.getRemitterAccount().proxy);
+      await setProxyWhiteList(
+        process.env.NODE_ENV === "production"
+          ? "www.tcgpayment.com"
+          : "localhost;10.8.95.22;"
+      );
 
       return { isFlowExecutedSuccess: true };
     } catch (error) {
@@ -253,7 +263,10 @@ export default class BankWorker {
           message:
             "System can't check the transfer result, please check it manually"
         });
-        return { isFlowExecutedSuccess: false, message: "Fail to check if transaction success" };
+        return {
+          isFlowExecutedSuccess: false,
+          message: "Fail to check if transaction success"
+        };
       }
     } catch (error) {
       Logger({ message: error, level: "error" });

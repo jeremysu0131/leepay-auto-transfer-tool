@@ -1,4 +1,4 @@
-import * as AccountApi from "../../api/account";
+import * as AccountApi from "@/api/account";
 import {
   VuexModule,
   Module,
