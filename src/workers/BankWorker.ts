@@ -56,7 +56,7 @@ export default class BankWorker {
       await setProxyWhiteList(
         process.env.NODE_ENV === "production"
           ? "www.tcgpayment.com"
-          : "localhost;10.8.95.22;"
+          : "localhost;192.168.0.27;10.8.95.22;"
       );
 
       return { isFlowExecutedSuccess: true };
@@ -167,7 +167,7 @@ export default class BankWorker {
         globalState
       );
 
-      return { isFlowExecutedSuccess: true };
+      return { isFlowExecutedSuccess: isLoginSuccess };
     } catch (error) {
       Logger({ level: "error", message: error });
       return { isFlowExecutedSuccess: false, message: error };

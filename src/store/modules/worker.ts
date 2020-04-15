@@ -45,7 +45,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     this.workflow = manualSignInWorkflowEnum();
   }
   @Mutation
-  SET_TRANSFER_WORKFLOW(accountCode:string) {
+  SET_TRANSFER_WORKFLOW(accountCode: string) {
     this.workflow = transferWorkflowEnum(accountCode);
   }
   @Mutation
@@ -172,7 +172,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
             : WorkflowStatusEnum.FAIL
         });
         if (!isFlowExecutedSuccess) throw new Error(message);
-        break;
+        return { isFlowExecutedSuccess, message };
 
       default:
         throw new Error("No such workflow");
@@ -202,13 +202,12 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async CheckIfLoginSuccess() {
     const isManualLogin = AppModule.isManualLogin;
-    var isLoginSuccess = await transponder(
-      ipcRenderer,
-      WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
-      { isManualLogin }
-    );
+    var { isFlowExecutedSuccess, message } = await this.RunFlow({
+      name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
+      args: { isManualLogin }
+    });
 
-    if (isLoginSuccess) {
+    if (isFlowExecutedSuccess) {
       AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
       AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
       AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
