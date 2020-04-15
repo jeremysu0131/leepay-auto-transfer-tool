@@ -122,6 +122,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async RunAutoTransferFlows() {
     try {
+      await this.RunFlow({ name: WorkflowEnum.SET_TASK, args: TaskModule.selectedDetail });
       await this.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
       await this.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
       await this.RunFlow({ name: WorkflowEnum.FILL_NOTE });
