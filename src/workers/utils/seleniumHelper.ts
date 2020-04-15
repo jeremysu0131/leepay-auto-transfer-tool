@@ -265,6 +265,7 @@ export async function waitPageLoad(driver: WebDriver) {
  * @param interval (second) default 1s
  */
 export async function waitPageLoadCondition(
+  name : string,
   driver: WebDriver,
   condition: WebElementCondition,
   maxRetry = 60,
@@ -273,7 +274,7 @@ export async function waitPageLoadCondition(
   let count = 0;
   while (true) {
     try {
-      logger({ level: "info", message: "wait page loading..." });
+      logger({ level: "info", message: `${name} wait page loading retry (${count})...` });
       await driver.wait(condition, 10000);
       // 確認 frame 裡面的element 已經載入
       await driver.switchTo().defaultContent();
@@ -281,13 +282,13 @@ export async function waitPageLoadCondition(
       break;
     } catch (e) {
       if (count >= maxRetry) {
-        throw new Error("more than max retry to waiting page");
+        throw new Error(`more than max retry to waiting page retry (${count + 1})`);
       }
       count++;
       await new Promise(resolve => setTimeout(resolve, interval * 1000));
     }
   }
-  logger({ level: "info", message: "page loading success" });
+  logger({ level: "info", message: `${name} page loading success` });
 }
 
 export async function waitAndSwitchToTargetFrame(

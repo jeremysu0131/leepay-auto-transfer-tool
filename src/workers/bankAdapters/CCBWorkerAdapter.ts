@@ -1,6 +1,6 @@
 import dayjs, { Dayjs } from "dayjs";
 import * as fs from "fs";
-import { By, until, WebDriver } from "selenium-webdriver";
+import { By, until, WebDriver, WebElement } from "selenium-webdriver";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import RemitterAccountModel from "../models/remitterAccountModel";
 import TaskDetailModel from "../models/taskDetailModel";
@@ -20,6 +20,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   private charge: string;
   private transactionTime: Dayjs;
   private bankMappingList: any;
+  private screenshotPath: string = "";
   private readonly loginFrame = "fQRLGIN";
   private readonly wattingTime = 10 * 1000;
 
@@ -83,12 +84,13 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     // 確認頁面載入
     await waitPageLoad(this.driver);
     // 切換frame 到登入
-    this.logInfo("switch to login iframe");
-    let frame = await this.driver.wait(
-      until.elementLocated(By.id(this.loginFrame)),
-      10 * 1000
+    const loginFrameCon = until.elementLocated(By.id(this.loginFrame));
+    await waitPageLoadCondition("login page", this.driver, loginFrameCon);
+    await waitAndSwitchToTargetFrame(
+      "switch to login iframe",
+      this.driver,
+      loginFrameCon
     );
-    await this.driver.switchTo().frame(frame);
     // validate login info data
     if (!this.remitterAccount.loginName) {
       throw new Error("Account name is null");
@@ -183,6 +185,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       throw new Error("can not find submit button");
     }
     await waitPageLoadCondition(
+      "login to home page",
       this.driver,
       until.elementLocated(By.id("idxmaincontainer"))
     );
@@ -232,6 +235,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     );
     // 等待 txmainfrm frame 被載入
     await waitPageLoadCondition(
+      "load transfer form page",
       this.driver,
       until.elementLocated(By.id("txmainfrm"))
     );
@@ -291,7 +295,8 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     await this.driver.switchTo().frame(frame);
     const task = this.getTask();
     // 驗證task 資訊
-    if (!task) throw new Error("task is null");
+    if (!task) throw new Error("task is not defined");
+    if (!task.id) throw new Error("task id is not defined");
     if (!task.amount || task.amount < 0) throw new Error("task amount error");
     if (!task.payeeAccount) throw new Error("task payee account is null");
     if (!task.payeeAccount.holderName) {
@@ -338,13 +343,16 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     await this.driver.switchTo().defaultContent();
     // 等待載入, 確認進到下一個頁面
     const trxFrameCondition = until.elementLocated(By.id("txmainfrm"));
-    await waitPageLoadCondition(this.driver, trxFrameCondition);
-    const trxFrame = await this.driver.wait(
-      trxFrameCondition,
-      this.wattingTime
+    await waitPageLoadCondition(
+      "load transaction check page",
+      this.driver,
+      trxFrameCondition
     );
-    await this.driver.switchTo().frame(trxFrame);
-    await waitPageLoad(this.driver);
+    await waitAndSwitchToTargetFrame(
+      "check if in transaction check page",
+      this.driver,
+      trxFrameCondition
+    );
     const checkTransactionPage = await this.driver.wait(
       until.elementLocated(By.className("pbd_table_step_title_no_line")),
       5 * 1000
@@ -420,15 +428,29 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     this.logInfo("skip fill note");
   }
   async checkBankReceivedTransferInformation(): Promise<boolean> {
+    this.logInfo("start check transaction info and setting remark");
     const task = this.getTask();
     // 切換到目標 iframe
     const transactionFrameCon = await until.elementLocated(By.id("txmainfrm"));
-    await waitPageLoadCondition(this.driver, transactionFrameCon);
-    await waitAndSwitchToTargetFrame(
-      "切換到目標 iframe",
+    await waitPageLoadCondition(
+      "transaction detail page",
       this.driver,
       transactionFrameCon
     );
+    await waitAndSwitchToTargetFrame(
+      "transaction detail view load",
+      this.driver,
+      transactionFrameCon
+    );
+
+    this.logInfo("add remark use task id");
+    // 將task id 加入附言
+    await sendKeysV2(
+      this.driver,
+      this.driver.wait(until.elementLocated(By.id("MEMO")), this.wattingTime),
+      { text: task.id.toString() }
+    );
+
     // 取得所有帳號欄位 card_menoy1 在做塞選
     const accountElement = await this.driver.wait(
       until.elementsLocated(By.className("card_menoy1")),
@@ -517,28 +539,23 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     // }
     // TODO 等待跳轉 用工具取代計時
     await this.sleep(60);
-
-    // await this.driver.switchTo().defaultContent();
-    // const frameCon = until.elementLocated(By.id("txfrmcontainer"));
-    // await waitPageLoadCondition(this.driver, frameCon);
-    // await waitAndSwitchToTargetFrame("go target frame", this.driver, frameCon);
-    // await this.driver.wait(until.elementLocated(By.id("pmain")));
-    // await this.driver.wait(until.elementLocated(By.id("err_info")));
     // 結果頁面 截圖
     const base64Png = await this.driver.takeScreenshot();
-    if (!base64Png) { 
+    if (!base64Png) {
       this.logWarn("can not take Screenshot");
       return;
     }
     const fileName = `${this.getTask().id}.png`;
+    this.screenshotPath = `./logs/${fileName}`;
     this.logInfo(`check result page in file name ${fileName}`);
     fs.writeFileSync(
-      `./logs/${fileName}`,
+      this.screenshotPath,
       base64Png.replace(/^data:image\/png;base64,/, ""),
       { encoding: "base64" }
     );
   }
   async checkIfTransactionSuccess(): Promise<boolean> {
+    let resultPageCheck = true;
     try {
       // 確認交易回條
       this.logInfo("check result page start...");
@@ -554,60 +571,69 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
         const successSpans = await this.driver.wait(
           until.elementsLocated(
             By.css("div#showINFO > div.pResult > div.succeed_span > p")
-          )
+          ),
+          this.wattingTime
         );
+        let successTitleCheck = false;
         if (successSpans && successSpans.length > 0) {
           for (const element of successSpans) {
             const text = await element.getText();
             if (text.indexOf("转账成功") > -1) {
               this.logInfo("轉帳成功");
+              successTitleCheck = true;
             }
+          }
+        }
+        if (!successTitleCheck) {
+          resultPageCheck = false;
+          this.logWarn("transfer success title not show, transfer fail");
+          const errorDiv = await this.driver.wait(
+            until.elementLocated(By.id("err_info")),
+            this.wattingTime
+          );
+          const errorSpan = await errorDiv.findElements(By.tagName("p"));
+          for (const p of errorSpan) {
+            const text = await p.getText();
+            this.logWarn(text);
           }
         }
       } catch (e) {
         return false;
       }
+      // check success table exist
       const successTableElementCon = until.elementLocated(
-        By.css("div#showINFO > div.four_column_table_padLR > table.four_column_table > tbody")
+        By.css(
+          "div#showINFO > div.four_column_table_padLR > table.four_column_table > tbody"
+        )
       );
       const table = await this.driver.wait(
         successTableElementCon,
         this.wattingTime
       );
-      if (table) {
-        const name = await this.driver.wait(
-          until.elementLocated(
-            By.css(
-              "div#showINFO > div > table.four_column_table > tbody > tr:nth-child(0) > td:nth-child(1)"
-            )
-          )
-        );
-        const account = await this.driver.wait(
-          until.elementLocated(
-            By.css(
-              "div#showINFO > div > table.four_column_table > tbody > tr:nth-child(1) > td:nth-child(1)"
-            )
-          )
-        );
-        const amount = await this.driver.wait(
-          until.elementLocated(
-            By.css(
-              "div#showINFO > div > table.four_column_table > tbody > tr:nth-child(3) > td:nth-child(0)"
-            )
-          )
-        );
-      }
-      return true;
+
+      // 檢查交易明細頁面 是否存在該筆任務id
+      const checkTransactionList = await this.checkTransactionDetailList();
+      this.logInfo(
+        `check transaction list result (${checkTransactionList}), result page result (${resultPageCheck})`
+      );
+      return resultPageCheck;
     } catch (e) {
       this.logWarn(e);
       return false;
     }
   }
-  async checkIfTransactionList(): Promise<boolean> {
+
+  /**
+   * 交易明細頁面 確認是否有交易結果
+   */
+  async checkTransactionDetailList(): Promise<boolean> {
     try {
+      await this.driver.switchTo().defaultContent();
       // go my account page #MENUV6020101
+      // 前往我的帳戶頁面
       this.logInfo("go to transaction detail page MENUV6020101");
       await waitPageLoadCondition(
+        "transaction detail page",
         this.driver,
         until.elementLocated(By.id("MENUV6020101"))
       );
@@ -628,9 +654,9 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       // 切換到目標 iframe #txmainfrm
       this.logInfo("switch to frame");
       const transactionFrameCon = until.elementLocated(By.id("txmainfrm"));
-      await waitPageLoadCondition(this.driver, transactionFrameCon);
+      await waitPageLoadCondition("", this.driver, transactionFrameCon);
       await waitAndSwitchToTargetFrame(
-        "txmainfrm",
+        "transaction list frame",
         this.driver,
         transactionFrameCon
       );
@@ -641,11 +667,17 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
         "document.getElementById('tuxing').click()"
       );
       // 切換到目標 iframe #result
-      const resultFrameCon = until.elementLocated(By.id("result"));
-      await waitAndSwitchToTargetFrame("result", this.driver, resultFrameCon);
+      await waitAndSwitchToTargetFrame(
+        "result",
+        this.driver,
+        until.elementLocated(By.id("result"))
+      );
       // 切換到目標 iframe #result
-      const result1FrameCon = until.elementLocated(By.id("result"));
-      await waitAndSwitchToTargetFrame("result1", this.driver, result1FrameCon);
+      await waitAndSwitchToTargetFrame(
+        "result1",
+        this.driver,
+        until.elementLocated(By.id("result"))
+      );
 
       // search detail href .detail pr_5
       const hrefCon = until.elementLocated(By.className("detail pr_5"));
@@ -659,16 +691,43 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       );
       // await hrefElement.click();
       // find pop out window and get body
-      // WindowFocusTool.focusAndCheckIE();
-      await this.getTransactionList();
-      return true;
+      const lastPageData = await this.getTransactionList();
+      if (!lastPageData) {
+        this.logWarn("not found any transaction record");
+        return false;
+      }
+      const taskRecord = lastPageData.filter(x => +x.remark === this.task.id);
+      // console.log(lastPageData);
+      this.logInfo(`task record is ${JSON.stringify(taskRecord)}`);
+      if (taskRecord) {
+        // 失敗的交易會被沖正, 所以確認沒有同樣的task id 被沖正
+        const revertRecord = taskRecord.find(x => x.title === "冲正");
+        if (revertRecord) {
+          this.logWarn("content revert record, transfer fail");
+          return false;
+        }
+        return true;
+      }
+      return false;
     } catch (e) {
       this.logWarn(e.toString());
       return false;
     }
   }
 
-  async getTransactionList() {
+  async getTransactionList(): Promise<
+    | Array<{
+        cardNumber: string;
+        distName: string;
+        amount: string;
+        timeStr: string;
+        remark: string;
+        // 摘要
+        title: string;
+      }>
+    | undefined
+    | null
+  > {
     try {
       // window.frames[0].document.getElementById("result").document dev #result
       const parent = await this.driver.getWindowHandle();
@@ -681,29 +740,76 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       WindowFocusTool.focusAndCheckIE();
       await this.driver.switchTo().frame(0);
       await waitPageLoad(this.driver);
+
+      // go last page btns #query_amount_page2
+      this.logInfo("go last page click");
+      const pagesButton = await this.driver.wait(
+        until.elementLocated(By.id("query_amount_page2")),
+        this.wattingTime
+      );
+      const hrefs = await pagesButton.findElements(By.tagName("a"));
+      let lastBtn: { page: number; element: WebElement } = {
+        page: 0,
+        element: null as any
+      };
+      for (const href of hrefs) {
+        const page = +(await href.getText());
+        if (page > lastBtn.page) {
+          lastBtn.page = page;
+          lastBtn.element = href;
+        }
+      }
+      if (lastBtn.element) await lastBtn.element.click();
+
       await waitAndSwitchToTargetFrame(
-        "result",
+        "go to result frame",
         this.driver,
         until.elementLocated(By.id("result"))
       );
-      const records = await this.driver.wait(
-        until.elementsLocated(
-          By.css("html > body > form#jhform > table > tbody > tr")
-        ),
+      const tableBody = await this.driver.wait(
+        until.elementLocated(By.css(" form#jhform > table#result > tbody ")),
         this.wattingTime
       );
-      const dataPromise = records.map(async x => {
-        const data = await x.findElements(By.tagName("td"));
-        if (!data) return null;
-        const cardNumber = await data[3].getText();
-        const distName = await data[3].getText();
-        const amount = await data[3].getText();
-        return [cardNumber, distName, amount];
-      });
-      const data = await Promise.all(dataPromise);
-      // TODO resolve table body to dictionary
-      console.log(data);
+      await waitPageLoad(this.driver);
+      // resolve table body to dictionary
+      this.logInfo("resolve table data");
+      const records = await tableBody.findElements(By.className("td_span"));
+      const dataResult = [];
+      for (const x of records) {
+        try {
+          // const dataTagName = await x.getTagName();
+          // const html = await x.getAttribute("innerHTML");
+          // const data = await this.driver.wait(until.elementsLocated(By.tagName("td")));
+          const data = await x.findElements(By.tagName("td"));
+          if (!data || data.length <= 4) continue;
+          let timeStr = await data[1].getText();
+          timeStr = timeStr.replace("\n", " ");
+          const amount = await data[2].getText();
+          const title = await data[5].getAttribute("title");
+          const cardNumber = await data[6].getAttribute("title");
+          const distName = await data[7].getAttribute("title");
+          const remarkTd = await data[8].findElement(By.tagName("div"));
+          let remark = "";
+          if (remarkTd) {
+            remark = await remarkTd.getText();
+          }
+          dataResult.push({
+            cardNumber,
+            distName,
+            amount,
+            timeStr,
+            remark,
+            title
+          });
+        } catch (e) {
+          return null;
+        }
+      }
+      await this.driver.switchTo().window(parent);
+      this.logInfo("resolve table data success");
+      return dataResult;
     } catch (e) {
+      this.logWarn("getTransactionList fail please check");
       this.logWarn(e.toString());
       throw e;
     }
@@ -719,6 +825,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       'document.getElementById("MENUV6020101").click()'
     );
     await waitPageLoadCondition(
+      "load my account",
       this.driver,
       until.elementLocated(By.id("txmainfrm"))
     );

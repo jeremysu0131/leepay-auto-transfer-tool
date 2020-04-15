@@ -27,16 +27,22 @@ describe("CCBWorker", () => {
   });
 
   afterAll(async() => {
-    // await worker.closeSelenium();
+    await worker.closeSelenium();
   });
   it("login:setAccount", async() => {
+    // const bank = { chineseName: "中国农业银行" } as BankModel;
+    // const payAccount = {
+    //   holderName: "植鎏颖",
+    //   cardNumber: "6230520850012468076",
+    //   bank
+    // } as PayeeAccountModel;
     const bank = { chineseName: "中国邮政储蓄银行" } as BankModel;
     const payAccount = {
       holderName: "康贻龙",
       cardNumber: "6217993000391513895",
       bank
     } as PayeeAccountModel;
-    worker.setTask({ id: 20200414, amount: 0.1, payeeAccount: payAccount } as TaskDetailModel);
+    worker.setTask({ id: new Date().getTime(), amount: 0.1, payeeAccount: payAccount } as TaskDetailModel);
     const result = await worker.inputSignInInformation();
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });
