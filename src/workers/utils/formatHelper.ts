@@ -1,4 +1,4 @@
-export function amount(amount:string) :string {
+export function amount(amount:string|number) :string {
   if (!amount) amount = "0.00";
 
   if (typeof amount !== "string" && typeof amount !== "number") {

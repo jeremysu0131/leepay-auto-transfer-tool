@@ -102,8 +102,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         this.driver,
         this.driver.wait(until.elementLocated(By.id("toAcctNo")), 5 * 1000),
         {
-          // text: this.task.payeeAccount
-          text: ""
+          text: this.task.payeeAccount.cardNumber
         }
       );
 
@@ -115,8 +114,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           5 * 1000
         ),
         {
-          // text: this.task.receiverName
-          text: ""
+          text: this.task.payeeAccount.holderName
         }
       );
 
@@ -125,8 +123,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         this.driver,
         this.driver.wait(until.elementLocated(By.id("transAmt")), 5 * 1000),
         {
-          // text: FormatHelper.amount(this.task.requestAmount),
-          text: "",
+          text: FormatHelper.amount(this.task.amount),
           replaceRule: /,/g
         }
       );
@@ -143,7 +140,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         until.elementLocated(By.id("agreeBtn")),
         30 * 1000
       );
-      await this.checkSubmittedValue();
     } finally {
       await this.driver.switchTo().defaultContent();
     }
@@ -161,15 +157,44 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     // return true;
   }
   async checkBankReceivedTransferInformation(): Promise<boolean> {
-    // throw new Error("Method not implemented.");
-    return true;
+    try {
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
+
+      await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
+      return await this.checkSubmittedValue();
+      // TODO: Get transfer fee here
+    } finally {
+      await this.driver.switchTo().defaultContent();
+    }
   }
   async sendPasswordToPerformTransaction(): Promise<void> {
-    // throw new Error("Method not implemented.");
+    try {
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
+
+      await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
+      await this.sendQueryPassword();
+      // TODO: Get transfer fee here
+    } finally {
+      await this.driver.switchTo().defaultContent();
+    }
   }
   async sendUsbPasswordToPerformTransaction(): Promise<void> {
-    // throw new Error("Method not implemented.");
-    // return true;
+    await this.sendUSBPasswordForTransfer();
+    await this.waitUSBPress();
   }
   async checkIfTransactionSuccess(): Promise<boolean> {
     // Check customer advice first
@@ -382,9 +407,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           Logger({ level: "info", message: "Bank selected success" });
           break;
         }
-        // FIXME
-        var bankName = "";
-        // this.bankMappingList[this.task.bank.chineseName] || this.task.bank.chineseName;
+        var bankName = this.task.payeeAccount.bank.chineseName
+          ? this.bankMappingList[this.task.payeeAccount.bank.chineseName]
+          : this.task.payeeAccount.bank.chineseName;
 
         await sendKeysV2(this.driver, bankField, { text: bankName });
         await executeJavaScript(
@@ -435,6 +460,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         1 * 1000
       )
       .getText();
+      console.log("third line", thirdLine);
 
     var amountLine = thirdLine;
     if (thirdLine.indexOf("实时") > -1) {
@@ -452,44 +478,26 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
     var amount = amountLine.replace(/[^0-9.]/gi, "").trim();
     amount = amount.replace(/,/g, "");
-    // if (parseFloat(amount) !== parseFloat(this.task.requestAmount)) {
-    //   throw new Error("Amount is not right!");
-    // }
+    if (FormatHelper.amount(amount) !== FormatHelper.amount(this.task.amount)) {
+      throw new Error("Amount is not right!");
+    }
 
-    // var name = nameCardLine.split("/")[0];
-    // if (name != this.task.receiverName) {
-    //   throw new Error("Receiver name is not right!");
-    // }
+    var name = nameCardLine.split("/")[0];
+    if (name !== this.task.payeeAccount.holderName) {
+      throw new Error("Payee name is not right!");
+    }
 
-    // var card = nameCardLine.split("/")[1];
-    // if (card != this.task.bank.cardNumber) {
-    //   throw new Error("Card number is not right!");
-    // }
+    var card = nameCardLine.split("/")[1];
+    if (card !== this.task.payeeAccount.cardNumber) {
+      throw new Error("Card number is not right!");
+    }
+
+    return true;
   }
 
   async fillNote() {}
 
-  async confirmTransaction() {
-    try {
-      await this.driver
-        .switchTo()
-        .frame(
-          this.driver.wait(
-            until.elementLocated(By.id("contentFrame")),
-            60 * 1000
-          )
-        );
-
-      await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
-      // TODO: Get transfer fee here
-
-      await this.sendQueryPassword();
-      await this.sendUSBPasswordForTransfer();
-      await this.waitUSBPress();
-    } finally {
-      await this.driver.switchTo().defaultContent();
-    }
-  }
+  async confirmTransaction() {}
 
   async sendQueryPassword() {
     var retryTimes = 3;
