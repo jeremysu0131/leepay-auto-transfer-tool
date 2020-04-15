@@ -1,5 +1,5 @@
+import { ABCWorkerAdapter, CCBWorkerAdapter } from "./bankAdapters";
 import { IWorkerAdapter } from "./IWorkerAdapter";
-import { ABCWorkerAdapter } from "./bankAdapters";
 
 /**
  * Worker Adapter Factory
@@ -16,7 +16,7 @@ export class WorkerAdapterFactory {
     // else if (accountCode.indexOf("BCM") !== -1) return new BCMWorker();
     // else if (accountCode.indexOf("BOB") !== -1) return new BOBWorker();
     // else if (accountCode.indexOf("BOC") !== -1) return new BOCWorker();
-    // else if (accountCode.indexOf("CCB") !== -1) return new CCBWorker();
+    else if (accountCode.indexOf("CCB") !== -1) return new CCBWorkerAdapter();
     // else if (accountCode.indexOf("CITIC") !== -1) return new CITICWorker();
     // else if (accountCode.indexOf("CMBC") !== -1) return new CMBCWorker();
     // else if (accountCode.indexOf("HRBB") !== -1) return new HRBBWorker();

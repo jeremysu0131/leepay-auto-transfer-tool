@@ -1,12 +1,6 @@
 import { asyncForEach } from "@/utils/asyncForEach";
-
 // eslint-disable-next-line no-unused-vars
-import {
-  Locator,
-  WebElementPromise,
-  WebElementCondition,
-  WebDriver
-} from "selenium-webdriver";
+import { Locator, WebDriver, WebElement, WebElementCondition, WebElementPromise } from "selenium-webdriver";
 import logger from "./logger";
 
 /**
@@ -19,7 +13,9 @@ export async function executeJavaScript(
   delayMilliseconds = 1000
 ) {
   try {
-    if (!name) { throw new Error("You didn't set the name of this execute method"); }
+    if (!name) {
+      throw new Error("You didn't set the name of this execute method");
+    }
     await driver.sleep(delayMilliseconds);
     await driver.executeScript(script);
   } catch (error) {
@@ -259,6 +255,67 @@ export async function waitPageLoad(driver: WebDriver) {
     const readyState = await driver.executeScript("return document.readyState");
     return readyState === "complete";
   });
+}
+
+/**
+ * 跳轉頁面的時可以下等待目標來等待
+ * @param driver driver
+ * @param condition want to wait condition
+ * @param maxRetry default 60
+ * @param interval (second) default 1s
+ */
+export async function waitPageLoadCondition(
+  name : string,
+  driver: WebDriver,
+  condition: WebElementCondition,
+  maxRetry = 60,
+  interval = 1
+) {
+  let count = 0;
+  while (true) {
+    try {
+      logger({ level: "info", message: `${name} wait page loading retry (${count})...` });
+      await driver.wait(condition, 10000);
+      // 確認 frame 裡面的element 已經載入
+      await driver.switchTo().defaultContent();
+      await waitPageLoad(driver);
+      break;
+    } catch (e) {
+      if (count >= maxRetry) {
+        throw new Error(`more than max retry to waiting page retry (${count + 1})`);
+      }
+      count++;
+      await new Promise(resolve => setTimeout(resolve, interval * 1000));
+    }
+  }
+  logger({ level: "info", message: `${name} page loading success` });
+}
+
+export async function waitAndSwitchToTargetFrame(
+  name: string,
+  driver: WebDriver,
+  condition: WebElementCondition,
+  maxRetry = 2,
+  interval = 1
+): Promise<WebElement> {
+  let count = 0;
+  while (true) {
+    try {
+      logger({ level: "info", message: `(${name}) wait frame loading...` });
+      await waitPageLoad(driver);
+      const element = await driver.wait(condition, 10000);
+      await driver.switchTo().frame(element);
+      logger({ level: "info", message: `(${name}) frame loading and switch success` });
+      return element;
+    } catch (e) {
+      logger({ level: "warn", message: e });
+      if (count >= maxRetry) {
+        throw new Error(`${name} frame is not found`);
+      }
+      count++;
+      await new Promise(resolve => setTimeout(resolve, interval * 1000));
+    }
+  }
 }
 
 export async function waitUtilGetText(

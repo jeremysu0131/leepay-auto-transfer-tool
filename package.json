@@ -7,6 +7,7 @@
     "serve": "vue-cli-service electron:serve",
     "build": "vue-cli-service electron:build",
     "test:unit": "vue-cli-service test:unit",
+    "test:debug": "node --inspect-brk ./node_modules/@vue/cli-service/bin/vue-cli-service.js test:unit --runInBand",
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
     "postinstall": "electron-builder install-app-deps",
