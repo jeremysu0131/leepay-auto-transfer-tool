@@ -56,6 +56,9 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
         flow.status = data.status;
       }
     });
+    var workflow = this.workflow;
+    this.workflow = [];
+    this.workflow = workflow;
   }
   // SET_WORKFLOW: (state, bankCode) => {
   //   state.workflow = workflowEnum(bankCode);
@@ -122,7 +125,10 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async RunAutoTransferFlows() {
     try {
-      await this.RunFlow({ name: WorkflowEnum.SET_TASK, args: TaskModule.selectedDetail });
+      await this.RunFlow({
+        name: WorkflowEnum.SET_TASK,
+        args: TaskModule.selectedDetail
+      });
       await this.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
       await this.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
       await this.RunFlow({ name: WorkflowEnum.FILL_NOTE });

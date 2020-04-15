@@ -34,6 +34,7 @@ import { LogModule } from "../../store/modules/log";
 })
 export default class extends Vue {
   get workflow() {
+    console.log("change");
     return WorkerModule.workflow;
   }
 
