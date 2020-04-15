@@ -3,7 +3,7 @@
     <el-table
       ref="taskTable"
       v-loading="app.task.isFetching"
-      :data="task.list"
+      :data="taskList"
       style="width: 100%"
       :height="tableHeight"
       size="mini"
@@ -18,12 +18,12 @@
         width="80"
         align="center"
       />
-      <el-table-column
+      <!-- <el-table-column
         prop="createdAt"
         label="Request Time"
         width="150"
         align="center"
-      />
+      /> -->
       <el-table-column
         prop="pendingTime"
         label="Pending(min.)"
@@ -50,7 +50,7 @@
         label="From Account"
         align="center"
         width="120"
-      /> -->
+      />-->
       <!-- FIXME to check if this field correctlly -->
       <el-table-column
         prop="amount"
@@ -79,11 +79,11 @@
           {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.transferFee) }}
         </template>
       </el-table-column>
-      <el-table-column
+      <!-- <el-table-column
         prop="asignee"
         label="Asignee"
         align="center"
-      />
+      /> -->
       <el-table-column
         label="Actions"
         align="center"
@@ -236,6 +236,12 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   get task() {
     return TaskModule;
+  }
+  get taskList() {
+    console.log(TaskModule.list);
+    return TaskModule.list.filter(
+      task => task.remitterAccountCode === AccountModule.current.code
+    );
   }
   get name() {
     return UserModule.name;
