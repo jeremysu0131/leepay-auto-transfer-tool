@@ -3,31 +3,40 @@
     <el-table
       ref="taskTable"
       v-loading="app.task.isFetching"
-      :data="task.list"
+      :data="taskList"
       style="width: 100%"
       :height="tableHeight"
       size="mini"
       :stripe="true"
       :border="true"
       :row-class-name="selectedRowClass"
+      :default-sort="{prop: 'priority', order: 'descending'}"
     >
       <el-table-column
         prop="id"
         label="ID"
-        width="90"
+        width="80"
         align="center"
       />
-      <el-table-column
+      <!-- <el-table-column
         prop="createdAt"
         label="Request Time"
-        width="140"
+        width="150"
         align="center"
-      />
+      /> -->
       <el-table-column
         prop="pendingTime"
         label="Pending(min.)"
         align="center"
-        width="110"
+        width="130"
+        sortable
+      />
+      <el-table-column
+        prop="priority"
+        label="Priority"
+        align="center"
+        width="90"
+        sortable
       />
       <el-table-column
         prop="workflow"
@@ -36,12 +45,12 @@
         width="120"
       />
       <!-- FIXME to check if this field correctlly -->
-      <el-table-column
+      <!-- <el-table-column
         prop="remitterAccountCode"
         label="From Account"
         align="center"
         width="120"
-      />
+      />-->
       <!-- FIXME to check if this field correctlly -->
       <el-table-column
         prop="amount"
@@ -70,11 +79,11 @@
           {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.transferFee) }}
         </template>
       </el-table-column>
-      <el-table-column
+      <!-- <el-table-column
         prop="asignee"
         label="Asignee"
         align="center"
-      />
+      /> -->
       <el-table-column
         label="Actions"
         align="center"
@@ -228,6 +237,12 @@ export default class extends Mixins(TaskOperationMixin) {
   get task() {
     return TaskModule;
   }
+  get taskList() {
+    console.log(TaskModule.list);
+    return TaskModule.list.filter(
+      task => task.remitterAccountCode === AccountModule.current.code
+    );
+  }
   get name() {
     return UserModule.name;
   }
@@ -249,8 +264,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return "";
   }
   private async lockTask(task: TaskModel) {
-    console.log(task.assigneeId, UserModule.id);
-    if (task.assigneeId !== UserModule.id) {
+    if (+task.assigneeId !== +UserModule.id) {
       if (!(await TaskModule.Lock(task.id))) {
         return LogModule.SetConsole({
           // title: "Automation Stopped",
@@ -266,7 +280,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
-      // await this.lockTask(task);
+      await this.lockTask(task);
       var taskDetail = await this.getTaskDetail(task);
       TaskModule.SET_SELECTED_DETAIL(taskDetail);
       await this.startTask();

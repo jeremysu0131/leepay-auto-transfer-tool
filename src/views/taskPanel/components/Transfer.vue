@@ -21,7 +21,7 @@
               {{ lastSelectedTask.id }}
             </div>
             <div v-if="lastSelectedTask && lastSelectedTask.bank">
-              {{ card.currentDetail.channelGroup || ' - ' }}
+              <!-- {{ card.currentDetail.channelGroup || ' - ' }} -->
             </div>
             <div v-if="lastSelectedTask">
               {{ lastSelectedTask.merchantName }}
@@ -70,7 +70,7 @@
               {{ selectedTask.id }}
             </div>
             <div v-if="selectedTask">
-              {{ card.currentDetail.channelGroup || ' - ' }}
+              <!-- {{ card.currentDetail.channelGroup || ' - ' }} -->
             </div>
             <div v-if="selectedTask">
               {{ selectedTask.merchantName }}
@@ -89,7 +89,8 @@
             </div>
           </div>
         </div>
-        <div class="workflow">
+        <workflow />
+        <!-- <div class="workflow">
           <table class="workflow-table">
             <thead>
               <tr>
@@ -113,7 +114,7 @@
               </tr>
             </tbody>
           </table>
-        </div>
+        </div>-->
       </div>
       <div
         v-if="selectedTask&&selectedTask.id"
@@ -164,75 +165,50 @@
 <script lang="ts">
 import { Component, Vue, Watch, Mixins } from "vue-property-decorator";
 import { mapGetters } from "vuex";
-// import { workflowStatusEnum } from "../../../../worker/utils/workflowHelper";
 import { AccountModule } from "../../../store/modules/account";
 import { TaskModule } from "../../../store/modules/task";
 import { WorkerModule } from "../../../store/modules/worker";
 import TaskOperationMixin from "../mixins/taskOperation";
+import Workflow from "@/components/Workflow/index.vue";
+import { AppModule } from "../../../store/modules/app";
 
 @Component({
   name: "Transfer",
-  mixins: [TaskOperationMixin]
+  mixins: [TaskOperationMixin],
+  components: {
+    Workflow
+  }
 })
 export default class extends Mixins(TaskOperationMixin) {
- private isHandlingSuccess= false;
- private isHandlingFail= false;
- private isHandlingToConfirm=false;
- private isHandlingReassign= false;
+  private isHandlingSuccess = false;
+  private isHandlingFail = false;
+  private isHandlingToConfirm = false;
+  private isHandlingReassign = false;
 
- get card() {
-   return AccountModule;
- }
- get task() {
-   return TaskModule;
- }
- get worker() {
-   return WorkerModule;
- }
- get lastSelectedTask() {
-   return this.task.lastSelected;
- }
- get selectedTask() {
-   return this.task.selectedDetail;
- }
+  @Watch("worker.workflow")
+  onWorkflowChange() {
+    if (AppModule.showingTab === "tasks") {
+      var accountCode = this.account.current.code;
+      if (accountCode) WorkerModule.SET_TRANSFER_WORKFLOW(accountCode);
+    }
+  }
+
+  get account() {
+    return AccountModule;
+  }
+  get task() {
+    return TaskModule;
+  }
+  get worker() {
+    return WorkerModule;
+  }
+  get lastSelectedTask() {
+    return this.task.lastSelected;
+  }
+  get selectedTask() {
+    return this.task.selectedDetail;
+  }
 }
-// methods: {
-//   iconClass(status) {
-//     switch (status) {
-//       case workflowStatusEnum.RUNNING:
-//         return "workflow-running";
-//       case workflowStatusEnum.FAIL:
-//         return "workflow-fail";
-//       case workflowStatusEnum.SUCCESS:
-//         return "workflow-success";
-//       default:
-//         return "workflow-pending";
-//     }
-//   },
-//   flowStyle(status) {
-//     switch (status) {
-//       case workflowStatusEnum.RUNNING:
-//         return { "background-color": "#E6A23C" };
-//       case workflowStatusEnum.FAIL:
-//         return { "background-color": "#F56C6C" };
-//       case workflowStatusEnum.SUCCESS:
-//         return { "background-color": "#67C23A" };
-//       default:
-//         return { "background-color": "" };
-//     }
-//   },
-//   async handleRowClick(val) {
-//     try {
-//       console.log(val);
-//       if (process.env.NODE_ENV === "development") { this.$store.dispatch("RunSelectedFlow", val.name); }
-//     } catch (error) {
-//       this.$store.dispatch("SetConsole", {
-//         message: error.toString(),
-//         level: "debug"
-//       });
-//     }
-//   }
-// }
 </script>
 
 <style lang="scss" scoped>

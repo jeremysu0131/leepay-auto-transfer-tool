@@ -33,7 +33,12 @@ const workerCommunicator = (ipcMain: IpcMain) => {
   ipcMain.on(
     "asynchronous-message",
     async(event: Event, flowName: any, flowArgs: any) => {
-      logger({ level: "debug", message: `Running flow name: ${flowName}, args: ${JSON.stringify(flowArgs)}` });
+      logger({
+        level: "debug",
+        message: `Running flow name: ${flowName}, args: ${JSON.stringify(
+          flowArgs
+        )}`
+      });
       // logger(flowName);
       try {
         // eslint-disable-next-line no-async-promise-executor
@@ -43,7 +48,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
               case WorkflowEnum.SET_WORKER:
                 if (worker) worker.closeSelenium();
                 worker = new BankWorker(flowArgs as RemitterAccountModel);
-                return true;
+                return resolve({ isFlowExecutedSuccess: true });
               case WorkflowEnum.CLOSE_SELENIUM:
                 return resolve(await worker.closeSelenium());
               case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
@@ -87,7 +92,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
       } catch (error) {
         event.sender.send("asynchronous-reply", {
           isFlowExecutedSuccess: false,
-          message: JSON.stringify(error) 
+          message: JSON.stringify(error)
         });
       }
     }
@@ -160,7 +165,7 @@ app.on("ready", async() => {
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === "win32") {
-    process.on("message", (data) => {
+    process.on("message", data => {
       if (data === "graceful-exit") {
         worker.closeSelenium();
         app.quit();

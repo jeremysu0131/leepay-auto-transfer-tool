@@ -19,9 +19,10 @@ class Log extends VuexModule implements ILogState {
   public log = [];
 
   // Record log
-  @Mutation private SET_LOG(logInfo: ILog) {
+  @Mutation
+  private SET_LOG(logInfo: ILog) {
     const { level, message } = logInfo;
-    logger.log({ level: "error", message: message.toString() });
+    logger.log({ level, message: message.toString() });
     // this.log.push({ level, message: message.toString() });
   }
   @Mutation
@@ -43,6 +44,8 @@ class Log extends VuexModule implements ILogState {
   @Action
   // Show on application and record log
   public SetConsole(logInfo: ILog) {
+    let { level, message } = logInfo;
+    message = message.toString();
     // this.HANDLE_TASK_AUTO_PROCESS(false);
     this.SET_LOG(logInfo);
 

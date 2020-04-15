@@ -54,36 +54,64 @@ class Task extends VuexModule implements ITaskState {
   @Action
   public async GetAll() {
     AppModule.HANDLE_TASK_FETCHING(true);
-    var tasks: TaskModel[] = [];
     try {
       var { data } = await TaskApi.getAll();
-      (data.data as [])
-        .filter((task: any) => task.task === "FT-P")
-        .forEach((task: any) => {
-          tasks.push({
-            id: task.id,
-            amount: task.field5,
-            assignee: task.asignee,
-            assigneeId: task.asigneeId,
-            assignedAt: task.asigneeAt,
-            bank: {
-              id: 0,
-              code: "",
-              chineseName: ""
-            },
-            remitterAccountCode: task.field7,
-            payeeAccountCode: task.toAcct,
-            pendingTime: task.pendingTime,
-            ref: task.ref,
-            remark: task.remarks,
-            createdAt: task.createdAt,
-            createdBy: task.createdBy,
-            transferFee: task.field6 || 0,
-            updatedAt: task.updatedAt,
-            updatedBy: task.updatedBy,
-            workflow: task.workflow
-          });
-        });
+      var tasks = (data.data as []).map((task: any) => {
+        switch (task.workflow) {
+          case "Partial Withdraw":
+            return {
+              id: task.id,
+              amount: task.field5,
+              assignee: task.asignee,
+              assigneeId: task.asigneeId,
+              assignedAt: task.asigneeAt,
+              bank: {
+                id: 0,
+                code: "",
+                chineseName: ""
+              },
+              remitterAccountCode: task.field4,
+              payeeAccountCode: "",
+              pendingTime: task.pendingTime,
+              priority: task.priority,
+              ref: task.ref,
+              remark: task.remarks,
+              createdAt: task.createdAt,
+              createdBy: task.createdBy,
+              transferFee: isNaN(task.field8) ? 0 : task.field8,
+              updatedAt: task.updatedAt,
+              updatedBy: task.updatedBy,
+              workflow: task.workflow
+            };
+          case "Fund Transfer":
+            return {
+              id: task.id,
+              amount: task.field5,
+              assignee: task.asignee,
+              assigneeId: task.asigneeId,
+              assignedAt: task.asigneeAt,
+              bank: {
+                id: 0,
+                code: "",
+                chineseName: ""
+              },
+              remitterAccountCode: task.field7,
+              payeeAccountCode: task.toAcct,
+              pendingTime: task.pendingTime,
+              priority: task.priority,
+              ref: task.ref,
+              remark: task.remarks,
+              createdAt: task.createdAt,
+              createdBy: task.createdBy,
+              transferFee: isNaN(task.field6) ? 0 : task.field6,
+              updatedAt: task.updatedAt,
+              updatedBy: task.updatedBy,
+              workflow: task.workflow
+            };
+          default:
+            throw new Error("No such task type");
+        }
+      });
       this.SET_TASK_LIST(tasks);
     } catch (error) {
       throw new Error("Get all tasks fail");
@@ -97,6 +125,7 @@ class Task extends VuexModule implements ITaskState {
     accountId: number
   ): Promise<TaskDetailModel> {
     try {
+      console.log("task call");
       var response = await TaskApi.getDetail({
         taskId: task.id,
         bankId: accountId,

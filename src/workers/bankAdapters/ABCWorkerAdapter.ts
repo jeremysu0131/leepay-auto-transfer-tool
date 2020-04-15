@@ -26,7 +26,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   private bankUrl: string;
   // private card: any;
   private task: TaskDetailModel;
-  private remitterAccount:RemitterAccountModel;
+  private remitterAccount: RemitterAccountModel;
   private charge: string;
   private transactionTime: Dayjs;
   private bankMappingList: any;
@@ -67,7 +67,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   getRemitterAccount(): RemitterAccountModel {
     return this.remitterAccount;
   }
-  setRemitterAccount(remitterAccount:RemitterAccountModel):void {
+  setRemitterAccount(remitterAccount: RemitterAccountModel): void {
     this.remitterAccount = remitterAccount;
   }
   getTask(): TaskDetailModel {
@@ -76,35 +76,131 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   setTask(task: TaskDetailModel): void {
     this.task = task;
   }
-  checkSignInInformationCorrectly(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async checkSignInInformationCorrectly(): Promise<boolean> {
+    // throw new Error("Method not implemented.");
+    return true;
   }
-  checkIfInTransferPage(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async checkIfInTransferPage(): Promise<boolean> {
+    // throw new Error("Method not implemented.");
+    return true;
   }
-  fillTransferForm(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async fillTransferForm(): Promise<void> {
+    try {
+      // this.card = AccountModule.currentDetail;
+      // this.task = TaskModule.selectedDetail;
+      await this.driver
+        .switchTo()
+        .frame(
+          this.driver.wait(
+            until.elementLocated(By.id("contentFrame")),
+            60 * 1000
+          )
+        );
+
+      // account
+      await sendKeysV2(
+        this.driver,
+        this.driver.wait(until.elementLocated(By.id("toAcctNo")), 5 * 1000),
+        {
+          // text: this.task.payeeAccount
+          text: ""
+        }
+      );
+
+      // name
+      await sendKeysV2(
+        this.driver,
+        this.driver.wait(
+          until.elementLocated(By.id("toAcctNameKey")),
+          5 * 1000
+        ),
+        {
+          // text: this.task.receiverName
+          text: ""
+        }
+      );
+
+      // amount
+      await sendKeysV2(
+        this.driver,
+        this.driver.wait(until.elementLocated(By.id("transAmt")), 5 * 1000),
+        {
+          // text: FormatHelper.amount(this.task.requestAmount),
+          text: "",
+          replaceRule: /,/g
+        }
+      );
+
+      await this.waitUntilBankSelected();
+      // submit
+      await executeJavaScript(
+        this.driver,
+        "click submit button",
+        "document.getElementById('transferNext').click()",
+        0
+      );
+      await this.driver.wait(
+        until.elementLocated(By.id("agreeBtn")),
+        30 * 1000
+      );
+      await this.checkSubmittedValue();
+    } finally {
+      await this.driver.switchTo().defaultContent();
+    }
   }
-  checkTransferInformationCorrectly(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async checkTransferInformationCorrectly(): Promise<boolean> {
+    // throw new Error("Method not implemented.");
+    return true;
   }
-  submitTransaction(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async submitTransaction(): Promise<void> {
+    // throw new Error("Method not implemented.");
+    // return true;
   }
-  checkIfNoteFilled(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async checkIfNoteFilled(): Promise<void> {
+    // throw new Error("Method not implemented.");
+    // return true;
   }
-  checkBankReceivedTransferInformation(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async checkBankReceivedTransferInformation(): Promise<boolean> {
+    // throw new Error("Method not implemented.");
+    return true;
   }
-  sendPasswordToPerformTransaction(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async sendPasswordToPerformTransaction(): Promise<void> {
+    // throw new Error("Method not implemented.");
   }
-  sendUsbPasswordToPerformTransaction(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async sendUsbPasswordToPerformTransaction(): Promise<void> {
+    // throw new Error("Method not implemented.");
+    // return true;
   }
-  checkIfTransactionSuccess(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async checkIfTransactionSuccess(): Promise<boolean> {
+    // Check customer advice first
+    // If check fail then check transaction detail
+    try {
+      // Wait page load and also improve success rate of check customer advice
+      await this.driver.sleep(3 * 1000);
+      await waitPageLoad(this.driver);
+
+      await this.getTransactionTime();
+
+      // 跳转到打印回单页面
+      if (await this.goCustomerAdvice()) {
+        // 检查打印回单页面，如果交易状态为成功则直接标识任务为成功
+        if (await this.checkCustomerAdvice()) return true;
+      }
+
+      // 若检查回单页面失败，则检查交易记录
+      // 如果没有获取交易时间，则无法确认交易
+      // 跳转到转账记录
+      await this.goTransferRecordPage();
+      await this.queryTransferRecord();
+      // 检查转账记录
+      if (await this.checkTransferRecord()) return true;
+      return false;
+    } catch (error) {
+      Logger({ level: "error", message: error });
+      return false;
+    } finally {
+      await this.driver.switchTo().defaultContent();
+    }
   }
 
   public getDriver(): WebDriver {
@@ -149,7 +245,11 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   async inputPassword() {
     if (this.remitterAccount.loginPassword) {
       WindowFocusTool.focusAndCheckIE();
-      await KeySender.sendText(this.remitterAccount.loginPassword, 3 * 1000, 250);
+      await KeySender.sendText(
+        this.remitterAccount.loginPassword,
+        3 * 1000,
+        250
+      );
     } else {
       throw new Error("Account password is null");
     }
@@ -255,71 +355,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         ),
         60 * 1000
       );
-    } finally {
-      await this.driver.switchTo().defaultContent();
-    }
-  }
-
-  async fillTransferFrom() {
-    try {
-      // this.card = AccountModule.currentDetail;
-      // this.task = TaskModule.selectedDetail;
-      await this.driver
-        .switchTo()
-        .frame(
-          this.driver.wait(
-            until.elementLocated(By.id("contentFrame")),
-            60 * 1000
-          )
-        );
-
-      // account
-      await sendKeysV2(
-        this.driver,
-        this.driver.wait(until.elementLocated(By.id("toAcctNo")), 5 * 1000),
-        {
-          // text: this.task.payeeAccount
-          text: ""
-        }
-      );
-
-      // name
-      await sendKeysV2(
-        this.driver,
-        this.driver.wait(
-          until.elementLocated(By.id("toAcctNameKey")),
-          5 * 1000
-        ),
-        {
-          // text: this.task.receiverName
-          text: ""
-        }
-      );
-
-      // amount
-      await sendKeysV2(
-        this.driver,
-        this.driver.wait(until.elementLocated(By.id("transAmt")), 5 * 1000),
-        {
-          // text: FormatHelper.amount(this.task.requestAmount),
-          text: "",
-          replaceRule: /,/g
-        }
-      );
-
-      await this.waitUntilBankSelected();
-      // submit
-      await executeJavaScript(
-        this.driver,
-        "click submit button",
-        "document.getElementById('transferNext').click()",
-        0
-      );
-      await this.driver.wait(
-        until.elementLocated(By.id("agreeBtn")),
-        30 * 1000
-      );
-      await this.checkSubmittedValue();
     } finally {
       await this.driver.switchTo().defaultContent();
     }
@@ -589,38 +624,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       } finally {
         retryTimes--;
       }
-    }
-  }
-
-  // Check customer advice first
-  // If check fail then check transaction detail
-  async checkIfSuccess() {
-    try {
-      // Wait page load and also improve success rate of check customer advice
-      await this.driver.sleep(3 * 1000);
-      await waitPageLoad(this.driver);
-
-      await this.getTransactionTime();
-
-      // 跳转到打印回单页面
-      if (await this.goCustomerAdvice()) {
-        // 检查打印回单页面，如果交易状态为成功则直接标识任务为成功
-        if (await this.checkCustomerAdvice()) return true;
-      }
-
-      // 若检查回单页面失败，则检查交易记录
-      // 如果没有获取交易时间，则无法确认交易
-      // 跳转到转账记录
-      await this.goTransferRecordPage();
-      await this.queryTransferRecord();
-      // 检查转账记录
-      if (await this.checkTransferRecord()) return true;
-      return false;
-    } catch (error) {
-      Logger({ level: "error", message: error });
-      return false;
-    } finally {
-      await this.driver.switchTo().defaultContent();
     }
   }
 

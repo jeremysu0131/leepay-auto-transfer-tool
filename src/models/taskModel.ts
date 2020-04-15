@@ -7,13 +7,14 @@ export default class TaskModel {
   assignee = "";
   assigneeId = 0;
   assignedAt = Date;
-  bank=new BankModel();
+  bank = new BankModel();
   transferFee = 0;
   remitterAccountCode = "";
   payeeAccountCode = "";
   pendingTime = 0;
+  priority = 0;
   remark = "";
-  ref="";
+  ref = "";
   createdAt = Date;
   createdBy = 0;
   updatedAt = Date;

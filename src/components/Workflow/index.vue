@@ -1,34 +1,25 @@
 <template>
-  <el-dialog
-    title="Shipping address"
-    :visible.sync="dialogVisible"
-    :fullscreen="true"
-    :before-close="handleClose"
-  >
-    <div class="workflow">
-      <table class="workflow-table">
-        <thead>
-          <th>Status</th>
-          <th>Step name</th>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(flow,index) in signInWorkflow"
-            :key="index"
-            :style="flowStyle(flow.status)"
-            @click="handleRowClick(flow)"
-          >
-            <td>
-              <!-- <svg-icon :icon-class="iconClass(flow.status)" /> -->
-
-              <svg-icon :name="iconClass(flow.status)" />
-            </td>
-            <td>{{ flow.name }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </el-dialog>
+  <div class="workflow">
+    <table class="workflow-table">
+      <thead>
+        <th>Status</th>
+        <th>Step name</th>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(flow,index) in workflow"
+          :key="index"
+          :style="flowStyle(flow.status)"
+          @click="handleRowClick(flow)"
+        >
+          <td>
+            <svg-icon :name="iconClass(flow.status)" />
+          </td>
+          <td>{{ flow.name }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <script lang="ts">
@@ -36,36 +27,27 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { WorkerModule } from "../../store/modules/worker";
 import WorkflowStatusEnum from "@/models/WorkflowStatusEnum";
 import { AppModule } from "../../store/modules/app";
+import { LogModule } from "../../store/modules/log";
 
 @Component({
-  name: "WorkflowDialog",
-  mounted() {
-    WorkerModule.SET_SIGN_IN_WORKFLOW(true);
-  }
+  name: "Workflow"
 })
 export default class extends Vue {
-  get dialogVisible() {
-    return AppModule.task.isProcessing;
+  get workflow() {
+    return WorkerModule.workflow;
   }
 
-  get signInWorkflow() {
-    return WorkerModule.signInWorkflow;
-  }
-
-  private handleClose() {
-    AppModule.HANDLE_TASK_PROCESSING(false);
-  }
   private async handleRowClick(row: any) {
     try {
       if (process.env.NODE_ENV === "development") {
-        var result = await WorkerModule.RunSelectedFlow(row.name);
-        console.log(result);
+        var result = await WorkerModule.RunFlow({
+          name: row.name,
+          args: { width: 800, height: 600 }
+        });
+        LogModule.SetLog({ level: "debug", message: row.name });
       }
     } catch (error) {
-      this.$store.dispatch("SetConsole", {
-        message: error.toString(),
-        level: "debug"
-      });
+      LogModule.SetConsole({ level: "debug", message: error });
     }
   }
 
@@ -82,7 +64,6 @@ export default class extends Vue {
     }
   }
   private flowStyle(status: WorkflowStatusEnum) {
-    console.log(status);
     switch (status) {
       case WorkflowStatusEnum.RUNNING:
         return { "background-color": "#E6A23C" };

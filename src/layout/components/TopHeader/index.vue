@@ -79,7 +79,7 @@ export default class extends Vue {
     return TaskModule;
   }
   get isProxySetEnable() {
-    return this.app.account.showingPage !== "bank-card-search";
+    return this.app.account.showingPage !== "account-search";
   }
   @Watch("app.task.isAutoProcess")
   onAutoProcessChanged(value: string, oldValue: string) {

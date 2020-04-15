@@ -17,6 +17,17 @@ export function setProxy(proxy: string) {
   });
 }
 
+export function setProxyWhiteList(addresses: string) {
+  return new Promise((resolve, reject) => {
+    var child = exec(
+      `BankWorkerTool.exe "REGISTRY_TOOL" "SET_PROXY_WHITE_LIST" ${addresses}`,
+      { shell: false, cwd }
+    );
+    child.on("error", (err: any) => reject(err));
+    child.on("exit", () => resolve());
+  });
+}
+
 export function unsetProxy() {
   return new Promise((resolve, reject) => {
     var child = exec(

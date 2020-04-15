@@ -7,6 +7,18 @@ export function getList() {
   });
 }
 
+export function getAvailableAccount() {
+  return request({
+    url: "/adminAcct!listWithdraw.do",
+    method: "GET",
+    params: {
+      page: 1,
+      start: 0,
+      limit: 50
+    }
+  });
+}
+
 export function getBoBalance(id: number) {
   return request({
     url: "/ps-ops-console/api/bank/account/monitor/searchAccountBalances",
@@ -33,10 +45,10 @@ export function getGroup(id: number) {
 
 export function getDetailById(id: number) {
   return request({
-    url: "/ps-ops-console/api/bank/account/loadBankAccountDetails",
-    method: "GET",
+    url: "/adminAcct!search.do",
+    method: "POST",
     params: {
-      bankAccountId: id
+      "a.acctCode": id
     }
   });
 }
@@ -46,7 +58,7 @@ export function getAssignedProxy(accountId: number) {
     url: "/adminAcct!listAssignProxy.do",
     method: "GET",
     params: {
-      acctId: accountId 
+      acctId: accountId
     }
   });
 }

@@ -1,5 +1,5 @@
 export enum WorkflowEnum {
-  SET_WORKER="SET_WORKER",
+  SET_WORKER = "SET_WORKER",
   SET_IE_ENVIRONMENT = "Set IE environment",
   SET_PROXY = "Set proxy",
   UNSET_PROXY = "Unet proxy",
@@ -18,64 +18,53 @@ export enum WorkflowEnum {
   CONFIRM_TRANSACTION = "Confirm transaction",
   CHECK_IF_SUCCESS = "Check if transfer success"
 }
-// export enum WorkflowStatusEnum {
-//   PENDING = "pending",
-//   RUNNING = "running",
-//   SUCCESS = "success",
-//   FAIL = "fail"
-// }
 
-/**
- * Get workflow of sign in
- */
-export function signInWorkflowEnum(isManualSignIn: any) {
-  return isManualSignIn
-    ? [
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.SET_IE_ENVIRONMENT
-        },
-        // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
-        { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
-        }
-      ]
-    : [
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.SET_IE_ENVIRONMENT
-        },
-        // { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
-        { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION
-        },
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.SUBMIT_TO_SIGN_IN
-        },
-        {
-          status: "pending",
-          message: "",
-          name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
-        }
-      ];
+export function autoSignInWorkflowEnum() {
+  return [
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.SET_IE_ENVIRONMENT
+    },
+    { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
+    { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION
+    },
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.SUBMIT_TO_SIGN_IN
+    },
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
+    }
+  ];
 }
 
-/**
- * Get workflow
- */
-export function workflowEnum(bankCode?: string | string[] | undefined) {
-  if (!bankCode) return WorkflowEnum;
-  else if (bankCode.indexOf("ABC") !== -1) return ABCWorkflow;
+export function manualSignInWorkflowEnum() {
+  return [
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.SET_IE_ENVIRONMENT
+    },
+    { status: "pending", message: "", name: WorkflowEnum.SET_PROXY },
+    { status: "pending", message: "", name: WorkflowEnum.LAUNCH_SELENIUM },
+    {
+      status: "pending",
+      message: "",
+      name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
+    }
+  ];
+}
+
+export function transferWorkflowEnum(bankCode: string) {
+  if (bankCode.indexOf("ABC") !== -1) return ABCWorkflow;
   else if (bankCode.indexOf("BCM") !== -1) return BCMWorkflow;
   else if (bankCode.indexOf("BOB") !== -1) return BOBWorkflow;
   else if (bankCode.indexOf("BOC") !== -1) return BOCWorkflow;

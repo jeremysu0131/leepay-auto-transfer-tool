@@ -1,8 +1,25 @@
 <template>
   <div>
     <top-header />
-    <task-panel />
-    <workflow-dialog v-if="workflowDialogVisible" />
+    <el-tabs
+      :value="showingTab"
+      type="border-card"
+      class="tabs"
+    >
+      <el-tab-pane
+        name="accounts"
+        label="Accounts"
+      >
+        <account-panel />
+      </el-tab-pane>
+      <el-tab-pane
+        name="tasks"
+        :label="taskPanelLabel"
+        :disabled="!taskTabVisible"
+      >
+        <task-panel />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
@@ -15,42 +32,38 @@ import AccountPanel from "@/views/accountPanel/index.vue";
 import TaskPanel from "@/views/taskPanel/index.vue";
 import ResizeMixin from "./mixin/resize";
 import { TaskModule } from "../store/modules/task";
-import WorkflowDialog from "@/views/workflow/index.vue";
 
 @Component({
   name: "Layout",
   components: {
+    AccountPanel,
     TaskPanel,
-    TopHeader,
-    WorkflowDialog
+    TopHeader
   }
 })
 export default class extends mixins(ResizeMixin) {
   private taskPanelLabel = "Task";
 
-  get workflowDialogVisible() {
-    return AppModule.task.isProcessing;
-  }
   get showingTab() {
     return AppModule.showingTab;
   }
-  get task() {
-    return TaskModule;
+  get taskTabVisible() {
+    return AppModule.task.isVisible;
   }
+  get taskList() {
+    return TaskModule.list;
+  }
+
   @Watch("task.list")
   onTaskListChanged() {
     this.$nextTick(() => {
-      if (this.task.list) {
-        const totalTasks = this.task.list.length;
+      if (this.taskList) {
+        const totalTasks = this.taskList.length;
         // const processingTasks = this.task.list.filter(task => task.toolStatus === "processing").length;
         // this.taskPanelLabel = `Tasks ( total: ${totalTasks} / processing: ${processingTasks} )`;
         this.taskPanelLabel = `Tasks ( total: ${totalTasks} )`;
       }
     });
-  }
-
-  private handleClickOutside() {
-    AppModule.CloseSideBar(false);
   }
 }
 </script>

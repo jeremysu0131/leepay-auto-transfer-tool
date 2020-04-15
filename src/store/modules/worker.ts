@@ -7,19 +7,20 @@ import {
   getModule
 } from "vuex-module-decorators";
 import store from "@/store";
-import { AccountModule } from "./account";
 import {
-  signInWorkflowEnum,
-  WorkflowEnum
+  WorkflowEnum,
+  manualSignInWorkflowEnum,
+  autoSignInWorkflowEnum,
+  transferWorkflowEnum
 } from "../../workers/utils/workflowHelper";
 import { LogModule } from "./log";
 import { AppModule } from "./app";
 import { TaskModule } from "./task";
 import { transponder } from "../../electron-communicator";
-import { ipcRenderer } from "electron";
-import TaskDetailModel from "../../workers/models/taskDetailModel";
+import { ipcRenderer, screen } from "electron";
 import RemitterAccountModel from "../../workers/models/remitterAccountModel";
 import WorkflowStatusEnum from "../../models/WorkflowStatusEnum";
+import { AccountModule } from "./account";
 
 export interface IWorkerState {
   worker: BankWorker;
@@ -33,60 +34,60 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   public worker = {} as BankWorker;
 
   @Mutation
-  SET_SIGN_IN_WORKFLOW(isManualSignIn: boolean) {
-    this.signInWorkflow = signInWorkflowEnum(isManualSignIn);
+  UNSET_WORKFLOW() {
+    this.workflow = [];
   }
-  // UPDATE_FLOW_STATUS(data: { name: any; status: any }) {
-  //   this.signInWorkflow.forEach(flow => {
-  //     if (flow.name === data.name) {
-  //       flow.status = data.status;
-  //     }
-  //   });
-  //   var signInWorkflow = this.signInWorkflow;
-  //   this.signInWorkflow = [];
-  //   this.signInWorkflow = signInWorkflow;
-  // }
+  @Mutation
+  SET_AUTO_SIGN_IN_WORKFLOW() {
+    this.workflow = autoSignInWorkflowEnum();
+  }
+  @Mutation
+  SET_MANUAL_SIGN_IN_WORKFLOW() {
+    this.workflow = manualSignInWorkflowEnum();
+  }
+  @Mutation
+  SET_TRANSFER_WORKFLOW(accountCode: string) {
+    this.workflow = transferWorkflowEnum(accountCode);
+  }
   @Mutation
   UPDATE_FLOW_STATUS(data: { name: WorkflowEnum; status: WorkflowStatusEnum }) {
-    this.signInWorkflow.forEach(flow => {
+    this.workflow.forEach(flow => {
       if (flow.name === data.name) {
         flow.status = data.status;
       }
     });
-    // var signInWorkflow = this.signInWorkflow;
-    // this.signInWorkflow = [];
-    // this.signInWorkflow = signInWorkflow;
-    // this.workflow.forEach((flow) => {
-    //   if (flow.name === data.name) flow.status = data.status;
-    // });
-    // var workflow = this.workflow;
-    // this.workflow = [];
-    // this.workflow = workflow;
   }
-
   // SET_WORKFLOW: (state, bankCode) => {
   //   state.workflow = workflowEnum(bankCode);
   // },
   @Action
   public async SetWorker(remitterAccount: RemitterAccountModel) {
     try {
-      transponder(ipcRenderer, WorkflowEnum.SET_WORKER, remitterAccount);
+      await this.RunFlow({
+        name: WorkflowEnum.SET_WORKER,
+        args: remitterAccount
+      });
+      //  await transponder(ipcRenderer, WorkflowEnum.SET_WORKER, remitterAccount);
     } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetLog({ level: "error", message: error.stack });
     }
   }
   @Action
   async RunAutoLoginFlows() {
+    const screenSize = screen.getPrimaryDisplay().size;
     AppModule.HANDLE_TASK_AUTO_PROCESS(true);
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
-    this.SET_SIGN_IN_WORKFLOW(false);
+    // this.SET_SIGN_IN_WORKFLOW(false);
     try {
-      await this.SetIEEnvironment();
-      await this.SetProxy();
-      await this.LaunchSelenium();
-      await this.InputSignInInformation();
-      await this.SubmitToSignIn();
-      await this.SendUSBKey();
+      await this.RunFlow({ name: WorkflowEnum.SET_IE_ENVIRONMENT });
+      await this.RunFlow({ name: WorkflowEnum.SET_PROXY });
+      await this.RunFlow({
+        name: WorkflowEnum.LAUNCH_SELENIUM,
+        args: screenSize
+      });
+      await this.RunFlow({ name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION });
+      await this.RunFlow({ name: WorkflowEnum.SUBMIT_TO_SIGN_IN });
+      await this.RunFlow({ name: WorkflowEnum.SEND_USB_KEY });
       return await this.CheckIfLoginSuccess();
     } catch (error) {
       LogModule.SetLog({ message: error, level: "error" });
@@ -100,62 +101,92 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
       AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
     }
   }
-
   @Action
   async RunManualLoginFlows() {
+    const screenSize = screen.getPrimaryDisplay().size;
     AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(true);
-    this.SET_SIGN_IN_WORKFLOW(true);
+    // this.SET_SIGN_IN_WORKFLOW(true);
     try {
-      // await this.SetIEEnviroment();
-      // await this.SetProxy();
-      await this.LaunchSelenium();
+      await this.RunFlow({ name: WorkflowEnum.SET_IE_ENVIRONMENT });
+      await this.RunFlow({ name: WorkflowEnum.SET_PROXY });
+      await this.RunFlow({
+        name: WorkflowEnum.LAUNCH_SELENIUM,
+        args: screenSize
+      });
     } catch (error) {
-      return LogModule.SetLog({ message: error, level: "error" });
+      LogModule.SetLog({ message: error, level: "error" });
     } finally {
       AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
     }
   }
-
   @Action
   async RunAutoTransferFlows() {
     try {
-      await this.GoTransferPage();
-      await this.FillTransferFrom();
-      await this.FillNote();
-      await this.ConfirmTransaction();
-      return await this.CheckIfSuccess();
+      await this.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
+      await this.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
+      await this.RunFlow({ name: WorkflowEnum.FILL_NOTE });
+      await this.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
+      return await this.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS });
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       return false;
     }
   }
   @Action
-  public async RunManualTransferFlows() {
+  async RunManualTransferFlows() {
     try {
-      await this.GoTransferPage();
-      await this.FillTransferFrom();
+      await this.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
+      await this.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     }
   }
 
-  @Action
-  private async SetIEEnvironment() {
-    var result = await transponder(
-      ipcRenderer,
-      WorkflowEnum.SET_IE_ENVIRONMENT
-    );
-    this.UPDATE_FLOW_STATUS({
-      name: WorkflowEnum.SET_IE_ENVIRONMENT,
-      status: WorkflowStatusEnum.SUCCESS
+  @Action({ rawError: true })
+  async RunFlow(flow: { name: WorkflowEnum; args?: object }) {
+    LogModule.SetLog({
+      level: "debug",
+      message: `Flow name: ${flow.name}, Args: ${JSON.stringify(flow.args)}`
     });
-    return result;
+    this.UPDATE_FLOW_STATUS({
+      name: flow.name,
+      status: WorkflowStatusEnum.RUNNING
+    });
+
+    /* eslint-disable no-return-await */
+    switch (flow.name) {
+      case flow.name:
+        var { isFlowExecutedSuccess, message } = await transponder(
+          ipcRenderer,
+          flow.name,
+          flow.args
+        );
+        LogModule.SetLog({
+          level: "debug",
+          message: `Flow executed result: ${isFlowExecutedSuccess}, message: ${message}`
+        });
+
+        this.UPDATE_FLOW_STATUS({
+          name: flow.name,
+          status: isFlowExecutedSuccess
+            ? WorkflowStatusEnum.SUCCESS
+            : WorkflowStatusEnum.FAIL
+        });
+        if (!isFlowExecutedSuccess) throw new Error(message);
+        return { isFlowExecutedSuccess, message };
+
+      default:
+        throw new Error("No such workflow");
+    }
+    /* eslint-enable no-return-await */
   }
+  // TODO
   @Action
   async UnsetWorker() {
     await this.CloseSelenium();
     // commit("SET_WORKFLOW", null);
   }
+  // TODO
   @Action
   async CheckIsProxySet() {
     try {
@@ -165,59 +196,20 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     }
   }
   @Action
-  private async SetProxy() {
-    var { isFlowExecutedSuccess, message } = await transponder(
-      ipcRenderer,
-      WorkflowEnum.SET_PROXY
-    );
-    if (!isFlowExecutedSuccess) {
-      throw new Error("Set proxy fail");
-    }
-  }
-  @Action
-  private async UnsetProxy() {
-    try {
-      await transponder(ipcRenderer, WorkflowEnum.UNSET_PROXY);
-      // await this.unsetProxy();
-    } catch (error) {
-      return LogModule.SetConsole({ message: error, level: "error" });
-    }
-  }
-  @Action
-  private async LaunchSelenium() {
-    await transponder(ipcRenderer, WorkflowEnum.LAUNCH_SELENIUM);
-  }
-  @Action
   private async CloseSelenium() {
     // if (this.worker) await this.worker.closeSelenium();
     await transponder(ipcRenderer, WorkflowEnum.CLOSE_SELENIUM);
   }
   @Action
-  private async InputSignInInformation() {
-    await transponder(ipcRenderer, WorkflowEnum.INPUT_SIGN_IN_INFORMATION);
-    // await this.worker.inputSignInInformation();
-  }
-  @Action
-  private async SubmitToSignIn() {
-    await transponder(ipcRenderer, WorkflowEnum.SUBMIT_TO_SIGN_IN);
-    // await this.worker.submitToSignIn();
-  }
-  @Action
-  private async SendUSBKey() {
-    await transponder(ipcRenderer, WorkflowEnum.SEND_USB_KEY);
-    // await this.worker.sendUSBKey();
-  }
-  @Action
   async CheckIfLoginSuccess() {
     const isManualLogin = AppModule.isManualLogin;
-    var isLoginSuccess = await transponder(
-      ipcRenderer,
-      WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
-      { isManualLogin }
-    );
+    var { isFlowExecutedSuccess, message } = await this.RunFlow({
+      name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
+      args: { isManualLogin }
+    });
 
-    if (isLoginSuccess) {
-      AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("bank-card-search");
+    if (isFlowExecutedSuccess) {
+      AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
       AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
       AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
       AppModule.HANDLE_TASK_VISIBLE(true);
@@ -226,22 +218,16 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
 
       // If selected card is empty, means this is called by relogin
       // if (AccountModule.selected.id) {
-      // AccountModule.SetCurrentCard();
       // }
+      AccountModule.SET_CURRENT(AccountModule.selected);
+      AccountModule.SET_SELECTED(new RemitterAccountModel());
+      WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
       await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
       return true;
     }
     return false;
   }
-  @Action
-  private async GetCookie() {
-    try {
-      await transponder(ipcRenderer, WorkflowEnum.GET_COOKIE);
-    } catch (error) {
-      LogModule.SetLog({ message: error, level: "error" });
-      throw error;
-    }
-  }
+  // TODO
   @Action
   async GetBankBalance() {
     try {
@@ -251,111 +237,5 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
       LogModule.SetLog({ level: "error", message: error });
     }
   }
-  @Action
-  private async GoTransferPage() {
-    await transponder(ipcRenderer, WorkflowEnum.GO_TRANSFER_PAGE);
-  }
-  @Action
-  private async FillTransferFrom() {
-    await transponder(ipcRenderer, WorkflowEnum.FILL_TRANSFER_INFORMATION);
-  }
-  @Action
-  private async FillNote() {
-    await transponder(ipcRenderer, WorkflowEnum.FILL_NOTE);
-  }
-  @Action
-  private async ConfirmTransaction() {
-    await transponder(ipcRenderer, WorkflowEnum.CONFIRM_TRANSACTION);
-  }
-  @Action
-  private async CheckIfSuccess() {
-    await transponder(ipcRenderer, WorkflowEnum.CHECK_IF_SUCCESS);
-  }
-  @Action
-  async RunSelectedFlow(flowName: WorkflowEnum) {
-    /* eslint-disable no-return-await */
-    switch (flowName) {
-      case WorkflowEnum.SET_IE_ENVIRONMENT:
-        return await this.SetIEEnvironment();
-      case WorkflowEnum.SET_PROXY:
-        return await this.SetProxy();
-      case WorkflowEnum.LAUNCH_SELENIUM:
-        return await this.LaunchSelenium();
-      case WorkflowEnum.CLOSE_SELENIUM:
-        return await this.CloseSelenium();
-      case WorkflowEnum.INPUT_SIGN_IN_INFORMATION:
-        return await this.InputSignInInformation();
-      case WorkflowEnum.SUBMIT_TO_SIGN_IN:
-        return await this.SubmitToSignIn();
-      case WorkflowEnum.SEND_USB_KEY:
-        return await this.SendUSBKey();
-      case WorkflowEnum.CHECK_IF_LOGIN_SUCCESS:
-        return await this.CheckIfLoginSuccess();
-      case WorkflowEnum.GET_COOKIE:
-        return await this.GetCookie();
-      case WorkflowEnum.GET_BALANCE:
-        return await this.GetBankBalance();
-      case WorkflowEnum.GO_TRANSFER_PAGE:
-        return await this.GoTransferPage();
-      case WorkflowEnum.FILL_TRANSFER_INFORMATION:
-        return await this.FillTransferFrom();
-      case WorkflowEnum.FILL_NOTE:
-        return await this.FillNote();
-      case WorkflowEnum.CONFIRM_TRANSACTION:
-        return await this.ConfirmTransaction();
-      case WorkflowEnum.CHECK_IF_SUCCESS:
-        return await this.CheckIfSuccess();
-      default:
-        throw new Error("No such workflow");
-    }
-    /* eslint-enable no-return-await */
-  }
 }
 export const WorkerModule = getModule(WorkerModuleStatic);
-// const worker = {
-//   state: { runner: null, workflow: [], signInWorkflow: [] },
-
-//   mutations: {
-//     // data: name, status
-//     // data: name, status
-//   actions: {
-//     async RunAutoReloginFlows({ dispatch, commit }) {
-//       commit("HANDLE_ACCOUNT_SIGN_IN_SUCCESS", false);
-//       commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", true);
-//       commit("HANDLE_SHOWING_TAB", "accounts");
-//       commit("HANDLE_ACCOUNT_SHOWING_PAGE", "sign-in-to-bank");
-//       try {
-//         await this.LaunchSelenium");
-//         await this.InputSignInInformation", { useCurrent: true });
-//         await this.SubmitToSignIn");
-//         await this.SendUSBKey");
-//         await this.CheckIfLoginSuccess");
-//       } catch (error) {
-//         return this.SetConsole", { message: error, level: "error" });
-//       } finally {
-//         commit("HANDLE_ACCOUNT_PROCESSING_SIGN_IN", false);
-//       }
-//     },
-//     async RunAutoTransferFlows({ dispatch }) {
-//       try {
-//         await this.GoTransferPage");
-//         await this.FillTransferFrom");
-//         await this.FillNote");
-//         await this.ConfirmTransaction");
-//         return await this.CheckIfSuccess");
-//       } catch (error) {
-//         this.SetConsole", { message: error, level: "error" });
-//         return false;
-//       }
-//     },
-//     async RunManualTransferFlows({ dispatch }) {
-//       try {
-//         await this.GoTransferPage");
-//         await this.FillTransferFrom");
-//       } catch (error) {
-//         return this.SetConsole", { message: error, level: "error" });
-//       }
-//     },
-// };
-
-// export default worker;
