@@ -20,6 +20,7 @@ import { transponder } from "../../electron-communicator";
 import { ipcRenderer, screen } from "electron";
 import RemitterAccountModel from "../../workers/models/remitterAccountModel";
 import WorkflowStatusEnum from "../../models/WorkflowStatusEnum";
+import { AccountModule } from "./account";
 
 export interface IWorkerState {
   worker: BankWorker;
@@ -217,8 +218,10 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
 
       // If selected card is empty, means this is called by relogin
       // if (AccountModule.selected.id) {
-      // AccountModule.SetCurrentCard();
       // }
+      AccountModule.SET_CURRENT(AccountModule.selected);
+      AccountModule.SET_SELECTED(new RemitterAccountModel());
+      WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
       await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
       return true;
     }
