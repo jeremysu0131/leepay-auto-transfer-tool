@@ -145,10 +145,9 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     );
     var userText = await user.getAttribute("value");
     if (userText !== this.remitterAccount.loginName) {
-      Logger({
-        level: "warn",
-        message: `Login user account incorrectly. Message on bank: CCB value : (${userText})`
-      });
+      this.logDebug(
+        `Login user account incorrectly. Message on bank: CCB value : (${userText})`
+      );
       return false;
     }
 
@@ -163,10 +162,9 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     );
     var passwordText = await password.getAttribute("value");
     if (passwordText !== this.remitterAccount.loginPassword) {
-      Logger({
-        level: "warn",
-        message: `Login password incorrectly. Message on bank: CCB value : (${passwordText})`
-      });
+      this.logDebug(
+        `Login password incorrectly. Message on bank: CCB value : (${passwordText})`
+      );
       return false;
     }
     return true;
@@ -200,6 +198,9 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   }): Promise<boolean> {
     // 確認頁面載入
     // await waitPageLoad(this.driver);
+    if (globalState.isManualLogin) {
+      this.sleep(30);
+    }
     this.logInfo("check login status");
     const container = await this.driver.wait(
       until.elementLocated(By.id("idxmaincontainer")),
@@ -357,7 +358,6 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       until.elementLocated(By.className("pbd_table_step_title_no_line")),
       5 * 1000
     );
-    // check U 盾 id SafeTypeU switchAuthType(this.id);checkU();
     if (!checkTransactionPage) {
       throw new Error("not exist transaction check page");
     }
@@ -422,10 +422,10 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   }
   async fillNote(): Promise<void> {
     // not necessary
-    this.logInfo("skip fill note");
+    this.logDebug("skip fill note");
   }
   async checkIfNoteFilled(): Promise<void> {
-    this.logInfo("skip fill note");
+    this.logDebug("skip fill note");
   }
   async checkBankReceivedTransferInformation(): Promise<boolean> {
     this.logInfo("start check transaction info and setting remark");
@@ -442,6 +442,13 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       this.driver,
       transactionFrameCon
     );
+    
+    // 使用U盾傳帳 click #SafeTypeU;
+    const button = await this.driver.wait(
+      until.elementLocated(By.id("SafeTypeU")),
+      this.wattingTime
+    );
+    await button.click();
 
     this.logInfo("add remark use task id");
     // 將task id 加入附言
@@ -479,6 +486,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       ),
       this.wattingTime
     );
+
     let confirmButton;
     for (const e of buttons) {
       const value = await e.getAttribute("value");
@@ -867,6 +875,10 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
 
   async sleep(s: number = 7) {
     await new Promise(resolve => setTimeout(resolve, s * 1000));
+  }
+
+  logDebug(message: string): void {
+    Logger({ level: "debug", message: message });
   }
 
   logInfo(message: string): void {
