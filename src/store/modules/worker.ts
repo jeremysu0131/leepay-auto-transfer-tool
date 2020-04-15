@@ -227,6 +227,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     }
     return false;
   }
+  // TODO
   @Action
   async GetBankBalance() {
     try {
