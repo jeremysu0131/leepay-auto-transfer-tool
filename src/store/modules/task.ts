@@ -13,12 +13,13 @@ import TaskModel from "../../models/taskModel";
 import { LogModule } from "./log";
 import TaskDetailModel from "@/models/taskDetailModel";
 import TaskTypeEnum from "../../enums/taskTypeEnum";
+import { UserModule } from "./user";
 
 export interface ITaskState {
   list: TaskModel[];
   lastSelected: {};
   selectedDetail: TaskDetailModel;
-  selectedForOperation:TaskDetailModel;
+  selectedForOperation: TaskDetailModel;
 }
 
 @Module({ dynamic: true, store, name: "task" })
@@ -213,23 +214,31 @@ class Task extends VuexModule implements ITaskState {
       message: `Mark task success parameters: charge: ${transferFee}`
     });
     try {
-    switch (task.type) {
-      case TaskTypeEnum.FUND_TRANSFER:
-        var response = await TaskApi.markFundTransferTaskSuccess(task, transferFee, note);
-        // var result = await TaskApi.updateInputFields(task, transferFee, note);
-        // console.log(result);
-        // if (response.data.code === 1) { }
-        break;
-      case TaskTypeEnum.PARTIAL_WITHDRAW:
-        // var response = await TaskApi.markFundTransferTaskSuccess(task, note);
-        // if (response.data.code === 1) { }
-        break;
+      switch (task.type) {
+        case TaskTypeEnum.FUND_TRANSFER:
+          var { data } = await TaskApi.markFundTransferTaskSuccess(
+            task,
+            transferFee,
+            note
+          );
+          if (data.code === 1) {
+            await TaskApi.updateInputFields(
+              task,
+              transferFee,
+              `Processed by ${UserModule.name}`
+            );
+          }
+          break;
+        case TaskTypeEnum.PARTIAL_WITHDRAW:
+          // var response = await TaskApi.markFundTransferTaskSuccess(task, note);
+          // if (response.data.code === 1) { }
+          break;
 
-      default:
-        break;
-    }
+        default:
+          break;
+      }
     } catch (error) {
-     console.log(error); 
+      console.log(error);
     }
 
     // LogModule.SetLog( {

@@ -79,7 +79,7 @@ export function updateInputFields(
   remark: string
 ) {
   return request({
-    url: "/adminWF!updateTask.do",
+    url: "/adminWF!updateInputFields.do",
     method: "POST",
     data: {
       "task.id": task.id,
