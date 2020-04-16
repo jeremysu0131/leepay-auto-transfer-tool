@@ -1,6 +1,7 @@
 import dayjs, { Dayjs } from "dayjs";
 import * as fs from "fs";
-import { By, until, WebDriver, WebElement } from "selenium-webdriver";
+import { isElementExist } from "../utils/seleniumHelper";
+import { By, until, WebDriver, WebElement, error } from "selenium-webdriver";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import RemitterAccountModel from "../models/remitterAccountModel";
 import TaskDetailModel from "../models/taskDetailModel";
@@ -177,16 +178,10 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
         until.elementLocated(By.id("loginButton"))
       );
       await webElement.click();
-      // 確認頁面載入
-      await waitPageLoad(this.driver);
+      await this.driver.wait(until.urlContains("B2CMainPlat"), this.wattingTime);
     } catch (e) {
-      throw new Error("can not find submit button");
+      throw new Error("can not find submit button - " + e);
     }
-    await waitPageLoadCondition(
-      "login to home page",
-      this.driver,
-      until.elementLocated(By.id("idxmaincontainer"))
-    );
   }
 
   async sendUSBKey(): Promise<void> {
@@ -196,11 +191,15 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   async checkIfLoginSuccess(globalState: {
     isManualLogin: boolean;
   }): Promise<boolean> {
-    // 確認頁面載入
-    // await waitPageLoad(this.driver);
+    // 看看是不是有裝置驗證選擇畫面，如果有則點選U頓
+    if (await this.isInVerifyPage()) {
+      await this.selectTypeU();
+    }
+
     if (globalState.isManualLogin) {
       this.sleep(30);
     }
+
     this.logInfo("check login status");
     const container = await this.driver.wait(
       until.elementLocated(By.id("idxmaincontainer")),
@@ -208,7 +207,37 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     );
     return !!container;
   }
+  async isInVerifyPage(): Promise<boolean> {
+    try {
+      await waitPageLoad(this.driver);
+    } catch (e) {
+      if (e instanceof (error.JavascriptError)) {
+        this.logDebug("found javascript error ignore it");
+      } else {
+        throw e;
+      }
+    }
+    await this.driver.sleep(1 * 1000);
+    this.logDebug("try to check now!");
+    try {
+      if (!await isElementExist(this.driver, By.id("mainfrm"))) {
+        return false;
+      }
+      await this.driver.switchTo().frame(this.driver.wait(until.elementLocated(By.id("mainfrm")), 3 * 1000));
 
+      if (await isElementExist(this.driver, By.id("SafeTypeU"))) {
+        this.logInfo("in the device selection page");
+        return true;
+      }
+      this.logDebug("not in device selection page");
+      return false;
+    } catch (e) {
+      if (e instanceof (error.UnexpectedAlertOpenError)) {
+        throw new Error("please check is UKey connected");
+      }
+      throw e;
+    }
+  }
   async getCookie(): Promise<void> {
     // FIXME 定義回傳介面
     const cookie = (await this.driver.executeScript(
@@ -427,6 +456,25 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   async checkIfNoteFilled(): Promise<void> {
     this.logDebug("skip fill note");
   }
+
+  async selectTypeU() {
+    try {
+      const button = await this.driver.wait(
+        until.elementLocated(By.id("SafeTypeU")),
+        this.wattingTime
+      );
+      await button.click();
+      this.logDebug("click type u");
+      await (await this.driver.wait(until.elementLocated(By.id("btnNext")), 3 * 1000)).click();
+      this.logDebug("go to next step");
+    } catch (e) {
+      if (e instanceof (error.UnexpectedAlertOpenError)) {
+        throw new Error("please check is usb deivce connected!");
+      }
+      throw e;
+    }
+  }
+
   async checkBankReceivedTransferInformation(): Promise<boolean> {
     this.logInfo("start check transaction info and setting remark");
     const task = this.getTask();
@@ -442,8 +490,10 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       this.driver,
       transactionFrameCon
     );
-    
+
     // 使用U盾傳帳 click #SafeTypeU;
+    await this.selectTypeU();
+
     const button = await this.driver.wait(
       until.elementLocated(By.id("SafeTypeU")),
       this.wattingTime
@@ -725,14 +775,14 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
 
   async getTransactionList(): Promise<
     | Array<{
-        cardNumber: string;
-        distName: string;
-        amount: string;
-        timeStr: string;
-        remark: string;
-        // 摘要
-        title: string;
-      }>
+      cardNumber: string;
+      distName: string;
+      amount: string;
+      timeStr: string;
+      remark: string;
+      // 摘要
+      title: string;
+    }>
     | undefined
     | null
   > {
