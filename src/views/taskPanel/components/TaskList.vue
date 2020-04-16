@@ -264,9 +264,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private async lockTask(task: TaskModel) {
     // check if locked
     if (+task.assigneeId !== +UserModule.id) {
-      if (await TaskModule.Lock(task.id)) {
-        return true;
-      } else {
+      if (!(await TaskModule.Lock(task.id))) {
         LogModule.SetConsole({
           // title: "Automation Stopped",
           level: "error",
@@ -278,15 +276,16 @@ export default class extends Mixins(TaskOperationMixin) {
         return false;
       }
     }
+    return true;
   }
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
-     if (await this.lockTask(task)) {
-      var taskDetail = await this.getTaskDetail(task);
-      TaskModule.SET_SELECTED_DETAIL(taskDetail);
-      await this.startTask();
-     }
+      if (await this.lockTask(task)) {
+        var taskDetail = await this.getTaskDetail(task);
+        TaskModule.SET_SELECTED_DETAIL(taskDetail);
+        await this.startTask();
+      }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     }
