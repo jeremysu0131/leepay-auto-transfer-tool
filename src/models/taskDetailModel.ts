@@ -6,6 +6,7 @@ import RemitterAccountModel from "./remitterAccountModel";
 export default class TaskDetailModel {
   id = 0;
   amount = 0;
+  ref="";
   payeeAccount = new PayeeAccountModel();
   remitterAccount=new RemitterAccountModel();
 

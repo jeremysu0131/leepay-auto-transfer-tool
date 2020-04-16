@@ -290,6 +290,7 @@ export default class extends Mixins(TaskOperationMixin) {
     var accountId = await AccountModule.GetId(task.remitterAccountCode);
     var taskDetail = await TaskModule.GetDetail(task, accountId);
     taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
+    taskDetail.ref = task.ref;
     return taskDetail;
   }
   private isMoreButtonDisabled(row: any) {
