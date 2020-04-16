@@ -27,8 +27,6 @@ export const transponder = async(
 ): Promise<{ isFlowExecutedSuccess: boolean; message?: string }> => {
   return new Promise(resolve => {
     ipcRenderer.once("asynchronous-reply", (event: Event, { isFlowExecutedSuccess, message }: { isFlowExecutedSuccess: boolean; message?: string }) => {
-        if (typeof message === "object") message = JSON.stringify(message);
-
         resolve({ isFlowExecutedSuccess, message });
       }
     );
