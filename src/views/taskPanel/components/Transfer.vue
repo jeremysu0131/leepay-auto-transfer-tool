@@ -8,8 +8,8 @@
         <div class="detail">
           <div>
             <div>ID:</div>
-            <div>Account Group:</div>
-            <div>Merchant:</div>
+            <!-- <div>Account Group:</div> -->
+            <!-- <div>Merchant:</div> -->
             <div>Receiver:</div>
             <div>Bank:</div>
             <div>A/C Number:</div>
@@ -20,27 +20,30 @@
             <div v-if="lastSelectedTask">
               {{ lastSelectedTask.id }}
             </div>
-            <div v-if="lastSelectedTask && lastSelectedTask.bank">
-              <!-- {{ card.currentDetail.channelGroup || ' - ' }} -->
-            </div>
-            <div v-if="lastSelectedTask">
+            <!-- <div v-if="lastSelectedTask && lastSelectedTask.bank">
+              {{ card.currentDetail.channelGroup || ' - ' }}
+            </div> -->
+            <!-- <div v-if="lastSelectedTask">
               {{ lastSelectedTask.merchantName }}
-            </div>
+            </div> -->
             <div v-if="lastSelectedTask ">
-              {{ lastSelectedTask.receiverName }}
+              {{ lastSelectedTask.payeeAccount.holderName }}
             </div>
-            <div v-if="lastSelectedTask && lastSelectedTask.bank">
-              {{ lastSelectedTask.bank.englishName }}
-            </div>
-            <div v-if="lastSelectedTask && lastSelectedTask.bank">
-              {{ lastSelectedTask.bank.cardNumber }}
-            </div>
-            <div v-if="lastSelectedTask">
-              {{ lastSelectedTask.requestAmount }}
+            <div
+              v-if="lastSelectedTask && lastSelectedTask.payeeAccount.bank.chineseName"
+            >
+              {{ lastSelectedTask.payeeAccount.bank.chineseName }}
             </div>
             <div v-if="lastSelectedTask">
+              {{ lastSelectedTask.payeeAccount.cardNumber }}
+            </div>
+            <div v-if="lastSelectedTask">
+              {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"})
+                .format(lastSelectedTask.amount) }}
+            </div>
+            <!-- <div v-if="lastSelectedTask">
               {{ lastSelectedTask.toolStatus }}
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
