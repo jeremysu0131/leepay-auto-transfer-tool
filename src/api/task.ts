@@ -15,7 +15,7 @@ export function getAll() {
   });
 }
 
-export function getDetail(data: {
+export function getFundTransferDetail(data: {
   taskId: number;
   ref: string;
   bankId: number;
@@ -26,6 +26,22 @@ export function getDetail(data: {
     params: {
       "task.id": data.taskId,
       "task.ref": data.ref
+    }
+  });
+}
+
+export function getPartialWithdrawDetail(data: {
+  taskId: number;
+  ref: string;
+  bankId: number;
+}) {
+  return request({
+    url: "/adminWF!loadPartialWithdrawPayment.do",
+    method: "POST",
+    params: {
+      "task.id": data.taskId,
+      "task.ref": data.ref,
+      bankId: data.bankId
     }
   });
 }
@@ -70,7 +86,10 @@ export function markFundTransferTaskSuccess(
   });
 }
 
-export function markFundTransferTaskFail(task: TaskDetailModel, reason:string) {
+export function markFundTransferTaskFail(
+  task: TaskDetailModel,
+  reason: string
+) {
   return request({
     url: "/adminWF!updateTask.do",
     method: "POST",

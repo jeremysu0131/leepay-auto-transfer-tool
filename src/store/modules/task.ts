@@ -121,13 +121,30 @@ class Task extends VuexModule implements ITaskState {
     accountId: number
   ): Promise<TaskDetailModel> {
     try {
-      var response = await TaskApi.getDetail({
-        taskId: task.id,
-        bankId: accountId,
-        ref: task.ref
-      });
-      var { data } = response.data;
+      var data;
+      switch (task.workflow) {
+        case TaskTypeEnum.FUND_TRANSFER:
+          data = (
+            await TaskApi.getFundTransferDetail({
+              taskId: task.id,
+              bankId: accountId,
+              ref: task.ref
+            })
+          ).data.data;
+          break;
+        case TaskTypeEnum.PARTIAL_WITHDRAW:
+          data = (
+            await TaskApi.getPartialWithdrawDetail({
+              taskId: task.id,
+              bankId: accountId,
+              ref: task.ref
+            })
+          ).data.data;
+          break;
 
+        default:
+          throw new Error("No such task type");
+      }
       return new TaskDetailModel({
         // Task id and ref will shown error in get detail api
         id: task.id,
