@@ -86,8 +86,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   }
   async fillTransferForm(): Promise<void> {
     try {
-      // this.card = AccountModule.currentDetail;
-      // this.task = TaskModule.selectedDetail;
       await this.driver
         .switchTo()
         .frame(
@@ -460,7 +458,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         1 * 1000
       )
       .getText();
-      console.log("third line", thirdLine);
 
     var amountLine = thirdLine;
     if (thirdLine.indexOf("实时") > -1) {

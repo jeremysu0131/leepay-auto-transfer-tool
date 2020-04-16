@@ -55,7 +55,6 @@
       <el-table-column
         prop="amount"
         label="Amount"
-        width="90"
         header-align="center"
         align="right"
       >
@@ -238,7 +237,6 @@ export default class extends Mixins(TaskOperationMixin) {
     return TaskModule;
   }
   get taskList() {
-    console.log(TaskModule.list);
     return TaskModule.list.filter(
       task => task.remitterAccountCode === AccountModule.current.code
     );
