@@ -40,14 +40,8 @@ export function unsetProxy() {
 }
 
 export async function setIEEnvironment() {
-  try {
     await setIEFeature();
     await setIESecurityZones();
-    return true;
-  } catch (error) {
-    logger({ level: "error", message: error });
-    return false;
-  }
 }
 
 function setIESecurityZones(): Promise<void> {
