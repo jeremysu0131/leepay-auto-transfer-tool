@@ -105,6 +105,8 @@ class Task extends VuexModule implements ITaskState {
               updatedBy: task.updatedBy,
               workflow: task.workflow
             };
+          case TaskTypeEnum.WITHDRAW_DISTRIBUTION:
+            return new TaskModel();
           default:
             throw new Error("No such task type");
         }
@@ -292,8 +294,15 @@ class Task extends VuexModule implements ITaskState {
           }
           break;
         case TaskTypeEnum.PARTIAL_WITHDRAW:
-          // var response = await TaskApi.markFundTransferTaskSuccess(task, note);
-          // if (response.data.code === 1) { }
+          var response = await TaskApi.markPartialWithdrawTaskFail(
+            task,
+            AccountModule.current.id,
+            0,
+            reason
+          );
+          if (response.data.code === 1) {
+            await TaskApi.updateInputFields(task, 0, reason);
+          }
           break;
 
         default:

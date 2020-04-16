@@ -148,6 +148,30 @@ export function markPartialWithdrawTaskSuccess(
   });
 }
 
+export function markPartialWithdrawTaskFail(
+  task: TaskDetailModel,
+  remitterAccountId:number,
+  transferFee: number,
+  remark: string
+) {
+  return request({
+    url: "/adminWF!updateTask.do",
+    method: "POST",
+    data: {
+      "task.field3": remitterAccountId,
+      "task.field4": "N",
+      "task.field7": task.amount,
+      "task.additionalInfo0": transferFee,
+      "task.field8": transferFee,
+      "task.id": task.id,
+      "task.ref": task.ref,
+      "task.state.state": "F",
+      "task.remark": remark,
+      messageSending: false
+    }
+  });
+}
+
 // export function markTaskToConfirm(
 //   taskID: number,
 //   data: { platform: string; status: string; operator: string }
