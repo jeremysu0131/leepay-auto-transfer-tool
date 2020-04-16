@@ -132,7 +132,7 @@
             type="success"
             :loading="isHandlingSuccess"
             :disabled="isHandlingFail || isHandlingToConfirm"
-            @click="markAsSuccess()"
+            @click="markAsSuccess(selectedTask)"
           >
             Success
           </el-button>
@@ -199,17 +199,14 @@ export default class extends Mixins(TaskOperationMixin) {
   get account() {
     return AccountModule;
   }
-  get task() {
-    return TaskModule;
-  }
   get worker() {
     return WorkerModule;
   }
   get lastSelectedTask() {
-    return this.task.lastSelected;
+    return TaskModule.lastSelected;
   }
   get selectedTask() {
-    return this.task.selectedDetail;
+    return TaskModule.selectedDetail;
   }
 }
 </script>

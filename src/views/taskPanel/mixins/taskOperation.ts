@@ -4,6 +4,7 @@ import { WorkerModule } from "../../../store/modules/worker";
 import { LogModule } from "../../../store/modules/log";
 import { AccountModule } from "../../../store/modules/account";
 import { AppModule } from "../../../store/modules/app";
+import TaskDetailModel from "@/models/taskDetailModel";
 @Component
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
@@ -66,15 +67,9 @@ export default class TaskOperationMixin extends Vue {
     //   });
     // }
   }
-  public async markAsSuccess(task: any) {
-    // this.$store.commit("HANDLE_TASK_HANDLING", true);
-    // if (task) {
-    //   this.$store.commit("SET_DATA_FOR_API", task);
-    // } else {
-    //   const selectedDataForAPI = this.$store.state.task.selectedDataForAPI;
-    //   this.$store.commit("SET_DATA_FOR_API", selectedDataForAPI);
-    // }
-    // this.$store.commit("HANDLE_MARK_AS_SUCCESS_DIALOG", true);
+  public async markAsSuccess(task: TaskDetailModel) {
+    TaskModule.SET_SELECTED_FOR_OPERATION(task);
+    AppModule.HANDLE_TASK_HANDLING(true);
   }
   public async markAsFail(isHandleCurrentTask: any, task: any) {
     // this.$store.commit("HANDLE_TASK_HANDLING", true);

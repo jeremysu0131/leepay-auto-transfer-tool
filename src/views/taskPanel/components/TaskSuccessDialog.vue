@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     title="Mark Task as Success"
-    :visible="app.task.isShowMarkAsSuccessDialog"
+    :visible="taskDetail.id!==0"
     width="80%"
     @close="closeDialog"
   >
@@ -56,26 +56,27 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Vue, Watch, Prop } from "vue-property-decorator";
+import { TaskModule } from "../../../store/modules/task";
+import TaskDetailModel from "@/models/taskDetailModel";
+import { AppModule } from "../../../store/modules/app";
 
 @Component({
   name: "TaskSuccessDialog"
 })
 export default class extends Vue {
+  get taskDetail() {
+    return TaskModule.selectedForOperation;
+  }
+
   private isHandlingSuccess = false;
   private form = {
-    transferFee: "0",
+    transferFee: 0,
     note: ""
   };
-  privaterules = {
+  private rules = {
     transferFee: [{ required: true, trigger: "blur" }]
   };
-  get app() {
-    return this.$store.state.app;
-  }
-  get task() {
-    return this.$store.state.task;
-  }
 
   private handleConfirm() {
     (this.$refs.taskSuccessForm as any).validate(async(valid: boolean) => {
@@ -89,12 +90,9 @@ export default class extends Vue {
   private async setTaskAsSuccess() {
     try {
       this.isHandlingSuccess = true;
-      // If true, means handle current task
-      const isHandleCurrentTask =
-        this.task.selectedDataForAPI === this.task.dataForAPI;
 
-      await this.$store.dispatch("MarkTaskSuccess", {
-        isHandleCurrentTask,
+      await TaskModule.MarkTaskSuccess({
+        task: this.taskDetail,
         transferFee: this.form.transferFee,
         note: this.form.note
       });
@@ -108,11 +106,11 @@ export default class extends Vue {
     }
   }
   private closeDialog() {
-    this.$store.commit("HANDLE_MARK_AS_SUCCESS_DIALOG", false);
-    this.$store.commit("HANDLE_TASK_HANDLING", false);
+    TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+    AppModule.HANDLE_TASK_HANDLING(false);
 
     this.form = {
-      transferFee: "0",
+      transferFee: 0,
       note: ""
     };
   }

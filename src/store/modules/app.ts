@@ -24,7 +24,6 @@ export interface IAppState {
     isFetchable: boolean;
     isFetching: boolean;
     isShowMarkAsFailDialog: boolean;
-    isShowMarkAsSuccessDialog: boolean;
     isShowCheckProcessDialog: boolean;
     isTaskHandling: boolean;
     fetchTimer: number;
