@@ -3,6 +3,7 @@ import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
 
 var worker: BankWorker;
 var remitterAccount = {
+  id: 63819,
   balance: 1,
   code: "5.ABC.235",
   loginName: "bsodfidd",

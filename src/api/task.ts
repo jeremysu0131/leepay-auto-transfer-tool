@@ -126,6 +126,7 @@ export function updateInputFields(
 
 export function markPartialWithdrawTaskSuccess(
   task: TaskDetailModel,
+  remitterAccountId:number,
   transferFee: number,
   remark: string
 ) {
@@ -133,12 +134,16 @@ export function markPartialWithdrawTaskSuccess(
     url: "/adminWF!updateTask.do",
     method: "POST",
     data: {
-      // "task.field2": transferFee,
-      // "task.id": task.id,
-      // "task.ref": task.ref,
-      // "task.state.state": "A",
-      // "task.remark": remark,
-      // messageSending: false
+      "task.field3": remitterAccountId,
+      "task.field4": "N",
+      "task.field7": task.amount,
+      "task.additionalInfo0": transferFee,
+      "task.field8": transferFee,
+      "task.id": task.id,
+      "task.ref": task.ref,
+      "task.state.state": "Y",
+      "task.remark": remark,
+      messageSending: false
     }
   });
 }

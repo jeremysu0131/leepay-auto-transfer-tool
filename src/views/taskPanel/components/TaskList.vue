@@ -23,7 +23,7 @@
         label="Request Time"
         width="150"
         align="center"
-      /> -->
+      />-->
       <el-table-column
         prop="pendingTime"
         label="Pending(min.)"
@@ -82,7 +82,7 @@
         prop="asignee"
         label="Asignee"
         align="center"
-      /> -->
+      />-->
       <el-table-column
         label="Actions"
         align="center"
@@ -190,7 +190,7 @@
                 >
                   More
                 </el-button>
-              </el-popover> -->
+              </el-popover>-->
             </div>
           </div>
         </template>
@@ -262,9 +262,12 @@ export default class extends Mixins(TaskOperationMixin) {
     return "";
   }
   private async lockTask(task: TaskModel) {
+    // check if locked
     if (+task.assigneeId !== +UserModule.id) {
-      if (!(await TaskModule.Lock(task.id))) {
-        return LogModule.SetConsole({
+      if (await TaskModule.Lock(task.id)) {
+        return true;
+      } else {
+        LogModule.SetConsole({
           // title: "Automation Stopped",
           level: "error",
           message:
@@ -272,16 +275,18 @@ export default class extends Mixins(TaskOperationMixin) {
             "Please claim it manully in order to process it\r\n" +
             'Note: the "auto process task" has been turned off as the result.'
         });
+        return false;
       }
     }
   }
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
-      await this.lockTask(task);
+     if (await this.lockTask(task)) {
       var taskDetail = await this.getTaskDetail(task);
       TaskModule.SET_SELECTED_DETAIL(taskDetail);
       await this.startTask();
+     }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     }
@@ -289,7 +294,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private async getTaskDetail(task: TaskModel) {
     var accountId = await AccountModule.GetId(task.remitterAccountCode);
     var taskDetail = await TaskModule.GetDetail(task, accountId);
-    taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
+    // taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
     return taskDetail;
   }
   private isMoreButtonDisabled(row: any) {

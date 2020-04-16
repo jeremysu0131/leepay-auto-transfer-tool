@@ -18,7 +18,7 @@ import { AppModule } from "./app";
 import { TaskModule } from "./task";
 import { transponder } from "../../electron-communicator";
 import { ipcRenderer, screen } from "electron";
-import RemitterAccountModel from "../../workers/models/remitterAccountModel";
+import RemitterAccountModel from "@/models/remitterAccountModel";
 import WorkflowStatusEnum from "../../models/WorkflowStatusEnum";
 import { AccountModule } from "./account";
 

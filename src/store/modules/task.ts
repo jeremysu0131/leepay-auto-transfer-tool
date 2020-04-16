@@ -15,6 +15,7 @@ import TaskDetailModel from "@/models/taskDetailModel";
 import TaskTypeEnum from "../../enums/taskTypeEnum";
 import { UserModule } from "./user";
 import TaskStatusEnum from "../../enums/taskStatusEnum";
+import { AccountModule } from "./account";
 
 export interface ITaskState {
   list: TaskModel[];
@@ -151,14 +152,6 @@ class Task extends VuexModule implements ITaskState {
         ref: task.ref,
         amount: data.amount,
         type: task.workflow,
-        remitterAccount: {
-          balance: data.accountBalance,
-          loginName: data.companyAccountLoginName,
-          loginPassword: data.loginPassword,
-          code: data.companyBankAccountCode,
-          usbPassword: data.usbPassword,
-          proxy: ""
-        },
         payeeAccount: {
           bank: {
             branch: data.memberBankBranch,
@@ -232,6 +225,7 @@ class Task extends VuexModule implements ITaskState {
       message: `Mark task success parameters: charge: ${transferFee}`
     });
     try {
+      var remitterAccountId = AccountModule.current.id;
       switch (task.type) {
         case TaskTypeEnum.FUND_TRANSFER:
           var { data } = await TaskApi.markFundTransferTaskSuccess(
@@ -248,8 +242,19 @@ class Task extends VuexModule implements ITaskState {
           }
           break;
         case TaskTypeEnum.PARTIAL_WITHDRAW:
-          // var response = await TaskApi.markFundTransferTaskSuccess(task, note);
-          // if (response.data.code === 1) { }
+          var response = await TaskApi.markPartialWithdrawTaskSuccess(
+            task,
+            remitterAccountId,
+            transferFee,
+            note
+          );
+          if (response.data.code === 1) {
+            await TaskApi.updateInputFields(
+              task,
+              transferFee,
+              `Processed by ${UserModule.name}`
+            );
+          }
           break;
 
         default:

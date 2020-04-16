@@ -10,7 +10,7 @@ export default class TaskDetailModel {
   ref = "";
   type = TaskTypeEnum.FUND_TRANSFER;
   payeeAccount = new PayeeAccountModel();
-  remitterAccount = new RemitterAccountModel();
+  // remitterAccount = new RemitterAccountModel();
 
   public constructor(init?: Partial<TaskDetailModel>) {
     Object.assign(this, init);
