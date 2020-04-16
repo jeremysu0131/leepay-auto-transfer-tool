@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     title="Mark Task as Success"
-    :visible="taskDetail.id!==0"
+    :visible="isShowMarkAsSuccessDialog"
     width="80%"
     @close="closeDialog"
   >
@@ -68,6 +68,9 @@ export default class extends Vue {
   get taskDetail() {
     return TaskModule.selectedForOperation;
   }
+  get isShowMarkAsSuccessDialog() {
+    return AppModule.task.isShowMarkAsSuccessDialog;
+  }
 
   private isHandlingSuccess = false;
   private form = {
@@ -108,6 +111,7 @@ export default class extends Vue {
   private closeDialog() {
     TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
     AppModule.HANDLE_TASK_HANDLING(false);
+    AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(false);
 
     this.form = {
       transferFee: 0,

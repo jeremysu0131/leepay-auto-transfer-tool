@@ -101,7 +101,7 @@
               >
                 {{ scope.row.toolStatus === "processing" ? "Reprocess" : "Process" }}
               </el-button>
-              <el-button
+              <!-- <el-button
                 v-if="scope.row.toolStatus === 'to-confirm'"
                 class="task-operator__button"
                 style="width:80px"
@@ -190,7 +190,7 @@
                 >
                   More
                 </el-button>
-              </el-popover>
+              </el-popover> -->
             </div>
           </div>
         </template>

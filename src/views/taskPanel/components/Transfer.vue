@@ -140,7 +140,7 @@
             size="mini"
             type="danger"
             :loading="isHandlingFail"
-            @click="markAsFail(true)"
+            @click="markAsFail(selectedTask)"
           >
             Fail
           </el-button>

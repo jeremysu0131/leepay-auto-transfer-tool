@@ -68,27 +68,14 @@ export default class TaskOperationMixin extends Vue {
     // }
   }
   public async markAsSuccess(task: TaskDetailModel) {
-    TaskModule.SET_SELECTED_FOR_OPERATION(task);
     AppModule.HANDLE_TASK_HANDLING(true);
+    TaskModule.SET_SELECTED_FOR_OPERATION(task);
+    AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
-  public async markAsFail(isHandleCurrentTask: any, task: any) {
-    // this.$store.commit("HANDLE_TASK_HANDLING", true);
-    // if (task) {
-    //   this.$store.commit("SET_DATA_FOR_API", task);
-    // } else {
-    //   const selectedDataForAPI = this.$store.state.task.selectedDataForAPI;
-    //   this.$store.commit("SET_DATA_FOR_API", selectedDataForAPI);
-    // }
-    // try {
-    //   await this.confirmMarkAsFail(isHandleCurrentTask);
-    // } catch (error) {
-    //   return this.$store.dispatch("SetConsole", {
-    //     message: error.toString(),
-    //     level: "error"
-    //   });
-    // } finally {
-    //   this.$store.commit("HANDLE_TASK_HANDLING", false);
-    // }
+  public async markAsFail(task: TaskDetailModel) {
+    AppModule.HANDLE_TASK_HANDLING(true);
+    TaskModule.SET_SELECTED_FOR_OPERATION(task);
+    AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
   public confirmMarkAsFail(isHandleCurrentTask: any) {
     // return this.$prompt("Please enter the reason what you want to mark this task as fail.", "", {

@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     title="Mark Task as Fail"
-    :visible="app.task.isShowMarkAsFailDialog"
+    :visible="isShowMarkAsFailDialog"
     width="80%"
     @close="closeDialog"
   >
@@ -45,66 +45,70 @@
   </el-dialog>
 </template>
 
-<script>
-export default {
-  name: "TaskFailDialog",
-  data() {
-    return {
-      isHandlingFail: false,
-      form: {
-        transferFee: "0",
-        note: ""
-      },
-      rules: {
-        transferFee: [{ required: true, trigger: "blur" }]
+<script lang="ts">
+import { Component, Vue, Watch, Prop } from "vue-property-decorator";
+import { TaskModule } from "../../../store/modules/task";
+import TaskDetailModel from "@/models/taskDetailModel";
+import { AppModule } from "../../../store/modules/app";
+
+@Component({
+  name: "TaskFailDialog"
+})
+export default class extends Vue {
+  private isHandlingFail = false;
+  private form = {
+    note: ""
+  };
+  private rules = {
+    transferFee: [{ required: true, trigger: "blur" }]
+  };
+
+  get taskDetail() {
+    return TaskModule.selectedForOperation;
+  }
+
+  get isShowMarkAsFailDialog() {
+    return AppModule.task.isShowMarkAsFailDialog;
+  }
+
+  get task() {
+    return this.$store.state.task;
+  }
+
+  private handleConfirm() {
+    (this.$refs.taskFailForm as any).validate(async(valid: boolean) => {
+      if (valid) {
+        await this.setTaskAsFail();
+      } else {
+        return false;
       }
-    };
-  },
-  computed: {
-    app() {
-      return this.$store.state.app;
-    },
-    task() {
-      return this.$store.state.task;
-    }
-  },
-  methods: {
-    handleConfirm() {
-      this.$refs.taskFailForm.validate(async valid => {
-        if (valid) {
-          await this.setTaskAsFail();
-        } else {
-          return false;
-        }
+    });
+  }
+  async setTaskAsFail() {
+    try {
+      this.isHandlingFail = true;
+
+      await TaskModule.MarkTaskFail({
+        task: this.taskDetail,
+        reason: this.form.note
       });
-    },
-    async setTaskAsFail() {
-      try {
-        this.isHandlingFail = true;
-        // If true, means handle current task
-        const isHandleCurrentTask = this.task.selectedDataForAPI === this.task.dataForAPI;
 
-        await this.$store.dispatch("MarkTaskFail", {
-          isHandleCurrentTask,
-          reason: this.form.note
-        });
-
-        this.$message.success("Task has been mark as fail");
-        this.closeDialog();
-      } catch (error) {
-        this.$message.error(error.toString());
-      } finally {
-        this.isHandlingFail = false;
-      }
-    },
-    closeDialog() {
-      this.$store.commit("HANDLE_MARK_AS_FAIL_DIALOG", false);
-      this.$store.commit("HANDLE_TASK_HANDLING", false);
-
-      this.form = { reason: "" };
+      this.$message.success("Task has been mark as fail");
+      this.closeDialog();
+    } catch (error) {
+      this.$message.error(error.toString());
+    } finally {
+      this.isHandlingFail = false;
     }
   }
-};
+  closeDialog() {
+    TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+    AppModule.HANDLE_TASK_HANDLING(false);
+    AppModule.HANDLE_MARK_AS_FAIL_DIALOG(false);
+
+    this.form = { note: "" };
+  }
+}
 </script>
 <style lang="scss" scoped>
 .dialog-footer {

@@ -70,6 +70,21 @@ export function markFundTransferTaskSuccess(
   });
 }
 
+export function markFundTransferTaskFail(task: TaskDetailModel, reason:string) {
+  return request({
+    url: "/adminWF!updateTask.do",
+    method: "POST",
+    data: {
+      "task.field2": 0,
+      "task.id": task.id,
+      "task.ref": task.ref,
+      "task.state.state": "R",
+      "task.remark": reason,
+      messageSending: false
+    }
+  });
+}
+
 /**
  * Don't know what to do
  */
@@ -106,14 +121,6 @@ export function markPartialWithdrawTaskSuccess(
       // "task.remark": remark,
       // messageSending: false
     }
-  });
-}
-
-export function markTaskFail(data: any) {
-  return request({
-    url: "/ps-ops-console/api/withdraw/markAsFailPaymentDetail",
-    method: "POST",
-    data
   });
 }
 

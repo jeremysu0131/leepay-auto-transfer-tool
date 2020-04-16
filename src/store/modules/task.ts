@@ -14,10 +14,11 @@ import { LogModule } from "./log";
 import TaskDetailModel from "@/models/taskDetailModel";
 import TaskTypeEnum from "../../enums/taskTypeEnum";
 import { UserModule } from "./user";
+import TaskStatusEnum from "../../enums/taskStatusEnum";
 
 export interface ITaskState {
   list: TaskModel[];
-  lastSelected: {};
+  lastSelected: TaskDetailModel;
   selectedDetail: TaskDetailModel;
   selectedForOperation: TaskDetailModel;
 }
@@ -25,7 +26,7 @@ export interface ITaskState {
 @Module({ dynamic: true, store, name: "task" })
 class Task extends VuexModule implements ITaskState {
   public list = [] as TaskModel[];
-  public lastSelected = {};
+  public lastSelected = new TaskDetailModel();
   public selectedDetail = new TaskDetailModel();
   public selectedForOperation = new TaskDetailModel();
 
@@ -237,24 +238,67 @@ class Task extends VuexModule implements ITaskState {
         default:
           break;
       }
+      await this.MoveCurrentTaskToLast({
+        task,
+        status: TaskStatusEnum.SUCCESS
+      });
+      await this.GetAll();
     } catch (error) {
-      console.log(error);
+      LogModule.SetConsole({ level: "error", message: error });
+      //   throw new Error("Mark task as success fail, please contact admin");
     }
+  }
+  @Action
+  async MarkTaskFail({
+    task,
+    reason
+  }: {
+    task: TaskDetailModel;
+    reason: string;
+  }) {
+    reason += ` Processed by ${UserModule.name}`;
+    LogModule.SetLog({
+      level: "debug",
+      message: `Mark task fail parameters: reason: ${reason}`
+    });
+    try {
+      switch (task.type) {
+        case TaskTypeEnum.FUND_TRANSFER:
+          var { data } = await TaskApi.markFundTransferTaskFail(task, reason);
+          if (data.code === 1) {
+            await TaskApi.updateInputFields(task, 0, reason);
+          }
+          break;
+        case TaskTypeEnum.PARTIAL_WITHDRAW:
+          // var response = await TaskApi.markFundTransferTaskSuccess(task, note);
+          // if (response.data.code === 1) { }
+          break;
 
-    // LogModule.SetLog( {
-    //   level: "info",
-    //   message: `Mark task success response: ${JSON.stringify(result.data)}`
-    // });
-
-    // if (result.data.success) {
-    //   await this.MoveCurrentTaskToLast", {
-    //     isHandleCurrentTask,
-    //     status: "success"
-    //   });
-    //   await this.GetAllTasks");
-    // } else {
-    //   throw new Error("Mark task as success fail, please contact admin");
-    // }
+        default:
+          break;
+      }
+      await this.MoveCurrentTaskToLast({
+        task,
+        status: TaskStatusEnum.SUCCESS
+      });
+      await this.GetAll();
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+      // throw new Error("Mark task as fail error, please contact admin");
+    }
+  }
+  @Action
+  private async MoveCurrentTaskToLast({
+    task,
+    status
+  }: {
+    task: TaskDetailModel;
+    status: string;
+  }) {
+    // Clear selected task
+    this.SET_LAST_SELECTED_DATA(task);
+    this.SET_SELECTED_DETAIL(new TaskDetailModel());
+    this.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
   }
 }
 //   async SetTaskInfomationToTool() {
@@ -281,21 +325,6 @@ class Task extends VuexModule implements ITaskState {
 //   async UnlockSelectedTask(_, taskID) {
 //     var result = await unlockTask(taskID);
 //     return result.data.success;
-//   }
-//   async MarkTaskFail({ dispatch, getters } { isHandleCurrentTask, reason }) {
-//     const dataForAPI = { ...getters.task.dataForAPI };
-//     dataForAPI.remark = reason;
-//     var result = await markTaskFail(dataForAPI);
-//     if (result.data.success) {
-//       // Check if fail or re-assign
-//       await this.MoveCurrentTaskToLast", {
-//         isHandleCurrentTask,
-//         status: reason === "re-assign" ? "re-assign" : "fail"
-//       });
-//       await this.GetAllTasks");
-//     } else {
-//       throw new Error("Mark task as fail error, please contact admin");
-//     }
 //   }
 //   async MarkTaskToConfirm(
 //     { dispatch, getters }
@@ -342,20 +371,6 @@ class Task extends VuexModule implements ITaskState {
 //       note: reason
 //     });
 //   }
-//   async MoveCurrentTaskToLast(
-//     { commit, dispatch, getters }
-//     { isHandleCurrentTask, status }
-//   ) {
-//     // Clear selected task
-//     if (isHandleCurrentTask) {
-//       var selectedTask = { ...getters.task.selected };
-//       selectedTask.toolStatus = status;
-//       if (selectedTask) commit("SET_LAST_SELECTED_DATA", selectedTask);
-
-//       commit("SET_SELECTED_DATA", null);
-//       commit("SET_DATA_FOR_API", null);
-//       commit("SET_SELECTED_DATA_FOR_API", null);
-//     }
 
 //     await Promise.all([
 //       this.GetCurrentCardBoBalance"),
