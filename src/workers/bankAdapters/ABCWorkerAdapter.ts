@@ -146,9 +146,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     // throw new Error("Method not implemented.");
     // return true;
   }
-  async checkIfNoteFilled(): Promise<void> {
+  async checkIfNoteFilled(): Promise<boolean> {
     // throw new Error("Method not implemented.");
-    // return true;
+    return true;
   }
   async checkBankReceivedTransferInformation(): Promise<boolean> {
     try {
@@ -312,11 +312,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         await this.driver.wait(element, 30 * 1000);
         await waitPageLoad(this.driver);
       }
-      Logger({ message: "Signed in.", level: "info" });
       return true;
     } catch (error) {
       if (error.name === "TimeoutError") {
-        Logger({ message: "Sign in fail.", level: "info" });
         return false;
       }
       throw error;
