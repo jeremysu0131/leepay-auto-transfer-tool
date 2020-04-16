@@ -1,6 +1,6 @@
 import dayjs, { Dayjs } from "dayjs";
 import * as fs from "fs";
-import { isElementExist } from "../utils/seleniumHelper";
+import { isElementExist, executeJavaScript, sendKeysV2, waitAndSwitchToTargetFrame, waitPageLoad, waitPageLoadCondition, waitUtilGetText } from "../utils/seleniumHelper";
 import { By, until, WebDriver, WebElement, error } from "selenium-webdriver";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import RemitterAccountModel from "../models/remitterAccountModel";
@@ -8,7 +8,7 @@ import TaskDetailModel from "../models/taskDetailModel";
 import * as FormatHelper from "../utils/formatHelper";
 import * as KeySender from "../utils/keySender";
 import Logger from "../utils/logger";
-import { executeJavaScript, sendKeysV2, waitAndSwitchToTargetFrame, waitPageLoad, waitPageLoadCondition, waitUtilGetText } from "../utils/seleniumHelper";
+
 import * as UsbTrigger from "../utils/usbTrigger";
 import * as WindowFocusTool from "../utils/windowFocusTool";
 

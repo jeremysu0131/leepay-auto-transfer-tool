@@ -55,7 +55,7 @@ export async function sendKeys(
 
     await asyncForEach(
       text.split(""),
-      async (char: string | number | Promise<string | number>) => {
+      async(char: string | number | Promise<string | number>) => {
         await webElement.sendKeys(char);
         await new Promise(resolve => setTimeout(resolve, ms));
       }
@@ -187,7 +187,7 @@ async function sendText(
 ) {
   await asyncForEach(
     text.split(""),
-    async (char: string | number | Promise<string | number>) => {
+    async(char: string | number | Promise<string | number>) => {
       await webElement.sendKeys(char);
       await new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -251,7 +251,7 @@ export async function getElementValue(
 }
 
 export async function waitPageLoad(driver: WebDriver) {
-  await driver.wait(async () => {
+  await driver.wait(async() => {
     const readyState = await driver.executeScript("return document.readyState");
     return readyState === "complete";
   });
