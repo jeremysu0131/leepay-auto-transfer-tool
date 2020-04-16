@@ -23,8 +23,8 @@ export interface IAppState {
     isVisible: boolean;
     isFetchable: boolean;
     isFetching: boolean;
-    isShowMarkAsFailDialog: boolean;
     isShowMarkAsSuccessDialog: boolean;
+    isShowMarkAsFailDialog: boolean;
     isShowCheckProcessDialog: boolean;
     isTaskHandling: boolean;
     fetchTimer: number;

@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import request from "@/utils/request";
+import TaskDetailModel from "../models/taskDetailModel";
 
 export function getAll() {
   return request({
@@ -14,13 +15,33 @@ export function getAll() {
   });
 }
 
-export function getDetail(data:{taskId: number, ref: string, bankId:number}) {
+export function getFundTransferDetail(data: {
+  taskId: number;
+  ref: string;
+  bankId: number;
+}) {
   return request({
     url: "/adminWF!loadTrans.do",
     method: "POST",
     params: {
       "task.id": data.taskId,
       "task.ref": data.ref
+    }
+  });
+}
+
+export function getPartialWithdrawDetail(data: {
+  taskId: number;
+  ref: string;
+  bankId: number;
+}) {
+  return request({
+    url: "/adminWF!loadPartialWithdrawPayment.do",
+    method: "POST",
+    params: {
+      "task.id": data.taskId,
+      "task.ref": data.ref,
+      bankId: data.bankId
     }
   });
 }
@@ -46,19 +67,108 @@ export function unlockTask(taskId: number) {
   });
 }
 
-export function markTaskSuccess(data: any) {
+export function markFundTransferTaskSuccess(
+  task: TaskDetailModel,
+  transferFee: number,
+  remark: string
+) {
   return request({
-    url: "/ps-ops-console/api/withdraw/markAsSuccessPaymentDetail",
+    url: "/adminWF!updateTask.do",
     method: "POST",
-    data
+    data: {
+      "task.field2": transferFee,
+      "task.id": task.id,
+      "task.ref": task.ref,
+      "task.state.state": "A",
+      "task.remark": remark,
+      messageSending: false
+    }
   });
 }
 
-export function markTaskFail(data: any) {
+export function markFundTransferTaskFail(
+  task: TaskDetailModel,
+  reason: string
+) {
   return request({
-    url: "/ps-ops-console/api/withdraw/markAsFailPaymentDetail",
+    url: "/adminWF!updateTask.do",
     method: "POST",
-    data
+    data: {
+      "task.field2": 0,
+      "task.id": task.id,
+      "task.ref": task.ref,
+      "task.state.state": "R",
+      "task.remark": reason,
+      messageSending: false
+    }
+  });
+}
+
+/**
+ * Don't know what to do
+ */
+export function updateInputFields(
+  task: TaskDetailModel,
+  transferFee: number,
+  remark: string
+) {
+  return request({
+    url: "/adminWF!updateInputFields.do",
+    method: "POST",
+    data: {
+      "task.id": task.id,
+      // Processed By
+      "task.field2": remark,
+      "task.field8": transferFee
+    }
+  });
+}
+
+export function markPartialWithdrawTaskSuccess(
+  task: TaskDetailModel,
+  remitterAccountId:number,
+  transferFee: number,
+  remark: string
+) {
+  return request({
+    url: "/adminWF!updateTask.do",
+    method: "POST",
+    data: {
+      "task.field3": remitterAccountId,
+      "task.field4": "N",
+      "task.field7": task.amount,
+      "task.additionalInfo0": transferFee,
+      "task.field8": transferFee,
+      "task.id": task.id,
+      "task.ref": task.ref,
+      "task.state.state": "Y",
+      "task.remark": remark,
+      messageSending: false
+    }
+  });
+}
+
+export function markPartialWithdrawTaskFail(
+  task: TaskDetailModel,
+  remitterAccountId:number,
+  transferFee: number,
+  remark: string
+) {
+  return request({
+    url: "/adminWF!updateTask.do",
+    method: "POST",
+    data: {
+      "task.field3": remitterAccountId,
+      "task.field4": "N",
+      "task.field7": task.amount,
+      "task.additionalInfo0": transferFee,
+      "task.field8": transferFee,
+      "task.id": task.id,
+      "task.ref": task.ref,
+      "task.state.state": "F",
+      "task.remark": remark,
+      messageSending: false
+    }
   });
 }
 

@@ -1,5 +1,6 @@
 import MerchantModel from "./merchantModel";
 import BankModel from "./bankModel";
+import TaskTypeEnum from "@/enums/taskTypeEnum";
 
 export default class TaskModel {
   id = 0;
@@ -19,5 +20,5 @@ export default class TaskModel {
   createdBy = 0;
   updatedAt = Date;
   updatedBy = 0;
-  workflow = "";
+  workflow:TaskTypeEnum = TaskTypeEnum.FUND_TRANSFER;
 }

@@ -23,7 +23,7 @@
         label="Request Time"
         width="150"
         align="center"
-      /> -->
+      />-->
       <el-table-column
         prop="pendingTime"
         label="Pending(min.)"
@@ -55,7 +55,6 @@
       <el-table-column
         prop="amount"
         label="Amount"
-        width="90"
         header-align="center"
         align="right"
       >
@@ -83,7 +82,7 @@
         prop="asignee"
         label="Asignee"
         align="center"
-      /> -->
+      />-->
       <el-table-column
         label="Actions"
         align="center"
@@ -102,7 +101,7 @@
               >
                 {{ scope.row.toolStatus === "processing" ? "Reprocess" : "Process" }}
               </el-button>
-              <el-button
+              <!-- <el-button
                 v-if="scope.row.toolStatus === 'to-confirm'"
                 class="task-operator__button"
                 style="width:80px"
@@ -191,7 +190,7 @@
                 >
                   More
                 </el-button>
-              </el-popover>
+              </el-popover>-->
             </div>
           </div>
         </template>
@@ -238,7 +237,6 @@ export default class extends Mixins(TaskOperationMixin) {
     return TaskModule;
   }
   get taskList() {
-    console.log(TaskModule.list);
     return TaskModule.list.filter(
       task => task.remitterAccountCode === AccountModule.current.code
     );
@@ -264,9 +262,10 @@ export default class extends Mixins(TaskOperationMixin) {
     return "";
   }
   private async lockTask(task: TaskModel) {
+    // check if locked
     if (+task.assigneeId !== +UserModule.id) {
       if (!(await TaskModule.Lock(task.id))) {
-        return LogModule.SetConsole({
+        LogModule.SetConsole({
           // title: "Automation Stopped",
           level: "error",
           message:
@@ -274,16 +273,19 @@ export default class extends Mixins(TaskOperationMixin) {
             "Please claim it manully in order to process it\r\n" +
             'Note: the "auto process task" has been turned off as the result.'
         });
+        return false;
       }
     }
+    return true;
   }
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
-      await this.lockTask(task);
-      var taskDetail = await this.getTaskDetail(task);
-      TaskModule.SET_SELECTED_DETAIL(taskDetail);
-      await this.startTask();
+      if (await this.lockTask(task)) {
+        var taskDetail = await this.getTaskDetail(task);
+        TaskModule.SET_SELECTED_DETAIL(taskDetail);
+        await this.startTask();
+      }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     }
@@ -291,7 +293,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private async getTaskDetail(task: TaskModel) {
     var accountId = await AccountModule.GetId(task.remitterAccountCode);
     var taskDetail = await TaskModule.GetDetail(task, accountId);
-    taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
+    // taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
     return taskDetail;
   }
   private isMoreButtonDisabled(row: any) {

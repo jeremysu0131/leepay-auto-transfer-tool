@@ -18,7 +18,7 @@ import { AppModule } from "./app";
 import { TaskModule } from "./task";
 import { transponder } from "../../electron-communicator";
 import { ipcRenderer, screen } from "electron";
-import RemitterAccountModel from "../../workers/models/remitterAccountModel";
+import RemitterAccountModel from "@/models/remitterAccountModel";
 import WorkflowStatusEnum from "../../models/WorkflowStatusEnum";
 import { AccountModule } from "./account";
 
@@ -56,6 +56,9 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
         flow.status = data.status;
       }
     });
+    var workflow = this.workflow;
+    this.workflow = [];
+    this.workflow = workflow;
   }
   // SET_WORKFLOW: (state, bankCode) => {
   //   state.workflow = workflowEnum(bankCode);
@@ -122,6 +125,10 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   @Action
   async RunAutoTransferFlows() {
     try {
+      await this.RunFlow({
+        name: WorkflowEnum.SET_TASK,
+        args: TaskModule.selectedDetail
+      });
       await this.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
       await this.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
       await this.RunFlow({ name: WorkflowEnum.FILL_NOTE });
@@ -143,7 +150,10 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
 
   @Action({ rawError: true })
-  async RunFlow(flow: { name: WorkflowEnum; args?: object }) {
+  async RunFlow(flow: {
+    name: WorkflowEnum;
+    args?: object;
+  }): Promise<{ isFlowExecutedSuccess: boolean; message?: string }> {
     LogModule.SetLog({
       level: "debug",
       message: `Flow name: ${flow.name}, Args: ${JSON.stringify(flow.args)}`
@@ -200,32 +210,36 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     // if (this.worker) await this.worker.closeSelenium();
     await transponder(ipcRenderer, WorkflowEnum.CLOSE_SELENIUM);
   }
-  @Action
+  @Action({ rawError: true })
   async CheckIfLoginSuccess() {
     const isManualLogin = AppModule.isManualLogin;
-    var { isFlowExecutedSuccess, message } = await this.RunFlow({
-      name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
-      args: { isManualLogin }
-    });
+    try {
+      var { isFlowExecutedSuccess, message } = await this.RunFlow({
+        name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
+        args: { isManualLogin }
+      });
 
-    if (isFlowExecutedSuccess) {
-      AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
-      AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
-      AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
-      AppModule.HANDLE_TASK_VISIBLE(true);
-      AppModule.HANDLE_TASK_FETCHABLE(true);
-      AppModule.HANDLE_SHOWING_TAB("tasks");
+      if (isFlowExecutedSuccess) {
+        AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
+        AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
+        AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
+        AppModule.HANDLE_TASK_VISIBLE(true);
+        AppModule.HANDLE_TASK_FETCHABLE(true);
+        AppModule.HANDLE_SHOWING_TAB("tasks");
 
-      // If selected card is empty, means this is called by relogin
-      // if (AccountModule.selected.id) {
-      // }
-      AccountModule.SET_CURRENT(AccountModule.selected);
-      AccountModule.SET_SELECTED(new RemitterAccountModel());
-      WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-      await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
-      return true;
+        // If selected card is empty, means this is called by relogin
+        // if (AccountModule.selected.id) {
+        // }
+        AccountModule.SET_CURRENT(AccountModule.selected);
+        AccountModule.SET_SELECTED(new RemitterAccountModel());
+        WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
+        await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      return false;
     }
-    return false;
   }
   // TODO
   @Action

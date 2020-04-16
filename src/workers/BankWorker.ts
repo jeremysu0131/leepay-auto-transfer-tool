@@ -80,7 +80,6 @@ export default class BankWorker {
     width: number;
     height: number;
   }): Promise<WorkerResponseModel> {
-    try {
       const driver = await new Builder()
         .withCapabilities({
           ignoreZoomSetting: true
@@ -106,10 +105,6 @@ export default class BankWorker {
 
       Logger({ level: "debug", message: "Selenium launched" });
       return { isFlowExecutedSuccess: true };
-    } catch (error) {
-      Logger({ level: "error", message: error });
-      return { isFlowExecutedSuccess: false, message: error };
-    }
   }
 
   async closeSelenium(): Promise<WorkerResponseModel> {
@@ -167,7 +162,9 @@ export default class BankWorker {
         globalState
       );
 
-      return { isFlowExecutedSuccess: isLoginSuccess };
+      return isLoginSuccess
+        ? { isFlowExecutedSuccess: true }
+        : { isFlowExecutedSuccess: false, message: "Login In to Bank Fail" };
     } catch (error) {
       Logger({ level: "error", message: error });
       return { isFlowExecutedSuccess: false, message: error };

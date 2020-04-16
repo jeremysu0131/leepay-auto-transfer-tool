@@ -5,7 +5,7 @@
       <task-list />
     </div>
     <transfer />
-    <!-- <TaskSuccessDialog /> -->
+    <TaskSuccessDialog />
     <TaskFailDialog />
     <!-- <TaskProcessDialog /> -->
   </div>
@@ -19,6 +19,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
   name: "TaskPanel",
   components: {
     TaskHeader,
+    TaskSuccessDialog,
     TaskFailDialog,
     TaskList,
     Transfer

@@ -12,43 +12,40 @@ import { AppModule } from "./app";
 import TaskModel from "../../models/taskModel";
 import { LogModule } from "./log";
 import TaskDetailModel from "@/models/taskDetailModel";
+import TaskTypeEnum from "../../enums/taskTypeEnum";
+import { UserModule } from "./user";
+import TaskStatusEnum from "../../enums/taskStatusEnum";
+import { AccountModule } from "./account";
 
 export interface ITaskState {
   list: TaskModel[];
-  lastSelected: {};
+  lastSelected: TaskDetailModel;
   selectedDetail: TaskDetailModel;
-  selectedDataForAPI: {}; // this is use for send the api of mark success
-  dataForAPI: {}; // this is use for send the api of mark success
+  selectedForOperation: TaskDetailModel;
 }
 
 @Module({ dynamic: true, store, name: "task" })
 class Task extends VuexModule implements ITaskState {
   public list = [] as TaskModel[];
-  public lastSelected = {};
+  public lastSelected = new TaskDetailModel();
   public selectedDetail = new TaskDetailModel();
-  public selectedDataForAPI = {}; // this is use for send the api of mark success
-  public dataForAPI = {}; // this is use for send the api of mark success
+  public selectedForOperation = new TaskDetailModel();
 
   @Mutation
   public SET_TASK_LIST(tasks: TaskModel[]) {
     this.list = tasks;
   }
   @Mutation
-  public SET_LAST_SELECTED_DATA(task: object) {
-    this.lastSelected = task;
+  public SET_LAST_SELECTED_DATA(taskDetail: TaskDetailModel) {
+    this.lastSelected = taskDetail;
   }
   @Mutation
   public SET_SELECTED_DETAIL(taskDetail: TaskDetailModel) {
     this.selectedDetail = taskDetail;
   }
   @Mutation
-  // This for intergrade with weird api of leepay
-  public SET_DATA_FOR_API(data: object) {
-    this.dataForAPI = data;
-  }
-  @Mutation
-  public SET_SELECTED_DATA_FOR_API(data: object) {
-    this.selectedDataForAPI = data;
+  public SET_SELECTED_FOR_OPERATION(taskDetail: TaskDetailModel) {
+    this.selectedForOperation = taskDetail;
   }
   // actions: {
   @Action
@@ -108,6 +105,8 @@ class Task extends VuexModule implements ITaskState {
               updatedBy: task.updatedBy,
               workflow: task.workflow
             };
+          case TaskTypeEnum.WITHDRAW_DISTRIBUTION:
+            return new TaskModel();
           default:
             throw new Error("No such task type");
         }
@@ -125,25 +124,36 @@ class Task extends VuexModule implements ITaskState {
     accountId: number
   ): Promise<TaskDetailModel> {
     try {
-      console.log("task call");
-      var response = await TaskApi.getDetail({
-        taskId: task.id,
-        bankId: accountId,
-        ref: task.ref
-      });
-      var { data } = response.data;
+      var data;
+      switch (task.workflow) {
+        case TaskTypeEnum.FUND_TRANSFER:
+          data = (
+            await TaskApi.getFundTransferDetail({
+              taskId: task.id,
+              bankId: accountId,
+              ref: task.ref
+            })
+          ).data.data;
+          break;
+        case TaskTypeEnum.PARTIAL_WITHDRAW:
+          data = (
+            await TaskApi.getPartialWithdrawDetail({
+              taskId: task.id,
+              bankId: accountId,
+              ref: task.ref
+            })
+          ).data.data;
+          break;
 
+        default:
+          throw new Error("No such task type");
+      }
       return new TaskDetailModel({
-        id: data.id,
+        // Task id and ref will shown error in get detail api
+        id: task.id,
+        ref: task.ref,
         amount: data.amount,
-        remitterAccount: {
-          balance: data.accountBalance,
-          loginName: data.companyAccountLoginName,
-          loginPassword: data.loginPassword,
-          code: data.companyBankAccountCode,
-          usbPassword: data.usbPassword,
-          proxy: ""
-        },
+        type: task.workflow,
         payeeAccount: {
           bank: {
             branch: data.memberBankBranch,
@@ -201,6 +211,126 @@ class Task extends VuexModule implements ITaskState {
     // };
     // commit("SET_SELECTED_DATA", taskDetail);
   }
+
+  @Action
+  async MarkTaskSuccess({
+    task,
+    transferFee,
+    note
+  }: {
+    task: TaskDetailModel;
+    transferFee: number;
+    note: string;
+  }) {
+    LogModule.SetLog({
+      level: "debug",
+      message: `Mark task success parameters: charge: ${transferFee}`
+    });
+    try {
+      var remitterAccountId = AccountModule.current.id;
+      switch (task.type) {
+        case TaskTypeEnum.FUND_TRANSFER:
+          var { data } = await TaskApi.markFundTransferTaskSuccess(
+            task,
+            transferFee,
+            note
+          );
+          if (data.code === 1) {
+            await TaskApi.updateInputFields(
+              task,
+              transferFee,
+              `Processed by ${UserModule.name}`
+            );
+          }
+          break;
+        case TaskTypeEnum.PARTIAL_WITHDRAW:
+          var response = await TaskApi.markPartialWithdrawTaskSuccess(
+            task,
+            remitterAccountId,
+            transferFee,
+            note
+          );
+          if (response.data.code === 1) {
+            await TaskApi.updateInputFields(
+              task,
+              transferFee,
+              `Processed by ${UserModule.name}`
+            );
+          }
+          break;
+
+        default:
+          break;
+      }
+      await this.MoveCurrentTaskToLast({
+        task,
+        status: TaskStatusEnum.SUCCESS
+      });
+      await this.GetAll();
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+      //   throw new Error("Mark task as success fail, please contact admin");
+    }
+  }
+  @Action
+  async MarkTaskFail({
+    task,
+    reason
+  }: {
+    task: TaskDetailModel;
+    reason: string;
+  }) {
+    reason += ` Processed by ${UserModule.name}`;
+    LogModule.SetLog({
+      level: "debug",
+      message: `Mark task fail parameters: reason: ${reason}`
+    });
+    try {
+      switch (task.type) {
+        case TaskTypeEnum.FUND_TRANSFER:
+          var { data } = await TaskApi.markFundTransferTaskFail(task, reason);
+          if (data.code === 1) {
+            await TaskApi.updateInputFields(task, 0, reason);
+          }
+          break;
+        case TaskTypeEnum.PARTIAL_WITHDRAW:
+          var response = await TaskApi.markPartialWithdrawTaskFail(
+            task,
+            AccountModule.current.id,
+            0,
+            reason
+          );
+          if (response.data.code === 1) {
+            await TaskApi.updateInputFields(task, 0, reason);
+          }
+          break;
+
+        default:
+          break;
+      }
+      await this.MoveCurrentTaskToLast({
+        task,
+        status: TaskStatusEnum.SUCCESS
+      });
+      await this.GetAll();
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+      // throw new Error("Mark task as fail error, please contact admin");
+    }
+  }
+  @Action
+  private async MoveCurrentTaskToLast({
+    task,
+    status
+  }: {
+    task: TaskDetailModel;
+    status: string;
+  }) {
+    // Clear selected task
+    this.SET_LAST_SELECTED_DATA(task);
+    this.SET_SELECTED_DETAIL(new TaskDetailModel());
+    this.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+  }
 }
 //   async SetTaskInfomationToTool() {
 //     const taskID = getters.task.dataForAPI.id;
@@ -226,49 +356,6 @@ class Task extends VuexModule implements ITaskState {
 //   async UnlockSelectedTask(_, taskID) {
 //     var result = await unlockTask(taskID);
 //     return result.data.success;
-//   }
-//   async MarkTaskSuccess(
-//     { commit, dispatch, getters }
-//     { isHandleCurrentTask, transferFee, note }
-//   ) {
-//     var dataForAPI = { ...getters.task.dataForAPI };
-//     dataForAPI.newCharge = transferFee;
-//     dataForAPI.remark = note;
-
-//     LogModule.SetLog( {
-//       level: "info",
-//       message: `Mark task success parameters: charge: ${transferFee}`
-//     });
-//     var result = await markTaskSuccess(dataForAPI);
-//     LogModule.SetLog( {
-//       level: "info",
-//       message: `Mark task success response: ${JSON.stringify(result.data)}`
-//     });
-
-//     if (result.data.success) {
-//       await this.MoveCurrentTaskToLast", {
-//         isHandleCurrentTask,
-//         status: "success"
-//       });
-//       await this.GetAllTasks");
-//     } else {
-//       throw new Error("Mark task as success fail, please contact admin");
-//     }
-//   }
-//   async MarkTaskFail({ dispatch, getters } { isHandleCurrentTask, reason }) {
-//     const dataForAPI = { ...getters.task.dataForAPI };
-//     dataForAPI.remark = reason;
-//     var result = await markTaskFail(dataForAPI);
-//     if (result.data.success) {
-//       // Check if fail or re-assign
-//       await this.MoveCurrentTaskToLast", {
-//         isHandleCurrentTask,
-//         status: reason === "re-assign" ? "re-assign" : "fail"
-//       });
-//       await this.GetAllTasks");
-//     } else {
-//       throw new Error("Mark task as fail error, please contact admin");
-//     }
 //   }
 //   async MarkTaskToConfirm(
 //     { dispatch, getters }
@@ -315,20 +402,6 @@ class Task extends VuexModule implements ITaskState {
 //       note: reason
 //     });
 //   }
-//   async MoveCurrentTaskToLast(
-//     { commit, dispatch, getters }
-//     { isHandleCurrentTask, status }
-//   ) {
-//     // Clear selected task
-//     if (isHandleCurrentTask) {
-//       var selectedTask = { ...getters.task.selected };
-//       selectedTask.toolStatus = status;
-//       if (selectedTask) commit("SET_LAST_SELECTED_DATA", selectedTask);
-
-//       commit("SET_SELECTED_DATA", null);
-//       commit("SET_DATA_FOR_API", null);
-//       commit("SET_SELECTED_DATA_FOR_API", null);
-//     }
 
 //     await Promise.all([
 //       this.GetCurrentCardBoBalance"),
