@@ -150,7 +150,10 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
 
   @Action({ rawError: true })
-  async RunFlow(flow: { name: WorkflowEnum; args?: object }) {
+  async RunFlow(flow: {
+    name: WorkflowEnum;
+    args?: object;
+  }): Promise<{ isFlowExecutedSuccess: boolean; message?: string }> {
     LogModule.SetLog({
       level: "debug",
       message: `Flow name: ${flow.name}, Args: ${JSON.stringify(flow.args)}`
@@ -207,32 +210,36 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     // if (this.worker) await this.worker.closeSelenium();
     await transponder(ipcRenderer, WorkflowEnum.CLOSE_SELENIUM);
   }
-  @Action
+  @Action({ rawError: true })
   async CheckIfLoginSuccess() {
     const isManualLogin = AppModule.isManualLogin;
-    var { isFlowExecutedSuccess, message } = await this.RunFlow({
-      name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
-      args: { isManualLogin }
-    });
+    try {
+      var { isFlowExecutedSuccess, message } = await this.RunFlow({
+        name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS,
+        args: { isManualLogin }
+      });
 
-    if (isFlowExecutedSuccess) {
-      AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
-      AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
-      AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
-      AppModule.HANDLE_TASK_VISIBLE(true);
-      AppModule.HANDLE_TASK_FETCHABLE(true);
-      AppModule.HANDLE_SHOWING_TAB("tasks");
+      if (isFlowExecutedSuccess) {
+        AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
+        AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
+        AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
+        AppModule.HANDLE_TASK_VISIBLE(true);
+        AppModule.HANDLE_TASK_FETCHABLE(true);
+        AppModule.HANDLE_SHOWING_TAB("tasks");
 
-      // If selected card is empty, means this is called by relogin
-      // if (AccountModule.selected.id) {
-      // }
-      AccountModule.SET_CURRENT(AccountModule.selected);
-      AccountModule.SET_SELECTED(new RemitterAccountModel());
-      WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-      await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
-      return true;
+        // If selected card is empty, means this is called by relogin
+        // if (AccountModule.selected.id) {
+        // }
+        AccountModule.SET_CURRENT(AccountModule.selected);
+        AccountModule.SET_SELECTED(new RemitterAccountModel());
+        WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
+        await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      return false;
     }
-    return false;
   }
   // TODO
   @Action

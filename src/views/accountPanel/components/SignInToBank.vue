@@ -81,7 +81,7 @@ export default class extends Vue {
     this.isChecking = true;
     this.checkResult.type = "";
     this.checkResult.message = "Checking login status, please wait ...";
-    if (await this.$store.dispatch("CheckIfLoginSuccess")) {
+    if (await WorkerModule.CheckIfLoginSuccess()) {
       this.$message({ type: "success", message: "You have already loggin" });
       this.handleSignInSuccess();
     } else {

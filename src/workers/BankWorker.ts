@@ -167,7 +167,9 @@ export default class BankWorker {
         globalState
       );
 
-      return { isFlowExecutedSuccess: isLoginSuccess };
+      return isLoginSuccess
+        ? { isFlowExecutedSuccess: true }
+        : { isFlowExecutedSuccess: false, message: "Login In to Bank Fail" };
     } catch (error) {
       Logger({ level: "error", message: error });
       return { isFlowExecutedSuccess: false, message: error };
