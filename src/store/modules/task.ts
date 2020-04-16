@@ -12,13 +12,13 @@ import { AppModule } from "./app";
 import TaskModel from "../../models/taskModel";
 import { LogModule } from "./log";
 import TaskDetailModel from "@/models/taskDetailModel";
+import TaskTypeEnum from "../../enums/taskTypeEnum";
 
 export interface ITaskState {
   list: TaskModel[];
   lastSelected: {};
   selectedDetail: TaskDetailModel;
-  selectedDataForAPI: {}; // this is use for send the api of mark success
-  dataForAPI: {}; // this is use for send the api of mark success
+  selectedForOperation:TaskDetailModel;
 }
 
 @Module({ dynamic: true, store, name: "task" })
@@ -26,29 +26,23 @@ class Task extends VuexModule implements ITaskState {
   public list = [] as TaskModel[];
   public lastSelected = {};
   public selectedDetail = new TaskDetailModel();
-  public selectedDataForAPI = {}; // this is use for send the api of mark success
-  public dataForAPI = {}; // this is use for send the api of mark success
+  public selectedForOperation = new TaskDetailModel();
 
   @Mutation
   public SET_TASK_LIST(tasks: TaskModel[]) {
     this.list = tasks;
   }
   @Mutation
-  public SET_LAST_SELECTED_DATA(task: object) {
-    this.lastSelected = task;
+  public SET_LAST_SELECTED_DATA(taskDetail: TaskDetailModel) {
+    this.lastSelected = taskDetail;
   }
   @Mutation
   public SET_SELECTED_DETAIL(taskDetail: TaskDetailModel) {
     this.selectedDetail = taskDetail;
   }
   @Mutation
-  // This for intergrade with weird api of leepay
-  public SET_DATA_FOR_API(data: object) {
-    this.dataForAPI = data;
-  }
-  @Mutation
-  public SET_SELECTED_DATA_FOR_API(data: object) {
-    this.selectedDataForAPI = data;
+  public SET_SELECTED_FOR_OPERATION(taskDetail: TaskDetailModel) {
+    this.selectedForOperation = taskDetail;
   }
   // actions: {
   @Action
@@ -125,7 +119,6 @@ class Task extends VuexModule implements ITaskState {
     accountId: number
   ): Promise<TaskDetailModel> {
     try {
-      console.log("task call");
       var response = await TaskApi.getDetail({
         taskId: task.id,
         bankId: accountId,
@@ -134,8 +127,11 @@ class Task extends VuexModule implements ITaskState {
       var { data } = response.data;
 
       return new TaskDetailModel({
-        id: data.id,
+        // Task id and ref will shown error in get detail api
+        id: task.id,
+        ref: task.ref,
         amount: data.amount,
+        type: task.workflow,
         remitterAccount: {
           balance: data.accountBalance,
           loginName: data.companyAccountLoginName,
@@ -201,6 +197,56 @@ class Task extends VuexModule implements ITaskState {
     // };
     // commit("SET_SELECTED_DATA", taskDetail);
   }
+
+  @Action
+  async MarkTaskSuccess({
+    task,
+    transferFee,
+    note
+  }: {
+    task: TaskDetailModel;
+    transferFee: number;
+    note: string;
+  }) {
+    LogModule.SetLog({
+      level: "debug",
+      message: `Mark task success parameters: charge: ${transferFee}`
+    });
+    try {
+    switch (task.type) {
+      case TaskTypeEnum.FUND_TRANSFER:
+        var response = await TaskApi.markFundTransferTaskSuccess(task, transferFee, note);
+        // var result = await TaskApi.updateInputFields(task, transferFee, note);
+        // console.log(result);
+        // if (response.data.code === 1) { }
+        break;
+      case TaskTypeEnum.PARTIAL_WITHDRAW:
+        // var response = await TaskApi.markFundTransferTaskSuccess(task, note);
+        // if (response.data.code === 1) { }
+        break;
+
+      default:
+        break;
+    }
+    } catch (error) {
+     console.log(error); 
+    }
+
+    // LogModule.SetLog( {
+    //   level: "info",
+    //   message: `Mark task success response: ${JSON.stringify(result.data)}`
+    // });
+
+    // if (result.data.success) {
+    //   await this.MoveCurrentTaskToLast", {
+    //     isHandleCurrentTask,
+    //     status: "success"
+    //   });
+    //   await this.GetAllTasks");
+    // } else {
+    //   throw new Error("Mark task as success fail, please contact admin");
+    // }
+  }
 }
 //   async SetTaskInfomationToTool() {
 //     const taskID = getters.task.dataForAPI.id;
@@ -226,34 +272,6 @@ class Task extends VuexModule implements ITaskState {
 //   async UnlockSelectedTask(_, taskID) {
 //     var result = await unlockTask(taskID);
 //     return result.data.success;
-//   }
-//   async MarkTaskSuccess(
-//     { commit, dispatch, getters }
-//     { isHandleCurrentTask, transferFee, note }
-//   ) {
-//     var dataForAPI = { ...getters.task.dataForAPI };
-//     dataForAPI.newCharge = transferFee;
-//     dataForAPI.remark = note;
-
-//     LogModule.SetLog( {
-//       level: "info",
-//       message: `Mark task success parameters: charge: ${transferFee}`
-//     });
-//     var result = await markTaskSuccess(dataForAPI);
-//     LogModule.SetLog( {
-//       level: "info",
-//       message: `Mark task success response: ${JSON.stringify(result.data)}`
-//     });
-
-//     if (result.data.success) {
-//       await this.MoveCurrentTaskToLast", {
-//         isHandleCurrentTask,
-//         status: "success"
-//       });
-//       await this.GetAllTasks");
-//     } else {
-//       throw new Error("Mark task as success fail, please contact admin");
-//     }
 //   }
 //   async MarkTaskFail({ dispatch, getters } { isHandleCurrentTask, reason }) {
 //     const dataForAPI = { ...getters.task.dataForAPI };
