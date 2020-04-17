@@ -10,7 +10,13 @@ import store from "@/store";
 import RemitterAccountModel from "../../models/remitterAccountModel";
 import { LogModule } from "./log";
 
+class AccountListModel {
+  id: number = 0;
+  code: string = "";
+  balance: number = 0;
+}
 export interface IAccountState {
+  list: Array<AccountListModel>;
   selected: RemitterAccountModel;
   // selectedDetail: {};
   current: RemitterAccountModel;
@@ -18,9 +24,14 @@ export interface IAccountState {
 
 @Module({ dynamic: true, store, name: "card" })
 class Account extends VuexModule implements IAccountState {
+  public list = [] as AccountListModel[];
   public selected = new RemitterAccountModel();
   public current = new RemitterAccountModel();
 
+  @Mutation
+  SET_LIST(accounts: AccountListModel[]) {
+    this.list = accounts;
+  }
   @Mutation
   SET_BANK_BALANCE(balance: number) {
     this.current.balanceInBank = balance;

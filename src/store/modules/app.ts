@@ -32,6 +32,7 @@ export interface IAppState {
     isProcessing: boolean;
   };
    account : {
+     isFetching:boolean;
     showingPage: string,
     signInSuccessAt: Date,
     isSignInSuccess: boolean,
@@ -63,6 +64,7 @@ class App extends VuexModule implements IAppState {
     isProcessing: false
   };
   public account = {
+    isFetching: false,
     showingPage: "account-search",
     signInSuccessAt: new Date(),
     isSignInSuccess: false,
@@ -135,6 +137,10 @@ class App extends VuexModule implements IAppState {
   // This means system is processing sign in operator
   public HANDLE_ACCOUNT_PROCESSING_SIGN_IN(status: boolean) {
     this.account.isProcessingSignIn = status;
+  }
+  @Mutation
+  public HANDLE_ACCOUNT_IS_FETCHING(status: boolean) {
+    this.account.isFetching = status;
   }
   @Mutation
   public HANDLE_ACCOUNT_SIGN_IN_SUCCESS(status: boolean) {
