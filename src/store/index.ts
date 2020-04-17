@@ -11,11 +11,11 @@ Vue.use(Vuex);
 
 export interface IRootState {
   app: IAppState;
-  card:IAccountState;
-  log:ILogState;
+  account: IAccountState;
+  log: ILogState;
   user: IUserState;
-  task:ITaskState;
-  worker:IWorkerState;
+  task: ITaskState;
+  worker: IWorkerState;
 }
 
 // Declare empty store first, dynamically register all modules later.

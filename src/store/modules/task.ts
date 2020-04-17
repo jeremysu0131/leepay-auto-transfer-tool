@@ -183,36 +183,6 @@ class Task extends VuexModule implements ITaskState {
   }
 
   @Action
-  public async GetSelectedTaskDetail(data: {
-    id: number;
-    withdraw: any;
-    amount: number;
-    merchantNameString: string;
-    requestTimeStr: any;
-  }) {
-    // const taskId = data.id;
-    // const withdrawId = withdraw.id;
-    // var result = await getTaskDetail(taskId, withdrawId);
-    // const data = result.data.value;
-    // var taskDetail = {
-    //   id: taskId,
-    //   merchantName: merchantNameString,
-    //   requestAmount: amount,
-    //   requestTime: requestTimeStr,
-    //   receiverName: data.cardName,
-    //   bank: {
-    //     chineseName: data.offeredBank.bankChName,
-    //     englishName: data.offeredBank.bankEnName,
-    //     branch: data.cardBranch,
-    //     province: data.cardProvince,
-    //     city: data.cardCity,
-    //     cardNumber: data.cardNum
-    //   }
-    // };
-    // commit("SET_SELECTED_DATA", taskDetail);
-  }
-
-  @Action
   async MarkTaskSuccess({
     task,
     transferFee,
@@ -331,6 +301,14 @@ class Task extends VuexModule implements ITaskState {
     this.SET_SELECTED_DETAIL(new TaskDetailModel());
     this.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
   }
+
+  @Action
+  async UnsetTask() {
+    this.SET_TASK_LIST([]);
+    this.SET_LAST_SELECTED_DATA(new TaskDetailModel());
+    this.SET_SELECTED_DETAIL(new TaskDetailModel());
+    this.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+  }
 }
 //   async SetTaskInfomationToTool() {
 //     const taskID = getters.task.dataForAPI.id;
@@ -411,12 +389,6 @@ class Task extends VuexModule implements ITaskState {
 //     });
 //   }
 //   // This for unset everything
-//   async UnsetTask({ commit }) {
-//     commit("SET_LAST_SELECTED_DATA", null);
-//     commit("SET_SELECTED_DATA", null);
-//     commit("SET_DATA_FOR_API", null);
-//     commit("SET_SELECTED_DATA_FOR_API", null);
-//   }
 // }
 
 export const TaskModule = getModule(Task);

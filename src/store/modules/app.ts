@@ -214,19 +214,8 @@ class App extends VuexModule implements IAppState {
     this.TOGGLE_DEVICE(device);
   }
   @Action
-  public async ResetSystem() {
-    try {
+  public async UnsetApp() {
       this.RESET_APP_STATE();
-
-      await Promise.all([
-        // this.UnsetCard"),
-        // this.UnsetLog"),
-        // this.UnsetTask"),
-        // this.UnsetWorker"),
-      ]);
-    } catch (error) {
-      // return this.SetConsole", { level: "error", message: error.toString() });
-    }
   }
 }
 
