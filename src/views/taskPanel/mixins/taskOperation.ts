@@ -13,12 +13,20 @@ export default class TaskOperationMixin extends Vue {
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
   public async startTask() {
-    try {
-      WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-      AppModule.HANDLE_TASK_PROCESSING(true);
-      await WorkerModule.RunAutoTransferFlows();
-    } catch (error) {
-      LogModule.SetConsole({ level: "error", message: "error" });
+    WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
+    AppModule.HANDLE_TASK_PROCESSING(true);
+    var isSuccess = await WorkerModule.RunAutoTransferFlows();
+    TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
+    if (isSuccess) {
+      // TODO Get transfer fee
+      // TaskModule.MarkTaskSuccess({
+      //   task: TaskModule.selectedForOperation,
+      //   transferFee: 0
+      // });
+      AppModule.HANDLE_TASK_PROCESSING(false);
+    } else {
+      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
+      AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
     }
   }
   // private async loginToBankWebsite() {
