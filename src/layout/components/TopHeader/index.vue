@@ -28,7 +28,11 @@
       >
         <span class="el-dropdown-link">
           Settings
-          <svg-icon icon-class="caret-down" />
+          <svg-icon
+            name="caret-down"
+            width="10"
+            height="10"
+          />
         </span>
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item disabled>
