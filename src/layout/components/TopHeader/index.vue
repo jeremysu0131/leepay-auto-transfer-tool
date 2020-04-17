@@ -4,7 +4,7 @@
       <span>Operator:</span>
       <span style="font-weight: bold">{{ name }}</span>
     </div>
-    <div class="top-header__auto-process">
+    <!-- <div class="top-header__auto-process">
       <el-checkbox
         v-model="isProxySet"
         :disabled="!isProxySetEnable"
@@ -12,7 +12,7 @@
       >
         Use Proxy
       </el-checkbox>
-    </div>
+    </div> -->
     <div class="top-header__auto-process">
       <el-checkbox
         v-model="isAutoProcess"
