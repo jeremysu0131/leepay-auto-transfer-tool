@@ -22,10 +22,10 @@
             </div>
             <!-- <div v-if="lastSelectedTask && lastSelectedTask.bank">
               {{ card.currentDetail.channelGroup || ' - ' }}
-            </div> -->
+            </div>-->
             <!-- <div v-if="lastSelectedTask">
               {{ lastSelectedTask.merchantName }}
-            </div> -->
+            </div>-->
             <div v-if="lastSelectedTask ">
               {{ lastSelectedTask.payeeAccount.holderName }}
             </div>
@@ -43,7 +43,7 @@
             </div>
             <!-- <div v-if="lastSelectedTask">
               {{ lastSelectedTask.toolStatus }}
-            </div> -->
+            </div>-->
           </div>
         </div>
       </div>
@@ -96,31 +96,6 @@
           </div>
         </div>
         <workflow />
-        <!-- <div class="workflow">
-          <table class="workflow-table">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Step name</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(flow,index) in worker.workflow"
-                :key="index"
-                :style="flowStyle(flow.status)"
-                @click="handleRowClick(flow)"
-              >
-                <td class="transfer__task-workflow-status">
-                  <svg-icon :icon-class="iconClass(flow.status)" />
-                </td>
-                <td class="transfer__task-workflow-name">
-                  {{ flow.name }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>-->
       </div>
       <div
         v-if="selectedTask&&selectedTask.id"
@@ -149,7 +124,7 @@
           </el-button>
           <el-button
             size="mini"
-            :disabled="isHandlingSuccess || isHandlingFail"
+            :disabled="true"
             :loading="isHandlingToConfirm"
             @click="markAsToConfirm(true, selectedTask)"
           >
@@ -157,6 +132,7 @@
           </el-button>
           <el-button
             size="mini"
+            :disabled="true"
             :loading="isHandlingReassign"
             @click="markAsReassign(true)"
           >
@@ -191,16 +167,14 @@ export default class extends Mixins(TaskOperationMixin) {
   private isHandlingToConfirm = false;
   private isHandlingReassign = false;
 
-  @Watch("worker.workflow")
-  onWorkflowChange() {
-    if (AppModule.showingTab === "tasks") {
-      var accountCode = this.account.current.code;
-      if (accountCode) WorkerModule.SET_TRANSFER_WORKFLOW(accountCode);
-    }
+  @Watch("currentAccount")
+  onCurrentAccountChange() {
+    var accountCode = this.currentAccount.code;
+    if (accountCode) WorkerModule.SET_TRANSFER_WORKFLOW(accountCode);
   }
 
-  get account() {
-    return AccountModule;
+  get currentAccount() {
+    return AccountModule.current;
   }
   get worker() {
     return WorkerModule;
