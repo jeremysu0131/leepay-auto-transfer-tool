@@ -138,8 +138,8 @@ export default class extends Vue {
     }
   }
   private async signOutSystem() {
-    await this.$store.dispatch("FedSignOut");
-    await this.$store.dispatch("SignOut");
+    await UserModule.LogOut();
+    this.$router.push({ path: "/login" });
   }
 }
 </script>
