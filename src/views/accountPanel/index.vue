@@ -13,7 +13,10 @@
       >
         Unselect
       </el-button>
-      <div class="info-header__group">
+      <div
+        v-show="showingPage==='account-search'"
+        class="info-header__group"
+      >
         <!-- <span>Account Group:</span> -->
         <!-- <span style="font-weight: bold">{{ account.current || ' - ' }}</span> -->
         <el-button
@@ -22,9 +25,7 @@
           :type="fetchButton.type"
           :loading="app.account.isFetching"
           @click="handleFetch"
-        >
-          Fetch
-        </el-button>
+        />
       </div>
     </div>
     <account-search v-show="showingPage==='account-search'" />

@@ -168,6 +168,7 @@ class App extends VuexModule implements IAppState {
       isProcessing: false
     };
     this.account = {
+      isFetching: false,
       showingPage: "account-search",
       signInSuccessAt: new Date(),
       isSignInSuccess: false,

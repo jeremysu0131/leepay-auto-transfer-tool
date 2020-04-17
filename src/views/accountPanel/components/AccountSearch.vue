@@ -34,6 +34,7 @@
     <div>
       <el-table
         ref="acctCodeTable"
+        v-loading="app.account.isFetching"
         size="mini"
         :data="accountList"
         style="width: 100%"
