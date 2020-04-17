@@ -14,6 +14,7 @@ export default class TaskOperationMixin extends Vue {
   }
   public async startTask() {
     try {
+      WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
       AppModule.HANDLE_TASK_PROCESSING(true);
       await WorkerModule.RunAutoTransferFlows();
     } catch (error) {
