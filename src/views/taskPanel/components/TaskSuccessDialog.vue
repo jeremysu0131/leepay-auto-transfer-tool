@@ -93,10 +93,10 @@ export default class extends Vue {
   private async setTaskAsSuccess() {
     try {
       this.isHandlingSuccess = true;
+      TaskModule.SET_BANK_CHARGE_FOR_OPERATION(this.form.transferFee);
 
       await TaskModule.MarkTaskSuccess({
         task: this.taskDetail,
-        transferFee: this.form.transferFee,
         note: this.form.note
       });
 

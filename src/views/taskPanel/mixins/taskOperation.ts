@@ -19,10 +19,9 @@ export default class TaskOperationMixin extends Vue {
     TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     if (isSuccess) {
       // TODO Get transfer fee
-      // TaskModule.MarkTaskSuccess({
-      //   task: TaskModule.selectedForOperation,
-      //   transferFee: 0
-      // });
+      TaskModule.MarkTaskSuccess({
+        task: TaskModule.selectedForOperation
+      });
       AppModule.HANDLE_TASK_PROCESSING(false);
     } else {
       TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);

@@ -7,5 +7,6 @@ import { BaseModel } from "./baseModel";
 export default class TaskDetailModel extends BaseModel<TaskDetailModel> {
   id = 0;
   amount = 0;
+  bankCharge = 0;
   payeeAccount = new PayeeAccountModel();
 }

@@ -47,6 +47,10 @@ class Task extends VuexModule implements ITaskState {
   public SET_SELECTED_FOR_OPERATION(taskDetail: TaskDetailModel) {
     this.selectedForOperation = taskDetail;
   }
+  @Mutation
+  public SET_BANK_CHARGE_FOR_OPERATION(bankCharge: number) {
+    this.selectedForOperation.bankCharge = bankCharge;
+  }
   // actions: {
   @Action
   public async GetAll() {
@@ -185,30 +189,23 @@ class Task extends VuexModule implements ITaskState {
   @Action
   async MarkTaskSuccess({
     task,
-    transferFee,
     note
   }: {
     task: TaskDetailModel;
-    transferFee: number;
-    note: string;
+    note?: string;
   }) {
     LogModule.SetLog({
       level: "debug",
-      message: `Mark task success parameters: charge: ${transferFee}`
+      message: `Mark task success parameters: charge: ${task.bankCharge}`
     });
     try {
       var remitterAccountId = AccountModule.current.id;
       switch (task.type) {
         case TaskTypeEnum.FUND_TRANSFER:
-          var { data } = await TaskApi.markFundTransferTaskSuccess(
-            task,
-            transferFee,
-            note
-          );
+          var { data } = await TaskApi.markFundTransferTaskSuccess(task, note);
           if (data.code === 1) {
             await TaskApi.updateInputFields(
               task,
-              transferFee,
               `Processed by ${UserModule.name}`
             );
           }
@@ -217,13 +214,11 @@ class Task extends VuexModule implements ITaskState {
           var response = await TaskApi.markPartialWithdrawTaskSuccess(
             task,
             remitterAccountId,
-            transferFee,
             note
           );
           if (response.data.code === 1) {
             await TaskApi.updateInputFields(
               task,
-              transferFee,
               `Processed by ${UserModule.name}`
             );
           }
@@ -260,7 +255,7 @@ class Task extends VuexModule implements ITaskState {
         case TaskTypeEnum.FUND_TRANSFER:
           var { data } = await TaskApi.markFundTransferTaskFail(task, reason);
           if (data.code === 1) {
-            await TaskApi.updateInputFields(task, 0, reason);
+            await TaskApi.updateInputFields(task, reason);
           }
           break;
         case TaskTypeEnum.PARTIAL_WITHDRAW:
@@ -271,7 +266,7 @@ class Task extends VuexModule implements ITaskState {
             reason
           );
           if (response.data.code === 1) {
-            await TaskApi.updateInputFields(task, 0, reason);
+            await TaskApi.updateInputFields(task, reason);
           }
           break;
 

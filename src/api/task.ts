@@ -69,14 +69,13 @@ export function unlockTask(taskId: number) {
 
 export function markFundTransferTaskSuccess(
   task: TaskDetailModel,
-  transferFee: number,
-  remark: string
+  remark?: string
 ) {
   return request({
     url: "/adminWF!updateTask.do",
     method: "POST",
     data: {
-      "task.field2": transferFee,
+      "task.field2": task.bankCharge,
       "task.id": task.id,
       "task.ref": task.ref,
       "task.state.state": "A",
@@ -109,7 +108,6 @@ export function markFundTransferTaskFail(
  */
 export function updateInputFields(
   task: TaskDetailModel,
-  transferFee: number,
   remark: string
 ) {
   return request({
@@ -119,7 +117,7 @@ export function updateInputFields(
       "task.id": task.id,
       // Processed By
       "task.field2": remark,
-      "task.field8": transferFee
+      "task.field8": task.bankCharge
     }
   });
 }
@@ -127,8 +125,7 @@ export function updateInputFields(
 export function markPartialWithdrawTaskSuccess(
   task: TaskDetailModel,
   remitterAccountId:number,
-  transferFee: number,
-  remark: string
+  remark?: string
 ) {
   return request({
     url: "/adminWF!updateTask.do",
@@ -137,8 +134,8 @@ export function markPartialWithdrawTaskSuccess(
       "task.field3": remitterAccountId,
       "task.field4": "N",
       "task.field7": task.amount,
-      "task.additionalInfo0": transferFee,
-      "task.field8": transferFee,
+      "task.additionalInfo0": task.bankCharge,
+      "task.field8": task.bankCharge,
       "task.id": task.id,
       "task.ref": task.ref,
       "task.state.state": "Y",
