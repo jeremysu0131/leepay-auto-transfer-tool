@@ -28,9 +28,8 @@ export interface IWorkerState {
 }
 
 @Module({ dynamic: true, store, name: "worker" })
-class WorkerModuleStatic extends VuexModule implements IWorkerState {
+class Worker extends VuexModule implements IWorkerState {
   public workflow = [] as any[];
-  public signInWorkflow = [] as any[];
   public worker = {} as BankWorker;
 
   @Mutation
@@ -47,7 +46,7 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
   }
   @Mutation
   SET_TRANSFER_WORKFLOW(accountCode: string) {
-    this.workflow = transferWorkflowEnum(accountCode);
+    this.workflow = JSON.parse(JSON.stringify(transferWorkflowEnum(accountCode)));
   }
   @Mutation
   UPDATE_FLOW_STATUS(data: { name: WorkflowEnum; status: WorkflowStatusEnum }) {
@@ -56,9 +55,9 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
         flow.status = data.status;
       }
     });
-    var workflow = this.workflow;
-    this.workflow = [];
-    this.workflow = workflow;
+    // var workflow = this.workflow;
+    // this.workflow = [];
+    // this.workflow = workflow;
   }
   // SET_WORKFLOW: (state, bankCode) => {
   //   state.workflow = workflowEnum(bankCode);
@@ -252,4 +251,4 @@ class WorkerModuleStatic extends VuexModule implements IWorkerState {
     }
   }
 }
-export const WorkerModule = getModule(WorkerModuleStatic);
+export const WorkerModule = getModule(Worker);
