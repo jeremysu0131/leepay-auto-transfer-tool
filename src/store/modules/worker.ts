@@ -19,7 +19,7 @@ import { TaskModule } from "./task";
 import { transponder } from "../../electron-communicator";
 import { ipcRenderer, screen } from "electron";
 import RemitterAccountModel from "@/models/remitterAccountModel";
-import WorkflowStatusEnum from "../../models/WorkflowStatusEnum";
+import WorkflowStatusEnum from "../../enums/WorkflowStatusEnum";
 import { AccountModule } from "./account";
 
 export interface IWorkerState {
