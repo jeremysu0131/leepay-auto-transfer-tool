@@ -6,7 +6,7 @@ import TaskStatusEnum from "@/enums/taskStatusEnum";
 export default class TaskModel {
   id = 0;
   amount = 0;
-  status: TaskStatusEnum = TaskStatusEnum.TO_PROCESS;
+  status: string = TaskStatusEnum.TO_PROCESS;
   assignee = "";
   assigneeId = 0;
   assignedAt = Date;
@@ -22,5 +22,5 @@ export default class TaskModel {
   createdBy = 0;
   updatedAt = Date;
   updatedBy = 0;
-  workflow: TaskTypeEnum = TaskTypeEnum.FUND_TRANSFER;
+  workflow: string = TaskTypeEnum.FUND_TRANSFER;
 }

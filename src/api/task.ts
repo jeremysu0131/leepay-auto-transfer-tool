@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import request from "@/utils/request";
+import requestRisk from "@/utils/requestRisk";
 import TaskDetailModel from "../models/taskDetailModel";
 
 export function getAll() {
@@ -11,6 +12,16 @@ export function getAll() {
       page: 1,
       start: 0,
       limit: 500
+    }
+  });
+}
+
+export function getStatus(id: number) {
+  return requestRisk({
+    url: `/task/${id}`,
+    method: "GET",
+    params: {
+      platformName: "skypay"
     }
   });
 }
@@ -106,10 +117,7 @@ export function markFundTransferTaskFail(
 /**
  * Don't know what to do
  */
-export function updateInputFields(
-  task: TaskDetailModel,
-  remark: string
-) {
+export function updateInputFields(task: TaskDetailModel, remark: string) {
   return request({
     url: "/adminWF!updateInputFields.do",
     method: "POST",
@@ -124,7 +132,7 @@ export function updateInputFields(
 
 export function markPartialWithdrawTaskSuccess(
   task: TaskDetailModel,
-  remitterAccountId:number,
+  remitterAccountId: number,
   remark?: string
 ) {
   return request({
@@ -147,7 +155,7 @@ export function markPartialWithdrawTaskSuccess(
 
 export function markPartialWithdrawTaskFail(
   task: TaskDetailModel,
-  remitterAccountId:number,
+  remitterAccountId: number,
   transferFee: number,
   remark: string
 ) {
