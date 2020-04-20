@@ -1,6 +1,4 @@
-import dayjs from "dayjs";
 import request from "@/utils/request";
-import requestRisk from "@/utils/requestRisk";
 import TaskDetailModel from "../models/taskDetailModel";
 
 export function getAll() {
@@ -12,27 +10,6 @@ export function getAll() {
       page: 1,
       start: 0,
       limit: 500
-    }
-  });
-}
-
-export function updateStatus(id: number, status: string, operator: string) {
-  return requestRisk({
-    url: `/task/${id}/status`,
-    method: "PATCH",
-    data: {
-      platform: "skypay",
-      status,
-      operator
-    }
-  });
-}
-export function getStatus(id: number) {
-  return requestRisk({
-    url: `/task/${id}`,
-    method: "GET",
-    params: {
-      platformName: "skypay"
     }
   });
 }
