@@ -2,11 +2,12 @@ import MerchantModel from "./merchantModel";
 import BankModel from "./bankModel";
 import TaskTypeEnum from "@/enums/taskTypeEnum";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
+import TaskCheckToolModel from "./taskCheckToolModel";
 
 export default class TaskModel {
   id = 0;
   amount = 0;
-  status: string = TaskStatusEnum.TO_PROCESS;
+  checkTool=new TaskCheckToolModel();
   assignee = "";
   assigneeId = 0;
   assignedAt = Date;

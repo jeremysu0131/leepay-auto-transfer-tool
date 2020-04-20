@@ -16,6 +16,7 @@ import TaskTypeEnum from "../../enums/taskTypeEnum";
 import { UserModule } from "./user";
 import TaskStatusEnum from "../../enums/taskStatusEnum";
 import { AccountModule } from "./account";
+import TaskCheckToolModel from "@/models/taskCheckToolModel";
 
 export interface ITaskState {
   list: TaskModel[];
@@ -71,6 +72,7 @@ class Task extends VuexModule implements ITaskState {
                 code: "",
                 chineseName: ""
               },
+              checkTool: new TaskCheckToolModel(),
               status: "",
               remitterAccountCode: task.field4,
               payeeAccountCode: "",
@@ -84,7 +86,7 @@ class Task extends VuexModule implements ITaskState {
               updatedAt: task.updatedAt,
               updatedBy: task.updatedBy,
               workflow: task.workflow
-            };
+            } as TaskModel;
           case "Fund Transfer":
             return {
               id: task.id,
@@ -97,6 +99,7 @@ class Task extends VuexModule implements ITaskState {
                 code: "",
                 chineseName: ""
               },
+              checkTool: new TaskCheckToolModel(),
               status: "",
               remitterAccountCode: task.field7,
               payeeAccountCode: task.toAcct,
@@ -110,7 +113,7 @@ class Task extends VuexModule implements ITaskState {
               updatedAt: task.updatedAt,
               updatedBy: task.updatedBy,
               workflow: task.workflow
-            };
+            } as TaskModel;
           case TaskTypeEnum.WITHDRAW_DISTRIBUTION:
             return new TaskModel();
           default:
@@ -122,32 +125,6 @@ class Task extends VuexModule implements ITaskState {
       throw new Error("Get all tasks fail");
     } finally {
       AppModule.HANDLE_TASK_FETCHING(false);
-    }
-  }
-  @Action
-  public async GetStatus(id: number) {
-    try {
-      var { data } = await TaskApi.getStatus(id);
-      return data.status;
-    } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
-      LogModule.SetConsole({
-        level: "warn",
-        message: "Not able to get task status"
-      });
-    }
-  }
-  @Action
-  public async updateStatus({ id, status }:{id: number, status: string}) {
-    try {
-      var { data } = await TaskApi.updateStatus(id, status, UserModule.name);
-      return data.status;
-    } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
-      LogModule.SetConsole({
-        level: "warn",
-        message: "Not able to get task status"
-      });
     }
   }
   @Action
