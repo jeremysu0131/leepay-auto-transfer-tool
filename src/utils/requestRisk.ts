@@ -1,7 +1,6 @@
 import axios from "axios";
-
 const service = axios.create({
-  baseURL: process.env.VUE_BANK_RISK_URL,
+  baseURL: process.env.VUE_APP_BANK_RISK_URL,
   timeout: 15000
 });
 
