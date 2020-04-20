@@ -1,6 +1,7 @@
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import TaskDetailModel from "@/models/taskDetailModel";
 import requestRisk from "@/utils/requestRisk";
+import TaskModel from "@/models/taskModel";
 
 class CreateTaskRiskModel {
   taskID: number = 0;
@@ -53,7 +54,7 @@ export const updateStatus = async(
   });
   return response.data.status === status;
 };
-export const get = async(task: TaskDetailModel) => {
+export const get = async(task: TaskModel) => {
   var response = await requestRisk({
     url: `/task/${task.id}`,
     method: "GET",

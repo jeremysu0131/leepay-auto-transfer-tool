@@ -7,6 +7,8 @@ import { AppModule } from "../../../store/modules/app";
 import TaskDetailModel from "@/models/taskDetailModel";
 import { WorkflowEnum } from "@/workers/utils/workflowHelper";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
+import * as TaskCheckHelper from "@/utils/taskCheckHelper";
+import { UserModule } from "@/store/modules/user";
 @Component
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
@@ -15,8 +17,9 @@ export default class TaskOperationMixin extends Vue {
       task => task.remitterAccountCode === AccountModule.current.code
     );
     tasks.forEach(async task => {
-      var status = await TaskModule.GetStatus(task.id);
-      task.status = status || TaskStatusEnum.TO_PROCESS;
+      var { data } = await TaskCheckHelper.get(task);
+      task.checkTool.id = data.id;
+      task.checkTool.status = data.status || TaskStatusEnum.TO_PROCESS;
     });
     TaskModule.SET_TASK_LIST(tasks);
 
@@ -61,10 +64,7 @@ export default class TaskOperationMixin extends Vue {
   public async startTask() {
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
     AppModule.HANDLE_TASK_PROCESSING(true);
-    TaskModule.updateStatus({
-      id: TaskModule.selectedDetail.id,
-      status: TaskStatusEnum.PROCESSING
-    });
+    TaskCheckHelper.updateStatus(TaskModule.selectedDetail.id, TaskStatusEnum.PROCESSING, UserModule.name);
 
     if (await this.runAutoTransferFlows()) {
       if (
