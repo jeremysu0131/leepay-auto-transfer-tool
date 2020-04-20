@@ -21,6 +21,7 @@ import { ipcRenderer, screen } from "electron";
 import RemitterAccountModel from "@/models/remitterAccountModel";
 import WorkflowStatusEnum from "../../enums/WorkflowStatusEnum";
 import { AccountModule } from "./account";
+import FlowResponseModel from "@/models/flowResponseModel";
 
 export interface IWorkerState {
   worker: BankWorker;
@@ -46,7 +47,9 @@ class Worker extends VuexModule implements IWorkerState {
   }
   @Mutation
   SET_TRANSFER_WORKFLOW(accountCode: string) {
-    this.workflow = JSON.parse(JSON.stringify(transferWorkflowEnum(accountCode)));
+    this.workflow = JSON.parse(
+      JSON.stringify(transferWorkflowEnum(accountCode))
+    );
   }
   @Mutation
   UPDATE_FLOW_STATUS(data: { name: WorkflowEnum; status: WorkflowStatusEnum }) {
@@ -131,11 +134,11 @@ class Worker extends VuexModule implements IWorkerState {
       await this.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
       await this.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
       await this.RunFlow({ name: WorkflowEnum.FILL_NOTE });
-      await this.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
-      return await this.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS });
+      return await this.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
+      // return await this.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS });
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
-      return false;
+      return { isFlowExecutedSuccess: false, message: error };
     }
   }
   @Action

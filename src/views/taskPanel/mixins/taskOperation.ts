@@ -5,6 +5,7 @@ import { LogModule } from "../../../store/modules/log";
 import { AccountModule } from "../../../store/modules/account";
 import { AppModule } from "../../../store/modules/app";
 import TaskDetailModel from "@/models/taskDetailModel";
+import { WorkflowEnum } from "@/workers/utils/workflowHelper";
 @Component
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
@@ -12,20 +13,53 @@ export default class TaskOperationMixin extends Vue {
     await TaskModule.GetAll();
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
+  private async runAutoLoginFlows() {
+    try {
+      await WorkerModule.RunFlow({
+        name: WorkflowEnum.SET_TASK,
+        args: TaskModule.selectedDetail
+      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
+      await WorkerModule.RunFlow({
+        name: WorkflowEnum.FILL_TRANSFER_INFORMATION
+      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_NOTE });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
+      return true;
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetConsole({
+        level: "error",
+        message:
+          'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
+      });
+      return false;
+    } finally {
+      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
+      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
+    }
+  }
+  public async handleTransferSuccess() {
+    await TaskModule.MarkTaskSuccess({
+      task: TaskModule.selectedForOperation
+    });
+    AppModule.HANDLE_TASK_PROCESSING(false);
+  }
+  public async handleTransferFail() {
+    TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
+    AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
+  }
   public async startTask() {
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
     AppModule.HANDLE_TASK_PROCESSING(true);
-    var isSuccess = await WorkerModule.RunAutoTransferFlows();
-    TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
-    if (isSuccess) {
-      // TODO Get transfer fee
-      TaskModule.MarkTaskSuccess({
-        task: TaskModule.selectedForOperation
-      });
-      AppModule.HANDLE_TASK_PROCESSING(false);
-    } else {
-      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
-      AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
+
+    if (await this.runAutoLoginFlows()) {
+      if (
+        (await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS }))
+          .isFlowExecutedSuccess
+      ) {
+        this.handleTransferSuccess();
+      } else this.handleTransferFail();
     }
   }
   // private async loginToBankWebsite() {

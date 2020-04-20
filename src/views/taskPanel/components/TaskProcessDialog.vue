@@ -44,6 +44,13 @@ export default class extends Mixins(TaskOperationMixin) {
   get app() {
     return this.$store.state.app;
   }
+  @Watch("app.task.isShowCheckProcessDialog")
+  onProcessDialogChange() {
+    var audio = new Audio(require("@/assets/sounds/alarm.mp3"));
+    if (this.app.task.isShowCheckProcessDialog) {
+      audio.play();
+    }
+  }
   private async handleTaskSuccess() {
     this.$store.commit("HANDLE_MARK_AS_SUCCESS_DIALOG", true);
     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
