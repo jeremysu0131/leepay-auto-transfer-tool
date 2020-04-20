@@ -62,7 +62,7 @@ export const get = async(task: TaskModel) => {
       platformName: "skypay"
     }
   });
-  return response.data;
+  return response.data || null;
 };
 export const checkIfExecuted = async(toolID: number) => {
   var response = await requestRisk({

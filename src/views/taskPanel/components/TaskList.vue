@@ -39,7 +39,7 @@
         sortable
       />
       <el-table-column
-        prop="status"
+        prop="checkTool.status"
         label="Status"
         align="center"
         width="120"

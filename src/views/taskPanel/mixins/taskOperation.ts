@@ -17,9 +17,11 @@ export default class TaskOperationMixin extends Vue {
       task => task.remitterAccountCode === AccountModule.current.code
     );
     tasks.forEach(async task => {
-      var { data } = await TaskCheckHelper.get(task);
-      task.checkTool.id = data.id;
-      task.checkTool.status = data.status || TaskStatusEnum.TO_PROCESS;
+      var data = await TaskCheckHelper.get(task);
+      if (data) {
+        task.checkTool.id = data.id;
+        task.checkTool.status = data.status;
+      }
     });
     TaskModule.SET_TASK_LIST(tasks);
 
@@ -64,7 +66,11 @@ export default class TaskOperationMixin extends Vue {
   public async startTask() {
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
     AppModule.HANDLE_TASK_PROCESSING(true);
-    TaskCheckHelper.updateStatus(TaskModule.selectedDetail.id, TaskStatusEnum.PROCESSING, UserModule.name);
+    TaskCheckHelper.updateStatus(
+      TaskModule.selectedDetail.id,
+      TaskStatusEnum.PROCESSING,
+      UserModule.name
+    );
 
     if (await this.runAutoTransferFlows()) {
       if (
