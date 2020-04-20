@@ -1,0 +1,72 @@
+import TaskStatusEnum from "@/enums/taskStatusEnum";
+import TaskDetailModel from "@/models/taskDetailModel";
+import requestRisk from "@/utils/requestRisk";
+
+class CreateTaskRiskModel {
+  taskID: number = 0;
+  platform: string = "";
+  merchant: string = "";
+  cardCode: string = "";
+  payee: string = "";
+  payeeBank: string = "";
+  payeeAccount: string = "";
+  amount: number = 0;
+  operator: string = "";
+  status: string = "";
+  remark: string = "";
+}
+
+export const create = async(task: TaskDetailModel, operator: string) => {
+  var data = new CreateTaskRiskModel();
+  data.taskID = task.id;
+  data.platform = "skypay";
+  data.merchant = "";
+  data.payeeAccount = task.payeeAccount.cardNumber;
+  data.payeeBank = task.payeeAccount.bank.chineseName || "";
+  data.amount = task.amount;
+  data.operator = operator;
+  data.status = TaskStatusEnum.PROCESSING;
+  var response = await requestRisk({
+    url: "/task",
+    method: "POST",
+    data: {
+      platform: "skypay",
+      status: TaskStatusEnum.PROCESSING,
+      operator
+    }
+  });
+  return response.status === 201;
+};
+export const updateStatus = async(
+  taskId: number,
+  status: TaskStatusEnum,
+  operator: string
+) => {
+  var response = await requestRisk({
+    url: `/task/${taskId}/status`,
+    method: "PATCH",
+    data: {
+      platform: "skypay",
+      status,
+      operator
+    }
+  });
+  return response.data.status === status;
+};
+export const get = async(task: TaskDetailModel) => {
+  var response = await requestRisk({
+    url: `/task/${task.id}`,
+    method: "GET",
+    params: {
+      platformName: "skypay"
+    }
+  });
+  return response.data;
+};
+export const checkIfExecuted = async(toolID: number) => {
+  var response = await requestRisk({
+    url: `/task/${toolID}/executed`,
+    method: "GET"
+  });
+  return response.data;
+};
