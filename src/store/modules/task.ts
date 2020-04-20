@@ -71,6 +71,7 @@ class Task extends VuexModule implements ITaskState {
                 code: "",
                 chineseName: ""
               },
+              status: TaskStatusEnum.TO_PROCESS,
               remitterAccountCode: task.field4,
               payeeAccountCode: "",
               pendingTime: task.pendingTime,
@@ -96,6 +97,7 @@ class Task extends VuexModule implements ITaskState {
                 code: "",
                 chineseName: ""
               },
+              status: TaskStatusEnum.TO_PROCESS,
               remitterAccountCode: task.field7,
               payeeAccountCode: task.toAcct,
               pendingTime: task.pendingTime,

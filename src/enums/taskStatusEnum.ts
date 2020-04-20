@@ -1,6 +1,8 @@
 enum TaskStatusEnum {
   SUCCESS = "Success",
-  FAIL = "Fail"
+  FAIL = "Fail",
+  TO_CONFIRM="To Confirm",
+  TO_PROCESS="To Process"
 }
 
 export default TaskStatusEnum;

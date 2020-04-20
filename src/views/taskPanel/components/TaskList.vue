@@ -39,6 +39,12 @@
         sortable
       />
       <el-table-column
+        prop="status"
+        label="Status"
+        align="center"
+        width="120"
+      />
+      <el-table-column
         prop="workflow"
         label="Workflow"
         align="center"
@@ -111,7 +117,7 @@
                 @click="markAsSuccess(scope.row)"
               >
                 Success
-              </el-button>
+              </el-button> -->
             </div>
             <div>
               <el-popover
@@ -190,7 +196,7 @@
                 >
                   More
                 </el-button>
-              </el-popover>-->
+              </el-popover>
             </div>
           </div>
         </template>
