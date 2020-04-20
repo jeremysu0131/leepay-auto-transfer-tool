@@ -217,6 +217,8 @@ import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
 import TaskModel from "../../../models/taskModel";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
+import TaskOperateEnum from "../../../enums/taskOperateEnum";
+import { MessageBoxData } from "element-ui/types/message-box";
 
 @Component({
   name: "TaskList",
@@ -290,7 +292,7 @@ export default class extends Mixins(TaskOperationMixin) {
     }
   }
   private confirmExecution(
-    taskID: number,
+    toolId: number,
     executedTasks: Array<{
       id: number;
       taskID: number;
@@ -299,7 +301,7 @@ export default class extends Mixins(TaskOperationMixin) {
       createAt: Date;
       note: string;
     }>
-  ) {
+  ): Promise<boolean> {
     var message = "Previous executed record:" + "<br>";
     executedTasks.forEach((executedTask, index) => {
       message +=
@@ -321,9 +323,13 @@ export default class extends Mixins(TaskOperationMixin) {
         dangerouslyUseHTMLString: true
       }
     )
-      .then(async result => {
-        console.log(result);
-        // await this.recordExecutingTask(taskID, "leepay", value, this.name);
+      .then(async({ value }) => {
+        await TaskCheckHelper.createExecuteRecord(
+          toolId,
+          TaskOperateEnum.EXECUTE,
+          UserModule.name,
+          value
+        );
         return true;
       })
       .catch(() => {

@@ -78,3 +78,14 @@ export const checkIfExecuted = async(toolID: number) => {
     note: string;
   }>;
 };
+export const createExecuteRecord = async(toolID:number, operateType:string, operator:string, note:string) => {
+  return requestRisk({
+    url: `/task/${toolID}/detail`,
+    method: "POST",
+    data: {
+      operateType,
+      operator,
+      note
+    }
+  });
+};
