@@ -25,7 +25,7 @@
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { WorkerModule } from "../../store/modules/worker";
-import WorkflowStatusEnum from "@/models/WorkflowStatusEnum";
+import WorkflowStatusEnum from "../../enums/WorkflowStatusEnum";
 import { AppModule } from "../../store/modules/app";
 import { LogModule } from "../../store/modules/log";
 
