@@ -6,6 +6,7 @@ import { AccountModule } from "../../../store/modules/account";
 import { AppModule } from "../../../store/modules/app";
 import TaskDetailModel from "@/models/taskDetailModel";
 import { WorkflowEnum } from "@/workers/utils/workflowHelper";
+import TaskStatusEnum from "@/enums/taskStatusEnum";
 @Component
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
@@ -21,7 +22,7 @@ export default class TaskOperationMixin extends Vue {
 
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
-  private async runAutoLoginFlows() {
+  private async runAutoTransferFlows() {
     try {
       await WorkerModule.RunFlow({
         name: WorkflowEnum.SET_TASK,
@@ -60,8 +61,12 @@ export default class TaskOperationMixin extends Vue {
   public async startTask() {
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
     AppModule.HANDLE_TASK_PROCESSING(true);
+    TaskModule.updateStatus({
+      id: TaskModule.selectedDetail.id,
+      status: TaskStatusEnum.PROCESSING
+    });
 
-    if (await this.runAutoLoginFlows()) {
+    if (await this.runAutoTransferFlows()) {
       if (
         (await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS }))
           .isFlowExecutedSuccess

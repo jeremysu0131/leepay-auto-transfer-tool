@@ -138,6 +138,19 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
+  public async updateStatus({ id, status }:{id: number, status: string}) {
+    try {
+      var { data } = await TaskApi.updateStatus(id, status, UserModule.name);
+      return data.status;
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetConsole({
+        level: "warn",
+        message: "Not able to get task status"
+      });
+    }
+  }
+  @Action
   public async GetDetail(
     task: TaskModel,
     accountId: number

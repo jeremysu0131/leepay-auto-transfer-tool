@@ -16,6 +16,17 @@ export function getAll() {
   });
 }
 
+export function updateStatus(id: number, status: string, operator: string) {
+  return requestRisk({
+    url: `/task/${id}/status`,
+    method: "PATCH",
+    data: {
+      platform: "skypay",
+      status,
+      operator
+    }
+  });
+}
 export function getStatus(id: number) {
   return requestRisk({
     url: `/task/${id}`,
