@@ -117,7 +117,7 @@
                 @click="markAsSuccess(scope.row)"
               >
                 Success
-              </el-button> -->
+              </el-button>-->
             </div>
             <div>
               <el-popover
@@ -216,6 +216,7 @@ import { AppModule } from "@/store/modules/app";
 import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
 import TaskModel from "../../../models/taskModel";
+import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 
 @Component({
   name: "TaskList",
@@ -282,15 +283,63 @@ export default class extends Mixins(TaskOperationMixin) {
     }
     return true;
   }
+  private async checkIfTaskExecuted(task: TaskModel) {
+    var result = await TaskCheckHelper.checkIfExecuted(task.checkTool.id);
+    if (result.length > 0) {
+      this.confirmExecution(task.checkTool.id, result);
+    }
+  }
+  private confirmExecution(
+    taskID: number,
+    executedTasks: Array<{
+      id: number;
+      taskID: number;
+      operateType: string;
+      operator: string;
+      createAt: Date;
+      note: string;
+    }>
+  ) {
+    var message = "Previous executed record:" + "<br>";
+    executedTasks.forEach((executedTask, index) => {
+      message +=
+        `${index + 1}.` +
+        `At <span style="font-weight:bold">${dayjs(
+          executedTask.createAt
+        ).format("HH:mm:ss")}</span>` +
+        `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
+        "<br>";
+    });
+    return MessageBox.prompt(
+      message +
+        '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
+      "",
+      {
+        inputPattern: /\S+/,
+        inputErrorMessage: "The reason can't be empty",
+        type: "warning",
+        dangerouslyUseHTMLString: true
+      }
+    )
+      .then(async result => {
+        console.log(result);
+        // await this.recordExecutingTask(taskID, "leepay", value, this.name);
+        return true;
+      })
+      .catch(() => {
+        return false;
+      });
+  }
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
-      if (await this.lockTask(task)) {
-        var taskDetail = await this.getTaskDetail(task);
-        TaskModule.SET_SELECTED_DETAIL(taskDetail);
-        TaskModule.GetAll();
-        await this.startTask();
-      }
+      await this.checkIfTaskExecuted(task);
+      // if (await this.lockTask(task)) {
+      //   var taskDetail = await this.getTaskDetail(task);
+      //   TaskModule.SET_SELECTED_DETAIL(taskDetail);
+      //   TaskModule.GetAll();
+      //   await this.startTask();
+      // }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     }

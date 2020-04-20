@@ -69,5 +69,12 @@ export const checkIfExecuted = async(toolID: number) => {
     url: `/task/${toolID}/executed`,
     method: "GET"
   });
-  return response.data;
+  return response.data as Array<{
+    id: number;
+    taskID: number;
+    operateType: string;
+    operator: string;
+    createAt: Date;
+    note: string;
+  }>;
 };
