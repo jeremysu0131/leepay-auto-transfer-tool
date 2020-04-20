@@ -284,6 +284,7 @@ export default class extends Mixins(TaskOperationMixin) {
       if (await this.lockTask(task)) {
         var taskDetail = await this.getTaskDetail(task);
         TaskModule.SET_SELECTED_DETAIL(taskDetail);
+        TaskModule.GetAll();
         await this.startTask();
       }
     } catch (error) {
