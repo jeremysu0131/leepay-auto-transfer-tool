@@ -219,6 +219,7 @@ import TaskModel from "../../../models/taskModel";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import TaskOperateEnum from "../../../enums/taskOperateEnum";
 import { MessageBoxData } from "element-ui/types/message-box";
+import TaskDetailModel from "../../../models/taskDetailModel";
 
 @Component({
   name: "TaskList",
@@ -285,7 +286,10 @@ export default class extends Mixins(TaskOperationMixin) {
     }
     return true;
   }
-  private async handleIfTaskCanExecute(task: TaskModel) {
+  private async handleIfTaskCanExecute(
+    task: TaskModel,
+    taskDetail: TaskDetailModel
+  ) {
     var result = await TaskCheckHelper.checkIfExecuted(task.checkTool.id);
     if (result.length > 0) {
       var isConfirmToExecute = await this.confirmExecution(
@@ -294,7 +298,7 @@ export default class extends Mixins(TaskOperationMixin) {
       );
       return isConfirmToExecute;
     }
-    return true;
+    return TaskCheckHelper.create(taskDetail, UserModule.name);
   }
   private confirmExecution(
     toolId: number,
@@ -344,9 +348,9 @@ export default class extends Mixins(TaskOperationMixin) {
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
-      if (await this.handleIfTaskCanExecute(task)) {
-        if (await this.lockTask(task)) {
-          var taskDetail = await this.getTaskDetail(task);
+      if (await this.lockTask(task)) {
+        var taskDetail = await this.getTaskDetail(task);
+        if (await this.handleIfTaskCanExecute(task, taskDetail)) {
           TaskModule.SET_SELECTED_DETAIL(taskDetail);
           TaskModule.GetAll();
           await this.startTask();
