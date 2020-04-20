@@ -117,11 +117,24 @@ class Task extends VuexModule implements ITaskState {
             throw new Error("No such task type");
         }
       });
-      this.SET_TASK_LIST(tasks);
+      return tasks;
     } catch (error) {
       throw new Error("Get all tasks fail");
     } finally {
       AppModule.HANDLE_TASK_FETCHING(false);
+    }
+  }
+  @Action
+  public async GetStatus(id: number) {
+    try {
+      var { data } = await TaskApi.getStatus(id);
+      return data.status;
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetConsole({
+        level: "warn",
+        message: "Not able to get task status"
+      });
     }
   }
   @Action

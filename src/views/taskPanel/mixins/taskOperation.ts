@@ -10,7 +10,15 @@ import { WorkflowEnum } from "@/workers/utils/workflowHelper";
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
     // let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
-    await TaskModule.GetAll();
+    var tasks = await TaskModule.GetAll();
+    tasks
+      .filter(task => task.remitterAccountCode === AccountModule.current.code)
+      .forEach(async task => {
+        var status = await TaskModule.GetStatus(task.id);
+        task.status = status;
+      });
+    TaskModule.SET_TASK_LIST(tasks);
+
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
   private async runAutoLoginFlows() {
