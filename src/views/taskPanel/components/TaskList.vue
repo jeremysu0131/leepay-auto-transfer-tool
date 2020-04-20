@@ -285,11 +285,16 @@ export default class extends Mixins(TaskOperationMixin) {
     }
     return true;
   }
-  private async checkIfTaskExecuted(task: TaskModel) {
+  private async handleIfTaskCanExecute(task: TaskModel) {
     var result = await TaskCheckHelper.checkIfExecuted(task.checkTool.id);
     if (result.length > 0) {
-      this.confirmExecution(task.checkTool.id, result);
+      var isConfirmToExecute = await this.confirmExecution(
+        task.checkTool.id,
+        result
+      );
+      return isConfirmToExecute;
     }
+    return true;
   }
   private confirmExecution(
     toolId: number,
@@ -339,13 +344,14 @@ export default class extends Mixins(TaskOperationMixin) {
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
-      await this.checkIfTaskExecuted(task);
-      // if (await this.lockTask(task)) {
-      //   var taskDetail = await this.getTaskDetail(task);
-      //   TaskModule.SET_SELECTED_DETAIL(taskDetail);
-      //   TaskModule.GetAll();
-      //   await this.startTask();
-      // }
+      if (await this.handleIfTaskCanExecute(task)) {
+        if (await this.lockTask(task)) {
+          var taskDetail = await this.getTaskDetail(task);
+          TaskModule.SET_SELECTED_DETAIL(taskDetail);
+          TaskModule.GetAll();
+          await this.startTask();
+        }
+      }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     }
