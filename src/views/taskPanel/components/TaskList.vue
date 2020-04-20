@@ -243,9 +243,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return TaskModule;
   }
   get taskList() {
-    return TaskModule.list.filter(
-      task => task.remitterAccountCode === AccountModule.current.code
-    );
+    return TaskModule.list;
   }
   get name() {
     return UserModule.name;

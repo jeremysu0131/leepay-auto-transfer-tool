@@ -11,13 +11,13 @@ import TaskStatusEnum from "@/enums/taskStatusEnum";
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
     // let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
-    var tasks = await TaskModule.GetAll();
-    tasks
-      .filter(task => task.remitterAccountCode === AccountModule.current.code)
-      .forEach(async task => {
-        var status = await TaskModule.GetStatus(task.id);
-        task.status = status;
-      });
+    var tasks = (await TaskModule.GetAll()).filter(
+      task => task.remitterAccountCode === AccountModule.current.code
+    );
+    tasks.forEach(async task => {
+      var status = await TaskModule.GetStatus(task.id);
+      task.status = status || TaskStatusEnum.TO_PROCESS;
+    });
     TaskModule.SET_TASK_LIST(tasks);
 
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
