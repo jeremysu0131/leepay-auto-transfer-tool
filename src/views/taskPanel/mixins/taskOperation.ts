@@ -14,17 +14,7 @@ import TaskModel from "@/models/taskModel";
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
     // let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
-    var tasks = (await TaskModule.GetAll()).filter(
-      task => task.remitterAccountCode === AccountModule.current.code
-    );
-    tasks.forEach(async task => {
-      var data = await TaskCheckHelper.get(task);
-      if (data) {
-        task.checkTool.id = data.id;
-        task.checkTool.status = data.status;
-      }
-    });
-    TaskModule.SET_TASK_LIST(tasks);
+    await TaskModule.GetAll();
 
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }

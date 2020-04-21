@@ -18,6 +18,7 @@ import TaskStatusEnum from "../../enums/taskStatusEnum";
 import { AccountModule } from "./account";
 import TaskCheckToolModel from "@/models/taskCheckToolModel";
 import LastSelectedTaskDetailModel from "@/models/lastSelectedTaskDetailModel";
+import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 
 export interface ITaskState {
   list: TaskModel[];
@@ -54,7 +55,7 @@ class Task extends VuexModule implements ITaskState {
     this.selectedForOperation.bankCharge = bankCharge;
   }
   @Action
-  public async GetAll(): Promise<TaskModel[]> {
+  public async GetAll() {
     AppModule.HANDLE_TASK_FETCHING(true);
     try {
       var { data } = await TaskApi.getAll();
@@ -71,8 +72,18 @@ class Task extends VuexModule implements ITaskState {
             default:
               throw new Error("No such task type");
           }
-        });
-      return tasks;
+        })
+        .filter(
+          task => task.remitterAccountCode === AccountModule.current.code
+        );
+      tasks.forEach(async task => {
+        var data = await TaskCheckHelper.get(task);
+        if (data) {
+          task.checkTool.id = data.id;
+          task.checkTool.status = data.status;
+        }
+      });
+      TaskModule.SET_TASK_LIST(tasks);
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       return [];
@@ -247,7 +258,7 @@ class Task extends VuexModule implements ITaskState {
   @Action
   async UnsetTask() {
     this.SET_TASK_LIST([]);
-    this.SET_LAST_SELECTED_DATA(new TaskDetailModel());
+    this.SET_LAST_SELECTED_DATA(new LastSelectedTaskDetailModel());
     this.SET_SELECTED_DETAIL(new TaskDetailModel());
     this.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
   }
