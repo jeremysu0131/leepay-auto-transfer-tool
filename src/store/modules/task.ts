@@ -82,7 +82,7 @@ class Task extends VuexModule implements ITaskState {
   @Action
   public async GetDetail(
     task: TaskModel,
-    accountId: number
+    accountId: number // selected account id
   ): Promise<TaskDetailModel> {
     try {
       var data;
@@ -91,7 +91,6 @@ class Task extends VuexModule implements ITaskState {
           data = (
             await TaskApi.getFundTransferDetail({
               taskId: task.id,
-              bankId: accountId,
               ref: task.ref
             })
           ).data.data;

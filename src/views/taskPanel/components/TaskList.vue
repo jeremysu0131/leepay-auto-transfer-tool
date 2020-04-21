@@ -298,7 +298,8 @@ export default class extends Mixins(TaskOperationMixin) {
       );
       return isConfirmToExecute;
     }
-    return TaskCheckHelper.create(taskDetail, UserModule.name);
+    // FIXME
+    //  TaskCheckHelper.createExecuteRecord();
   }
   private confirmExecution(
     toolId: number,
@@ -361,8 +362,7 @@ export default class extends Mixins(TaskOperationMixin) {
     }
   }
   private async getTaskDetail(task: TaskModel) {
-    var accountId = await AccountModule.GetId(task.remitterAccountCode);
-    var taskDetail = await TaskModule.GetDetail(task, accountId);
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     // taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
     return taskDetail;
   }
