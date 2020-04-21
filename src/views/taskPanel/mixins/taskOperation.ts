@@ -112,9 +112,14 @@ export default class TaskOperationMixin extends Vue {
         TaskStatusEnum.TO_CONFIRM,
         UserModule.name
       );
+      TaskModule.MoveCurrentTaskToLast({
+        ...taskDetail,
+        status: TaskStatusEnum.TO_CONFIRM
+      });
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     } finally {
+      await TaskModule.GetAll();
       TaskModule.GetAll();
       AppModule.HANDLE_TASK_HANDLING(true);
     }

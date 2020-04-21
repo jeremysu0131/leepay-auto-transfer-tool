@@ -124,9 +124,8 @@
           </el-button>
           <el-button
             size="mini"
-            :disabled="true"
             :loading="isHandlingToConfirm"
-            @click="markAsToConfirm(true, selectedTaskDetail)"
+            @click="markAsToConfirm(selectedTaskDetail)"
           >
             To Confirm
           </el-button>
