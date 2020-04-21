@@ -240,6 +240,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private isFetchBoBalanceFail = false;
   private isWarnedBankTokenExpire = false;
   private confirmExecuteMessage = "";
+  private taskExecutedResult = [] as any[];
 
   get app() {
     return AppModule;
@@ -304,17 +305,10 @@ export default class extends Mixins(TaskOperationMixin) {
       return false;
     }
 
-    var result = await TaskCheckHelper.getExecutedResult(task.checkTool.id);
-    return result.length > 0;
-    // if (result.length > 0) {
-    //   var isConfirmToExecute = await this.confirmExecution(
-    //     task.checkTool.id,
-    //     result
-    //   );
-    //   return isConfirmToExecute;
-    // }
-    // FIXME
-    //  TaskCheckHelper.createExecuteRecord();
+    this.taskExecutedResult = await TaskCheckHelper.getExecutedResult(
+      task.checkTool.id
+    );
+    return this.taskExecutedResult.length > 0;
   }
   private confirmBeforeExecute(
     toolId: number,
@@ -365,10 +359,12 @@ export default class extends Mixins(TaskOperationMixin) {
         var taskDetail = await this.getTaskDetail(task);
 
         if (await this.checkIfTaskExecuted(task, taskDetail)) {
-          var result = await TaskCheckHelper.getExecutedResult(
-            task.checkTool.id
-          );
-          if (await this.confirmBeforeExecute(task.checkTool.id, result)) {
+          if (
+            await this.confirmBeforeExecute(
+              task.checkTool.id,
+              this.taskExecutedResult
+            )
+          ) {
             TaskCheckHelper.createExecuteRecord(
               task.checkTool.id,
               TaskOperateEnum.EXECUTE,
