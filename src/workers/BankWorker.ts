@@ -44,8 +44,8 @@ export default class BankWorker {
     await setProxy(this.instance.getRemitterAccount().proxy);
     await setProxyWhiteList(
       process.env.NODE_ENV === "production"
-        ? "www.tcgpayment.com"
-        : "localhost;192.168.0.27;10.8.95.22;"
+        ? "www.tcgpayment.com;risk.payment.com;"
+        : "localhost;192.168.0.27;10.8.95.22;risk.payment.com;"
     );
 
     return { isFlowExecutedSuccess: true };

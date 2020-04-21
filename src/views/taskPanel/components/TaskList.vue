@@ -189,7 +189,7 @@
                         class="el-row--popover__el-button--icon"
                       />Re-assign
                     </el-button>
-                  </el-col> -->
+                  </el-col>-->
                 </el-row>
                 <el-button
                   slot="reference"
@@ -272,18 +272,18 @@ export default class extends Mixins(TaskOperationMixin) {
   private async markTaskAsSuccess(task: TaskModel) {
     await this.lockTask(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-     this.markAsSuccess(taskDetail);
+    this.markAsSuccess(taskDetail);
   }
   private async markTaskAsFail(task: TaskModel) {
     await this.lockTask(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-     this.markAsFail(taskDetail);
+    this.markAsFail(taskDetail);
   }
 
   private async markTaskAsToConfirm(task: TaskModel) {
     await this.lockTask(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-     this.markAsToConfirm(taskDetail);
+    this.markAsToConfirm(taskDetail);
   }
 
   private selectedRowClass({ row, rowIndex }: any) {
@@ -409,14 +409,16 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   public async startTask(taskDetail: TaskDetailModel) {
     this.beforeExecuteTask(taskDetail);
-
-    if (await this.runAutoTransferFlows()) {
-      if (
-        (await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS }))
-          .isFlowExecutedSuccess
-      ) {
+    try {
+      if (await this.runAutoTransferFlows()) {
+        await WorkerModule.RunFlow({
+          name: WorkflowEnum.CHECK_IF_SUCCESS
+        });
         this.handleTransferSuccess();
-      } else this.handleTransferFail();
+      }
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      this.handleTransferFail();
     }
   }
   private beforeExecuteTask(taskDetail: TaskDetailModel) {
@@ -465,8 +467,8 @@ export default class extends Mixins(TaskOperationMixin) {
     if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) return true;
     return false;
   }
-  private isProcessButtonShow(row:TaskModel) {
-return row.checkTool.status !== "to-confirm";
+  private isProcessButtonShow(row: TaskModel) {
+    return row.checkTool.status !== "to-confirm";
   }
   private isProcessButtonDisabled(row: TaskModel) {
     // FIXME
@@ -477,7 +479,7 @@ return row.checkTool.status !== "to-confirm";
     if (row.checkTool.status !== TaskStatusEnum.TO_CONFIRM) return true;
     return false;
   }
-  private isSuccessButtonVisible(row:TaskModel) {
+  private isSuccessButtonVisible(row: TaskModel) {
     if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) {
       return false;
     }
@@ -489,7 +491,7 @@ return row.checkTool.status !== "to-confirm";
     }
     return true;
   }
-  private isToConfirmButtonVisible(row:TaskModel) {
+  private isToConfirmButtonVisible(row: TaskModel) {
     if (row.checkTool.status === TaskStatusEnum.PROCESSING) {
       return true;
     }
