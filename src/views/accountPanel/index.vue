@@ -4,15 +4,15 @@
       <div class="info-header__current-account">
         <span>Current Account:</span>
         <span style="font-weight: bold">{{ account.current.code|| ' - ' }}</span>
+        <el-button
+          v-if="account.current.code && showingPage !== 'unselect-card'"
+          class="info-header__unselect-button"
+          size="mini"
+          @click="handleUnselectCurrentCard"
+        >
+          Unselect
+        </el-button>
       </div>
-      <el-button
-        v-if="account.current.code && showingPage !== 'unselect-card'"
-        class="info-header__unselect-button"
-        size="mini"
-        @click="handleUnselectCurrentCard"
-      >
-        Unselect
-      </el-button>
       <div
         v-show="showingPage==='account-search'"
         class="info-header__group"
