@@ -6,7 +6,7 @@ import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
 var worker: BankWorker;
 var remitterAccount = {
   balance: 0,
-  code: "5.CCB.327-1",
+  code: "5.CCB.327",
   loginName: "judjencjd",
   loginPassword: "zz800525",
   usbPassword: "zz800525",
@@ -30,17 +30,17 @@ describe("CCBWorker", () => {
     // await worker.closeSelenium();
   });
 
-  // it("login:setAccount", async () => {
-  //   const bank = { chineseName: "中国邮政储蓄银行" } as BankModel;
-  //   const payAccount = {
-  //     holderName: "康贻龙",
-  //     cardNumber: "6217993000391513895",
-  //     bank
-  //   } as PayeeAccountModel;
-  //   worker.setTask({ id: new Date().getTime(), amount: 0.1, payeeAccount: payAccount } as TaskDetailModel);
-  //   const result = await worker.inputSignInInformation();
-  //   expect(result.isFlowExecutedSuccess).toEqual(true);
-  // });
+  it("login:setAccount", async () => {
+    const bank = { chineseName: "中国邮政储蓄银行" } as BankModel;
+    const payAccount = {
+      holderName: "康贻龙",
+      cardNumber: "6217993000391513895",
+      bank
+    } as PayeeAccountModel;
+    worker.setTask({ id: new Date().getTime(), amount: 0.1, payeeAccount: payAccount } as TaskDetailModel);
+    const result = await worker.inputSignInInformation();
+    expect(result.isFlowExecutedSuccess).toEqual(true);
+  });
 
   it("login:submit", async () => {
     await worker.submitToSignIn();
@@ -48,28 +48,28 @@ describe("CCBWorker", () => {
     expect(success.isFlowExecutedSuccess).toEqual(true);
   });
 
-  // it("get Balance", async () => {
-  //   const result = await worker.getBalance();
-  //   expect(result.balance).toBeGreaterThan(0);
-  // });
+  it("get Balance", async () => {
+    const result = await worker.getBalance();
+    expect(result.balance).toBeGreaterThan(0);
+  });
 
-  // it("transfer:go transfer page", async () => {
-  //   const result = await worker.goTransferPage();
-  //   expect(result.isFlowExecutedSuccess).toEqual(true);
-  // });
+  it("transfer:go transfer page", async () => {
+    const result = await worker.goTransferPage();
+    expect(result.isFlowExecutedSuccess).toEqual(true);
+  });
 
-  // it("transfer:fill transfer form", async () => {
-  //   const result = await worker.fillTransferFrom();
-  //   expect(result.isFlowExecutedSuccess).toEqual(true);
-  // });
+  it("transfer:fill transfer form", async () => {
+    const result = await worker.fillTransferFrom();
+    expect(result.isFlowExecutedSuccess).toEqual(true);
+  });
 
-  // it("transfer:confirm transfer form", async () => {
-  //   const result = await worker.confirmTransaction();
-  //   expect(result.isFlowExecutedSuccess).toEqual(true);
-  // });
+  it("transfer:confirm transfer form", async () => {
+    const result = await worker.confirmTransaction();
+    expect(result.isFlowExecutedSuccess).toEqual(true);
+  });
 
-  // it("transfer:check transaction result", async () => {
-  //   const result = await worker.checkIfTransactionSuccess();
-  //   expect(result.isFlowExecutedSuccess).toEqual(true);
-  // });
+  it("transfer:check transaction result", async () => {
+    const result = await worker.checkIfTransactionSuccess();
+    expect(result.isFlowExecutedSuccess).toEqual(true);
+  });
 });

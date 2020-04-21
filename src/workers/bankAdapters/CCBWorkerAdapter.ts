@@ -1,7 +1,7 @@
 import dayjs, { Dayjs } from "dayjs";
 import * as fs from "fs";
 import { isElementExist, executeJavaScript, sendKeysV2, waitAndSwitchToTargetFrame, waitPageLoad, waitPageLoadCondition, waitUtilGetText } from "../utils/seleniumHelper";
-import { By, until, WebDriver, WebElement, error } from "selenium-webdriver";
+import { By, until, WebDriver, WebElement, error, Locator } from "selenium-webdriver";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import RemitterAccountModel from "../models/remitterAccountModel";
 import TaskDetailModel from "../models/taskDetailModel";
@@ -12,7 +12,6 @@ import Logger from "../utils/logger";
 import * as UsbTrigger from "../utils/usbTrigger";
 import * as BankActivexTool from "../utils/bankActivexTool";
 import * as WindowFocusTool from "../utils/windowFocusTool";
-import { alertIsPresent } from "selenium-webdriver/lib/until";
 
 export class CCBWorkerAdapter implements IWorkerAdapter {
   private driver: WebDriver;
@@ -193,14 +192,11 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   async checkIfLoginSuccess(globalState: {
     isManualLogin: boolean;
   }): Promise<boolean> {
-    try {
-      await waitPageLoad(this.driver);
-    } catch (error) {
-      this.handleVerifyPageError(error);
-    }
+    this.logInfo("check login status");
+    await this.waitPageLoading();
     // 看看是不是有裝置驗證選擇畫面，如果有則點選U頓
     if (await this.isInVerifyPage()) {
-      await this.selectTypeU();
+      await this.selectTypeU(By.id("btnNext"));
       if (!await this.inputUSBPassword()) {
         throw new Error("input usb password fail");
       }
@@ -211,26 +207,34 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     if (globalState.isManualLogin) {
       wait = 30;
     }
+    const container = await this.driver.wait(
+      until.elementLocated(By.id("idxmaincontainer")),
+      wait
+    );
+    return !!container;
+  }
 
-    this.logInfo("check login status");
-    let recheckTimes = 3;
-    while (recheckTimes > 0) {
+  async waitPageLoading(waitIntervel: number = 1000): Promise<void> {
+    let waitCount = 20;
+    while (waitCount > 0) {
       try {
-        const container = await this.driver.wait(
-          until.elementLocated(By.id("idxmaincontainer")),
-          wait
-        );
-        return !!container;
-      } catch (checkStatusError) {
-        this.handleVerifyPageError(checkStatusError);
-        recheckTimes--;
+        await this.driver.sleep(waitIntervel);
+        await waitPageLoad(this.driver);
+        this.logDebug("page load success");
+        return;
+      } catch (e) {
+        if (e instanceof (error.JavascriptError)) {
+          waitCount--;
+          continue;
+        }
+        console.log(e);
+        throw e;
       }
     }
-    return false;
+    throw new Error("wait for page load fail...");
   }
 
   async isInVerifyPage(): Promise<boolean> {
-    await this.driver.sleep(1 * 1000);
     this.logDebug("try to check now!");
     let retry = 3;
     while (retry > 0) {
@@ -251,7 +255,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
         this.handleVerifyPageError(e);
         retry--;
         if (retry <= 0) {
-          this.logDebug("check is in verfiy page has erro - " + e);
+          this.logDebug("check is in verfiy page has error - " + e);
           throw e;
         }
       }
@@ -478,7 +482,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     this.logDebug("skip fill note");
   }
 
-  async selectTypeU() {
+  async selectTypeU(nextButton: Locator) {
     try {
       const button = await this.driver.wait(
         until.elementLocated(By.id("SafeTypeU")),
@@ -488,7 +492,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       this.logDebug("type u clicked");
 
       await this.driver.sleep(1 * 1000);
-      await this.driver.wait(until.elementLocated(By.id("btnNext")), 10 * 1000).click();
+      await this.driver.wait(until.elementLocated(nextButton), 10 * 1000).click();
       this.logDebug("next button clicked");
     } catch (e) {
       this.handleVerifyPageError(e);
@@ -550,14 +554,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       transactionFrameCon
     );
 
-    // 使用U盾傳帳 click #SafeTypeU;
-    await this.selectTypeU();
 
-    const button = await this.driver.wait(
-      until.elementLocated(By.id("SafeTypeU")),
-      this.wattingTime
-    );
-    await button.click();
 
     this.logInfo("add remark use task id");
     // 將task id 加入附言
@@ -596,19 +593,9 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       this.wattingTime
     );
 
-    let confirmButton;
-    for (const e of buttons) {
-      const value = await e.getAttribute("value");
-      if (!value) continue;
-      if (value === "确 认") {
-        confirmButton = e;
-        this.logInfo("found confirm button");
-        break;
-      }
-    }
-    if (!confirmButton) throw new Error("not found confirm button");
-    this.logInfo("confirm button click");
-    await confirmButton.click();
+    // 使用U盾傳帳 click #SafeTypeU;
+    await this.selectTypeU(By.css("input.btn[type=submit]"));
+
     await waitPageLoad(this.driver);
 
     return true;
@@ -617,45 +604,35 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
    *  等待 Loading 並輸入密碼
    * */
   async sendPasswordToPerformTransaction(): Promise<void> {
-    await KeySender.sendText(this.remitterAccount.usbPassword);
-    await KeySender.sendKey(KeySender.KeyEnum.RETURN);
-    this.logInfo("Send USB password success");
   }
 
   /**
    * 輸入玩U頓密碼後要觸發機械手臂 (測試中暫不執行)
    */
   async sendUsbPasswordToPerformTransaction(): Promise<void> {
-    // var retryTimes = 20;
-    // while (retryTimes >= 0) {
-    //   try {
-    //     if (retryTimes === 0) {
-    //       throw new Error("USB didn't press, please restart the task");
-    //     }
-    //     this.sleep(3);
-    //     this.sendUSBKey();
-    //     this.sleep(3);
-    //     const waitingCon = until.elementLocated(By.id("trnTips"));
-    //     await waitPageLoadCondition(this.driver, waitingCon);
-    //     var message = await this.driver.wait(waitingCon, 10 * 1000);
-    //     if (message) {
-    //       this.logInfo("USB pressed");
-    //       break;
-    //     }
-    //   } catch (error) {
-    //     if (error.name === "UnexpectedAlertOpenError") {
-    //       this.logWarn(`Waiting for usb press, remaining times: ${retryTimes}`);
-    //       continue;
-    //     } else if (error.name === "TimeoutError") {
-    //       this.logWarn("Can't get the element 'trnTips'");
-    //       break;
-    //     } else throw error;
-    //   } finally {
-    //     retryTimes--;
-    //   }
-    // }
-    // TODO 等待跳轉 用工具取代計時
-    await this.sleep(60);
+    if (!await this.inputUSBPassword()) {
+      throw new Error("input usb password fail");
+    }
+    this.logInfo("Send USB password success");
+    // click u key
+    let retry = 10;
+    while (retry > 0) {
+      try {
+        UsbTrigger.run(this.remitterAccount.code);
+        let stage = await BankActivexTool.execute(this.bankCode, "GET_CURRENT_STAGE", "");
+        this.logDebug("current stage - " + stage);
+        if (stage !== 2) {
+          break;
+        }
+      } catch (err) {
+        this.logDebug("click usb error - " + err);
+        throw new Error("click usb error - " + err);
+      }
+      this.driver.sleep(1 * 1000);
+      retry--;
+    }
+    this.logInfo("usb clicked!");
+
     // 結果頁面 截圖
     const base64Png = await this.driver.takeScreenshot();
     if (!base64Png) {
