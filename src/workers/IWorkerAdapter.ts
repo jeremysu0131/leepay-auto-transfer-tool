@@ -90,7 +90,7 @@ export interface IWorkerAdapter {
   /**
    * 檢查填寫附言 (非必要)
    */
-  checkIfNoteFilled(): Promise<void>;
+  checkIfNoteFilled(): Promise<boolean>;
 
   /**
    * Check if bank received data correctly before confirm transaction

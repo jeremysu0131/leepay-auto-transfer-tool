@@ -4,7 +4,7 @@
       <span>Operator:</span>
       <span style="font-weight: bold">{{ name }}</span>
     </div>
-    <div class="top-header__auto-process">
+    <!-- <div class="top-header__auto-process">
       <el-checkbox
         v-model="isProxySet"
         :disabled="!isProxySetEnable"
@@ -12,7 +12,7 @@
       >
         Use Proxy
       </el-checkbox>
-    </div>
+    </div> -->
     <div class="top-header__auto-process">
       <el-checkbox
         v-model="isAutoProcess"
@@ -28,7 +28,11 @@
       >
         <span class="el-dropdown-link">
           Settings
-          <svg-icon icon-class="caret-down" />
+          <svg-icon
+            name="caret-down"
+            width="10"
+            height="10"
+          />
         </span>
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item disabled>
@@ -134,8 +138,8 @@ export default class extends Vue {
     }
   }
   private async signOutSystem() {
-    await this.$store.dispatch("FedSignOut");
-    await this.$store.dispatch("SignOut");
+    await UserModule.LogOut();
+    this.$router.push({ path: "/login" });
   }
 }
 </script>

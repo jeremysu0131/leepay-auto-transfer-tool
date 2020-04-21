@@ -10,7 +10,7 @@
     >
       <div class="title-container">
         <h3 class="title">
-          Login Form
+          Bank Transfer Tool (Skypay)
         </h3>
       </div>
 
@@ -59,12 +59,12 @@
         Sign in
       </el-button>
 
-      <div style="position:relative">
+      <!-- <div style="position:relative">
         <div class="tips">
           <span>username: admin</span>
           <span>password: any</span>
         </div>
-      </div>
+      </div> -->
     </el-form>
   </div>
 </template>

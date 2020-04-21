@@ -4,18 +4,28 @@
       <div class="info-header__current-account">
         <span>Current Account:</span>
         <span style="font-weight: bold">{{ account.current.code|| ' - ' }}</span>
+        <el-button
+          v-if="account.current.code && showingPage !== 'unselect-card'"
+          class="info-header__unselect-button"
+          size="mini"
+          @click="handleUnselectCurrentCard"
+        >
+          Unselect
+        </el-button>
       </div>
-      <el-button
-        v-if="account.current.code && showingPage !== 'unselect-card'"
-        class="info-header__unselect-button"
-        size="mini"
-        @click="handleUnselectCurrentCard"
+      <div
+        v-show="showingPage==='account-search'"
+        class="info-header__group"
       >
-        Unselect
-      </el-button>
-      <div class="info-header__group">
         <!-- <span>Account Group:</span> -->
         <!-- <span style="font-weight: bold">{{ account.current || ' - ' }}</span> -->
+        <el-button
+          size="mini"
+          :icon="fetchButton.icon"
+          :type="fetchButton.type"
+          :loading="app.account.isFetching"
+          @click="handleFetch"
+        />
       </div>
     </div>
     <account-search v-show="showingPage==='account-search'" />
@@ -31,9 +41,9 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import {
   AccountSearch,
   SelectSignInType,
-  SignInToBank
+  SignInToBank,
   // ChangeCard,
-  , UnselectCard
+  UnselectCard
 } from "./components";
 import { AppModule } from "../../store/modules/app";
 import { AccountModule } from "../../store/modules/account";
@@ -49,11 +59,29 @@ import { AccountModule } from "../../store/modules/account";
   }
 })
 export default class extends Vue {
+  private fetchButton = {
+    icon: "el-icon-refresh",
+    type: "default"
+  };
+
   get showingPage() {
     return AppModule.account.showingPage;
   }
+  get app() {
+    return AppModule;
+  }
   get account() {
     return AccountModule;
+  }
+
+  private async handleFetch() {
+    try {
+      AppModule.HANDLE_ACCOUNT_IS_FETCHING(true);
+      var accounts = await AccountModule.GetAvailableAccount();
+      AccountModule.SET_LIST(accounts);
+    } finally {
+      AppModule.HANDLE_ACCOUNT_IS_FETCHING(false);
+    }
   }
 
   private handleSelect() {
@@ -73,6 +101,7 @@ export default class extends Vue {
 .info-header {
   font-size: $fontBase;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   padding: 0px 16px;
   background-color: #f2f2f2;

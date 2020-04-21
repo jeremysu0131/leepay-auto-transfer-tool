@@ -39,6 +39,12 @@
         sortable
       />
       <el-table-column
+        prop="checkTool.status"
+        label="Status"
+        align="center"
+        width="120"
+      />
+      <el-table-column
         prop="workflow"
         label="Workflow"
         align="center"
@@ -93,22 +99,23 @@
           <div style="display: flex; justify-content: space-around">
             <div>
               <el-button
+                v-if="isProcessButtonShow(scope.row)"
                 class="task-operator__button"
                 style="width:80px"
                 size="mini"
                 :disabled="isProcessButtonDisabled(scope.row)"
                 @click="handleRowSelect(scope.row)"
               >
-                {{ scope.row.toolStatus === "processing" ? "Reprocess" : "Process" }}
+                {{ scope.row.checkTool.status === "processing" ? "Reprocess" : "Process" }}
               </el-button>
-              <!-- <el-button
-                v-if="scope.row.toolStatus === 'to-confirm'"
+              <el-button
+                v-if="!isProcessButtonShow(scope.row)"
                 class="task-operator__button"
                 style="width:80px"
                 size="mini"
                 type="success"
                 :disabled="isSuccessButtonDisabled(scope.row)"
-                @click="markAsSuccess(scope.row)"
+                @click="markTaskAsSuccess(scope.row)"
               >
                 Success
               </el-button>
@@ -128,10 +135,11 @@
                   >
                     <el-button
                       class="el-row--popover__el-button"
-                      @click="markAsSuccess(scope.row)"
+                      type="success"
+                      @click="markTaskAsSuccess(scope.row)"
                     >
                       <svg-icon
-                        icon-class="check"
+                        name="check"
                         class="el-row--popover__el-button--icon"
                       />Success
                     </el-button>
@@ -143,10 +151,11 @@
                   >
                     <el-button
                       class="el-row--popover__el-button"
-                      @click="markAsFail(false, scope.row)"
+                      type="danger"
+                      @click="markTaskAsFail(scope.row)"
                     >
                       <svg-icon
-                        icon-class="error"
+                        name="error"
                         class="el-row--popover__el-button--icon"
                       />Fail
                     </el-button>
@@ -158,15 +167,15 @@
                   >
                     <el-button
                       class="el-row--popover__el-button"
-                      @click="markAsToConfirm(false, scope.row)"
+                      @click="markTaskAsToConfirm(scope.row)"
                     >
                       <svg-icon
-                        icon-class="check-circle"
+                        name="check-circle"
                         class="el-row--popover__el-button--icon"
                       />To Confirm
                     </el-button>
                   </el-col>
-                  <el-col
+                  <!-- <el-col
                     v-if="isReassignButtonVisible(scope.row)"
                     :span="24"
                     class="el-row--popover__el-col"
@@ -176,11 +185,11 @@
                       @click="markAsReassign(false, scope.row)"
                     >
                       <svg-icon
-                        icon-class="unlock"
+                        name="unlock"
                         class="el-row--popover__el-button--icon"
                       />Re-assign
                     </el-button>
-                  </el-col>
+                  </el-col> -->
                 </el-row>
                 <el-button
                   slot="reference"
@@ -190,7 +199,7 @@
                 >
                   More
                 </el-button>
-              </el-popover>-->
+              </el-popover>
             </div>
           </div>
         </template>
@@ -210,6 +219,13 @@ import { AppModule } from "@/store/modules/app";
 import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
 import TaskModel from "../../../models/taskModel";
+import * as TaskCheckHelper from "@/utils/taskCheckHelper";
+import TaskOperateEnum from "../../../enums/taskOperateEnum";
+import { MessageBoxData } from "element-ui/types/message-box";
+import TaskDetailModel from "../../../models/taskDetailModel";
+import { WorkerModule } from "@/store/modules/worker";
+import TaskStatusEnum from "@/enums/taskStatusEnum";
+import { WorkflowEnum } from "@/workers/utils/workflowHelper";
 
 @Component({
   name: "TaskList",
@@ -226,6 +242,8 @@ export default class extends Mixins(TaskOperationMixin) {
   private taskDialogVisible = false;
   private isFetchBoBalanceFail = false;
   private isWarnedBankTokenExpire = false;
+  private confirmExecuteMessage = "";
+  private taskExecutedResult = [] as any[];
 
   get app() {
     return AppModule;
@@ -237,9 +255,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return TaskModule;
   }
   get taskList() {
-    return TaskModule.list.filter(
-      task => task.remitterAccountCode === AccountModule.current.code
-    );
+    return TaskModule.list;
   }
   get name() {
     return UserModule.name;
@@ -253,6 +269,23 @@ export default class extends Mixins(TaskOperationMixin) {
     return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 100;
     // return window.innerHeight - 300;
   }
+  private async markTaskAsSuccess(task: TaskModel) {
+    await this.lockTask(task);
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+     this.markAsSuccess(taskDetail);
+  }
+  private async markTaskAsFail(task: TaskModel) {
+    await this.lockTask(task);
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+     this.markAsFail(taskDetail);
+  }
+
+  private async markTaskAsToConfirm(task: TaskModel) {
+    await this.lockTask(task);
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+     this.markAsToConfirm(taskDetail);
+  }
+
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {
       if (this.selectedTask.id === row.id) {
@@ -278,60 +311,195 @@ export default class extends Mixins(TaskOperationMixin) {
     }
     return true;
   }
+  private async checkIfTaskExecuted(
+    task: TaskModel,
+    taskDetail: TaskDetailModel
+  ) {
+    // check tool id was 0 means not execute
+    if (task.checkTool.id === 0) {
+      await TaskCheckHelper.create(
+        taskDetail,
+        AccountModule.current.code,
+        UserModule.name
+      );
+      return false;
+    }
+
+    this.taskExecutedResult = await TaskCheckHelper.getExecutedResult(
+      task.checkTool.id
+    );
+    return this.taskExecutedResult.length > 0;
+  }
+  private confirmBeforeExecute(
+    toolId: number,
+    executedTasks: Array<{
+      id: number;
+      taskID: number;
+      operateType: string;
+      operator: string;
+      createAt: Date;
+      note: string;
+    }>
+  ): Promise<boolean> {
+    var message = "Previous executed record:" + "<br>";
+    executedTasks.forEach((executedTask, index) => {
+      message +=
+        `${index + 1}.` +
+        `At <span style="font-weight:bold">${dayjs(
+          executedTask.createAt
+        ).format("HH:mm:ss")}</span>` +
+        `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
+        "<br>";
+    });
+    return MessageBox.prompt(
+      message +
+        '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
+      "",
+      {
+        inputPattern: /\S+/,
+        inputErrorMessage: "The reason can't be empty",
+        type: "warning",
+        dangerouslyUseHTMLString: true
+      }
+    )
+      .then(async({ value }) => {
+        this.confirmExecuteMessage = value;
+        return true;
+      })
+      .catch(() => {
+        return false;
+      });
+  }
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
+
+      // Check if task can be claim
       if (await this.lockTask(task)) {
         var taskDetail = await this.getTaskDetail(task);
-        TaskModule.SET_SELECTED_DETAIL(taskDetail);
-        await this.startTask();
+
+        if (await this.checkIfTaskExecuted(task, taskDetail)) {
+          if (
+            await this.confirmBeforeExecute(
+              task.checkTool.id,
+              this.taskExecutedResult
+            )
+          ) {
+            TaskCheckHelper.createExecuteRecord(
+              task.checkTool.id,
+              TaskOperateEnum.EXECUTE,
+              UserModule.name,
+              this.confirmExecuteMessage
+            );
+            await this.startTask(taskDetail);
+          }
+        } else {
+          TaskCheckHelper.createExecuteRecord(
+            task.checkTool.id,
+            TaskOperateEnum.EXECUTE,
+            UserModule.name,
+            "First time run, create by system."
+          );
+          await this.startTask(taskDetail);
+        }
       }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     }
   }
+  public async startTask(taskDetail: TaskDetailModel) {
+    this.beforeExecuteTask(taskDetail);
+
+    if (await this.runAutoTransferFlows()) {
+      if (
+        (await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS }))
+          .isFlowExecutedSuccess
+      ) {
+        this.handleTransferSuccess();
+      } else this.handleTransferFail();
+    }
+  }
+  private beforeExecuteTask(taskDetail: TaskDetailModel) {
+    TaskModule.SET_SELECTED_DETAIL(taskDetail);
+    TaskModule.GetAll();
+    WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
+    AppModule.HANDLE_TASK_PROCESSING(true);
+    TaskCheckHelper.updateStatus(
+      TaskModule.selectedDetail.id,
+      TaskStatusEnum.PROCESSING,
+      UserModule.name
+    );
+  }
+  private async runAutoTransferFlows() {
+    try {
+      await WorkerModule.RunFlow({
+        name: WorkflowEnum.SET_TASK,
+        args: TaskModule.selectedDetail
+      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
+      await WorkerModule.RunFlow({
+        name: WorkflowEnum.FILL_TRANSFER_INFORMATION
+      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_NOTE });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
+      return true;
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetConsole({
+        level: "error",
+        message:
+          'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
+      });
+      return false;
+    } finally {
+      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
+      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
+    }
+  }
   private async getTaskDetail(task: TaskModel) {
-    var accountId = await AccountModule.GetId(task.remitterAccountCode);
-    var taskDetail = await TaskModule.GetDetail(task, accountId);
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     // taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
     return taskDetail;
   }
-  private isMoreButtonDisabled(row: any) {
-    if (row.status !== "I") return true;
+  private isMoreButtonDisabled(row: TaskModel) {
+    if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) return true;
     return false;
   }
-  private isProcessButtonDisabled(row: any) {
-    // if (row.status !== "I" || row.toolStatus === "to-confirm") return true;
+  private isProcessButtonShow(row:TaskModel) {
+return row.checkTool.status !== "to-confirm";
+  }
+  private isProcessButtonDisabled(row: TaskModel) {
+    // FIXME
     // else if (this.app.task.isProcessing) return true;
     return false;
   }
-  private isSuccessButtonDisabled(row: any) {
-    if (row.status !== "I") return true;
+  private isSuccessButtonDisabled(row: TaskModel) {
+    if (row.checkTool.status !== TaskStatusEnum.TO_CONFIRM) return true;
     return false;
   }
-  private isSuccessButtonVisible(row: any) {
-    if (row.toolStatus === "to-process") {
+  private isSuccessButtonVisible(row:TaskModel) {
+    if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) {
       return false;
     }
     return true;
   }
-  private isFailButtonVisible(row: any) {
-    if (row.toolStatus === "to-process") {
+  private isFailButtonVisible(row: TaskModel) {
+    if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) {
       return false;
     }
     return true;
   }
-  private isToConfirmButtonVisible(row: any) {
-    if (row.toolStatus === "processing") {
+  private isToConfirmButtonVisible(row:TaskModel) {
+    if (row.checkTool.status === TaskStatusEnum.PROCESSING) {
       return true;
     }
     return false;
   }
-  private isReassignButtonVisible(row: any) {
-    if (row.status !== "I") {
-      return false;
-    }
-    return true;
-  }
+  // private isReassignButtonVisible(row:TaskModel) {
+  //   if (row.checkTool.status !== "I") {
+  //     return false;
+  //   }
+  //   return true;
+  // }
 }
 </script>

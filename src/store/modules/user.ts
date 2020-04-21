@@ -9,6 +9,11 @@ import { login, logout, getUserInfo } from "@/api/users";
 import { getToken, setToken, removeToken } from "@/utils/cookies";
 import { IUserData } from "@/api/types";
 import store from "@/store";
+import { AccountModule } from "./account";
+import { TaskModule } from "./task";
+import { WorkerModule } from "./worker";
+import { LogModule } from "./log";
+import { AppModule } from "./app";
 
 export interface IUserState {
   token: string;
@@ -117,6 +122,12 @@ class User extends VuexModule implements IUserState {
     removeToken();
     this.SET_TOKEN("");
     this.SET_ROLES([]);
+
+    AppModule.UnsetApp();
+    AccountModule.UnsetAccount();
+    TaskModule.UnsetTask();
+    WorkerModule.UNSET_WORKFLOW();
+    LogModule.UnsetLog();
   }
 }
 

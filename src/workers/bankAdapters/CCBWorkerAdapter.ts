@@ -424,8 +424,9 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     // not necessary
     this.logInfo("skip fill note");
   }
-  async checkIfNoteFilled(): Promise<void> {
+  async checkIfNoteFilled(): Promise<boolean> {
     this.logInfo("skip fill note");
+    return true;
   }
   async checkBankReceivedTransferInformation(): Promise<boolean> {
     this.logInfo("start check transaction info and setting remark");

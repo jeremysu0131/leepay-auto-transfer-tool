@@ -1,10 +1,13 @@
 import MerchantModel from "./merchantModel";
 import BankModel from "./bankModel";
 import TaskTypeEnum from "@/enums/taskTypeEnum";
+import TaskStatusEnum from "@/enums/taskStatusEnum";
+import TaskCheckToolModel from "./taskCheckToolModel";
 
 export default class TaskModel {
   id = 0;
   amount = 0;
+  checkTool=new TaskCheckToolModel();
   assignee = "";
   assigneeId = 0;
   assignedAt = Date;
@@ -20,5 +23,5 @@ export default class TaskModel {
   createdBy = 0;
   updatedAt = Date;
   updatedBy = 0;
-  workflow:TaskTypeEnum = TaskTypeEnum.FUND_TRANSFER;
+  workflow: string = TaskTypeEnum.FUND_TRANSFER;
 }

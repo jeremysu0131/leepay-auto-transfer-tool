@@ -14,6 +14,7 @@ var remitterAccount = {
 var task:TaskDetailModel = {
   amount: 1,
   id: 0,
+  bankCharge: 0,
   payeeAccount: {
     bank: { },
     cardNumber: "1234567890",

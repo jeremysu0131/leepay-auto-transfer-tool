@@ -60,6 +60,8 @@ import { Component, Vue, Watch, Prop } from "vue-property-decorator";
 import { TaskModule } from "../../../store/modules/task";
 import TaskDetailModel from "@/models/taskDetailModel";
 import { AppModule } from "../../../store/modules/app";
+import TaskStatusEnum from "@/enums/taskStatusEnum";
+import LastSelectedTaskDetailModel from "../../../models/lastSelectedTaskDetailModel";
 
 @Component({
   name: "TaskSuccessDialog"
@@ -93,12 +95,17 @@ export default class extends Vue {
   private async setTaskAsSuccess() {
     try {
       this.isHandlingSuccess = true;
+      TaskModule.SET_BANK_CHARGE_FOR_OPERATION(this.form.transferFee);
 
       await TaskModule.MarkTaskSuccess({
         task: this.taskDetail,
-        transferFee: this.form.transferFee,
         note: this.form.note
       });
+      TaskModule.MoveCurrentTaskToLast({
+        ...this.taskDetail,
+        status: TaskStatusEnum.SUCCESS
+      });
+      await TaskModule.GetAll();
 
       this.$message.success("Task has been mark as success");
       this.closeDialog();

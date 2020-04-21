@@ -1,12 +1,14 @@
 const path = require("path");
-const name = "Vue Typescript Admin";
+const { version } = require("./package.json");
+const name = `Bank Auto Transfer (Version ${version})`;
 
 module.exports = {
-  publicPath: process.env.NODE_ENV === "production" ? "/vue-typescript-admin-template/" : "/", // TODO: Remember to change this to fit your need
+  // TODO: Remember to change this to fit your need
+  publicPath:
+    process.env.NODE_ENV === "production"
+      ? "/vue-typescript-admin-template/"
+      : "/",
   lintOnSave: process.env.NODE_ENV === "development",
-  pwa: {
-    name: name
-  },
   pluginOptions: {
     // exposeEnv: ["PATH"],
     "style-resources-loader": {

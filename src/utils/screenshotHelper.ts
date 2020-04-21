@@ -45,7 +45,6 @@ const capture = (filename: string) => {
  * @param {string} folderPath
  * @param {number} day
  */
-// TODO: Test it
 const clearOldScreenshots = (folderPath: any, day = 7) => {
   const result: never[] = [];
   const diffTime = day * 24 * 60 * 60 * 1000;

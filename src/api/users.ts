@@ -16,6 +16,6 @@ export const login = (data: any) =>
 
 export const logout = () =>
   request({
-    url: "/users/logout",
+    url: "/aLogin!logout.do",
     method: "post"
   });

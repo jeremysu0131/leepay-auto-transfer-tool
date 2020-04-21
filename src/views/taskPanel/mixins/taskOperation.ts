@@ -5,20 +5,28 @@ import { LogModule } from "../../../store/modules/log";
 import { AccountModule } from "../../../store/modules/account";
 import { AppModule } from "../../../store/modules/app";
 import TaskDetailModel from "@/models/taskDetailModel";
+import { WorkflowEnum } from "@/workers/utils/workflowHelper";
+import TaskStatusEnum from "@/enums/taskStatusEnum";
+import * as TaskCheckHelper from "@/utils/taskCheckHelper";
+import { UserModule } from "@/store/modules/user";
+import TaskModel from "@/models/taskModel";
 @Component
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
     // let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
     await TaskModule.GetAll();
+
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
-  public async startTask() {
-    try {
-      AppModule.HANDLE_TASK_PROCESSING(true);
-      await WorkerModule.RunAutoTransferFlows();
-    } catch (error) {
-      LogModule.SetConsole({ level: "error", message: "error" });
-    }
+  public async handleTransferSuccess() {
+    await TaskModule.MarkTaskSuccess({
+      task: TaskModule.selectedForOperation
+    });
+    AppModule.HANDLE_TASK_PROCESSING(false);
+  }
+  public async handleTransferFail() {
+    TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
+    AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
   }
   // private async loginToBankWebsite() {
   //   try {
@@ -67,14 +75,14 @@ export default class TaskOperationMixin extends Vue {
     //   });
     // }
   }
-  public async markAsSuccess(task: TaskDetailModel) {
+  public markAsSuccess(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_HANDLING(true);
-    TaskModule.SET_SELECTED_FOR_OPERATION(task);
+    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
-  public async markAsFail(task: TaskDetailModel) {
+  public markAsFail(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_HANDLING(true);
-    TaskModule.SET_SELECTED_FOR_OPERATION(task);
+    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
   public confirmMarkAsFail(isHandleCurrentTask: any) {
@@ -95,14 +103,26 @@ export default class TaskOperationMixin extends Vue {
     //     return false;
     //   });
   }
-  public async markAsToConfirm(isHandleCurrentTask: any, task: any) {
-    // this.isHandlingToConfirm = true;
-    // this.$store.commit("HANDLE_TASK_HANDLING", true);
-    // try {
-    //   await this.$store.dispatch("MarkTaskToConfirm", { isHandleCurrentTask, taskID: task.id });
-    // } finally {
-    //   this.isHandlingToConfirm = false;
-    // }
+  public async markAsToConfirm(taskDetail: TaskDetailModel) {
+    AppModule.HANDLE_TASK_HANDLING(true);
+    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
+    try {
+      await TaskCheckHelper.updateStatus(
+        taskDetail.id,
+        TaskStatusEnum.TO_CONFIRM,
+        UserModule.name
+      );
+      TaskModule.MoveCurrentTaskToLast({
+        ...taskDetail,
+        status: TaskStatusEnum.TO_CONFIRM
+      });
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+    } finally {
+      await TaskModule.GetAll();
+      TaskModule.GetAll();
+      AppModule.HANDLE_TASK_HANDLING(true);
+    }
   }
   public async markAsReassign(isHandleCurrentTask: any, task: any) {
     //   this.$store.commit("HANDLE_TASK_HANDLING", true);

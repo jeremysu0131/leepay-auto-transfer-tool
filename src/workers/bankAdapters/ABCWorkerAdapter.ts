@@ -80,10 +80,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     // throw new Error("Method not implemented.");
     return true;
   }
-  async checkIfInTransferPage(): Promise<boolean> {
-    // throw new Error("Method not implemented.");
-    return true;
-  }
   async fillTransferForm(): Promise<void> {
     try {
       await this.driver
@@ -150,9 +146,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     // throw new Error("Method not implemented.");
     // return true;
   }
-  async checkIfNoteFilled(): Promise<void> {
+  async checkIfNoteFilled(): Promise<boolean> {
     // throw new Error("Method not implemented.");
-    // return true;
+    return true;
   }
   async checkBankReceivedTransferInformation(): Promise<boolean> {
     try {
@@ -316,11 +312,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         await this.driver.wait(element, 30 * 1000);
         await waitPageLoad(this.driver);
       }
-      Logger({ message: "Signed in.", level: "info" });
       return true;
     } catch (error) {
       if (error.name === "TimeoutError") {
-        Logger({ message: "Sign in fail.", level: "info" });
         return false;
       }
       throw error;
@@ -340,18 +334,20 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   }
   async goTransferPage() {
     this.resetVariables();
-    try {
-      WindowFocusTool.focusAndCheckIE();
-      await this.getBalance();
+    WindowFocusTool.focusAndCheckIE();
+    await this.getBalance();
 
-      await executeJavaScript(
-        this.driver,
-        "switch to transfer page",
-        "document.querySelector('#menuNav > ul > li:nth-child(4) > ul > li').click();",
-        500
-      );
-      // This wait until transfer page load
-      // Switch to iframe
+    await executeJavaScript(
+      this.driver,
+      "switch to transfer page",
+      "document.querySelector('#menuNav > ul > li:nth-child(4) > ul > li').click();",
+      500
+    );
+  }
+
+  async checkIfInTransferPage(): Promise<boolean> {
+    // This wait until transfer page load
+    try {
       await this.driver
         .switchTo()
         .frame(
@@ -381,6 +377,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     } finally {
       await this.driver.switchTo().defaultContent();
     }
+    return true;
   }
 
   async waitUntilBankSelected() {

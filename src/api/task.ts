@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import request from "@/utils/request";
 import TaskDetailModel from "../models/taskDetailModel";
 
@@ -18,7 +17,6 @@ export function getAll() {
 export function getFundTransferDetail(data: {
   taskId: number;
   ref: string;
-  bankId: number;
 }) {
   return request({
     url: "/adminWF!loadTrans.do",
@@ -69,14 +67,13 @@ export function unlockTask(taskId: number) {
 
 export function markFundTransferTaskSuccess(
   task: TaskDetailModel,
-  transferFee: number,
-  remark: string
+  remark?: string
 ) {
   return request({
     url: "/adminWF!updateTask.do",
     method: "POST",
     data: {
-      "task.field2": transferFee,
+      "task.field2": task.bankCharge,
       "task.id": task.id,
       "task.ref": task.ref,
       "task.state.state": "A",
@@ -107,11 +104,7 @@ export function markFundTransferTaskFail(
 /**
  * Don't know what to do
  */
-export function updateInputFields(
-  task: TaskDetailModel,
-  transferFee: number,
-  remark: string
-) {
+export function updateInputFields(task: TaskDetailModel, remark: string) {
   return request({
     url: "/adminWF!updateInputFields.do",
     method: "POST",
@@ -119,16 +112,15 @@ export function updateInputFields(
       "task.id": task.id,
       // Processed By
       "task.field2": remark,
-      "task.field8": transferFee
+      "task.field8": task.bankCharge
     }
   });
 }
 
 export function markPartialWithdrawTaskSuccess(
   task: TaskDetailModel,
-  remitterAccountId:number,
-  transferFee: number,
-  remark: string
+  remitterAccountId: number,
+  remark?: string
 ) {
   return request({
     url: "/adminWF!updateTask.do",
@@ -137,8 +129,8 @@ export function markPartialWithdrawTaskSuccess(
       "task.field3": remitterAccountId,
       "task.field4": "N",
       "task.field7": task.amount,
-      "task.additionalInfo0": transferFee,
-      "task.field8": transferFee,
+      "task.additionalInfo0": task.bankCharge,
+      "task.field8": task.bankCharge,
       "task.id": task.id,
       "task.ref": task.ref,
       "task.state.state": "Y",
@@ -150,7 +142,7 @@ export function markPartialWithdrawTaskSuccess(
 
 export function markPartialWithdrawTaskFail(
   task: TaskDetailModel,
-  remitterAccountId:number,
+  remitterAccountId: number,
   transferFee: number,
   remark: string
 ) {

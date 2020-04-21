@@ -22,10 +22,10 @@
             </div>
             <!-- <div v-if="lastSelectedTask && lastSelectedTask.bank">
               {{ card.currentDetail.channelGroup || ' - ' }}
-            </div> -->
+            </div>-->
             <!-- <div v-if="lastSelectedTask">
               {{ lastSelectedTask.merchantName }}
-            </div> -->
+            </div>-->
             <div v-if="lastSelectedTask ">
               {{ lastSelectedTask.payeeAccount.holderName }}
             </div>
@@ -41,16 +41,16 @@
               {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"})
                 .format(lastSelectedTask.amount) }}
             </div>
-            <!-- <div v-if="lastSelectedTask">
-              {{ lastSelectedTask.toolStatus }}
-            </div> -->
+            <div v-if="lastSelectedTask">
+              {{ lastSelectedTask.status }}
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div
       :class="
-        selectedTask?
+        selectedTaskDetail?
           'transfer__current-task-container--selected' :
           'transfer__current-task-container--unselect'"
     >
@@ -69,61 +69,36 @@
             <div>Request Amount:</div>
           </div>
           <div class="detail-data">
-            <div v-if="selectedTask">
-              {{ selectedTask.id }}
+            <div v-if="selectedTaskDetail">
+              {{ selectedTaskDetail.id }}
             </div>
-            <!-- <div v-if="selectedTask">
+            <!-- <div v-if="selectedTaskDetail">
               {{ card.currentDetail.channelGroup || ' - ' }}
             </div>
-            <div v-if="selectedTask">
-              {{ selectedTask.merchantName }}
+            <div v-if="selectedTaskDetail">
+              {{ selectedTaskDetail.merchantName }}
             </div>-->
-            <div v-if="selectedTask ">
-              {{ selectedTask.payeeAccount.holderName }}
+            <div v-if="selectedTaskDetail ">
+              {{ selectedTaskDetail.payeeAccount.holderName }}
             </div>
             <div
-              v-if="selectedTask && selectedTask.payeeAccount.bank.chineseName"
+              v-if="selectedTaskDetail && selectedTaskDetail.payeeAccount.bank.chineseName"
             >
-              {{ selectedTask.payeeAccount.bank.chineseName }}
+              {{ selectedTaskDetail.payeeAccount.bank.chineseName }}
             </div>
-            <div v-if="selectedTask">
-              {{ selectedTask.payeeAccount.cardNumber }}
+            <div v-if="selectedTaskDetail">
+              {{ selectedTaskDetail.payeeAccount.cardNumber }}
             </div>
-            <div v-if="selectedTask">
+            <div v-if="selectedTaskDetail">
               {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"})
-                .format(selectedTask.amount) }}
+                .format(selectedTaskDetail.amount) }}
             </div>
           </div>
         </div>
         <workflow />
-        <!-- <div class="workflow">
-          <table class="workflow-table">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Step name</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(flow,index) in worker.workflow"
-                :key="index"
-                :style="flowStyle(flow.status)"
-                @click="handleRowClick(flow)"
-              >
-                <td class="transfer__task-workflow-status">
-                  <svg-icon :icon-class="iconClass(flow.status)" />
-                </td>
-                <td class="transfer__task-workflow-name">
-                  {{ flow.name }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>-->
       </div>
       <div
-        v-if="selectedTask&&selectedTask.id"
+        v-if="selectedTaskDetail&&selectedTaskDetail.id"
         class="current-task__footer"
       >
         <div class="prompt">
@@ -135,7 +110,7 @@
             type="success"
             :loading="isHandlingSuccess"
             :disabled="isHandlingFail || isHandlingToConfirm"
-            @click="markAsSuccess(selectedTask)"
+            @click="markAsSuccess(selectedTaskDetail)"
           >
             Success
           </el-button>
@@ -143,20 +118,20 @@
             size="mini"
             type="danger"
             :loading="isHandlingFail"
-            @click="markAsFail(selectedTask)"
+            @click="markAsFail(selectedTaskDetail)"
           >
             Fail
           </el-button>
           <el-button
             size="mini"
-            :disabled="isHandlingSuccess || isHandlingFail"
             :loading="isHandlingToConfirm"
-            @click="markAsToConfirm(true, selectedTask)"
+            @click="markAsToConfirm(selectedTaskDetail)"
           >
             To Confirm
           </el-button>
           <el-button
             size="mini"
+            :disabled="true"
             :loading="isHandlingReassign"
             @click="markAsReassign(true)"
           >
@@ -191,16 +166,14 @@ export default class extends Mixins(TaskOperationMixin) {
   private isHandlingToConfirm = false;
   private isHandlingReassign = false;
 
-  @Watch("worker.workflow")
-  onWorkflowChange() {
-    if (AppModule.showingTab === "tasks") {
-      var accountCode = this.account.current.code;
-      if (accountCode) WorkerModule.SET_TRANSFER_WORKFLOW(accountCode);
-    }
+  @Watch("currentAccount")
+  onCurrentAccountChange() {
+    var accountCode = this.currentAccount.code;
+    if (accountCode) WorkerModule.SET_TRANSFER_WORKFLOW(accountCode);
   }
 
-  get account() {
-    return AccountModule;
+  get currentAccount() {
+    return AccountModule.current;
   }
   get worker() {
     return WorkerModule;
@@ -208,7 +181,7 @@ export default class extends Mixins(TaskOperationMixin) {
   get lastSelectedTask() {
     return TaskModule.lastSelected;
   }
-  get selectedTask() {
+  get selectedTaskDetail() {
     return TaskModule.selectedDetail;
   }
 }

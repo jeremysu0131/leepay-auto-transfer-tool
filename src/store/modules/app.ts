@@ -32,6 +32,7 @@ export interface IAppState {
     isProcessing: boolean;
   };
    account : {
+     isFetching:boolean;
     showingPage: string,
     signInSuccessAt: Date,
     isSignInSuccess: boolean,
@@ -63,6 +64,7 @@ class App extends VuexModule implements IAppState {
     isProcessing: false
   };
   public account = {
+    isFetching: false,
     showingPage: "account-search",
     signInSuccessAt: new Date(),
     isSignInSuccess: false,
@@ -137,6 +139,10 @@ class App extends VuexModule implements IAppState {
     this.account.isProcessingSignIn = status;
   }
   @Mutation
+  public HANDLE_ACCOUNT_IS_FETCHING(status: boolean) {
+    this.account.isFetching = status;
+  }
+  @Mutation
   public HANDLE_ACCOUNT_SIGN_IN_SUCCESS(status: boolean) {
     this.account.isSignInSuccess = status;
   }
@@ -162,6 +168,7 @@ class App extends VuexModule implements IAppState {
       isProcessing: false
     };
     this.account = {
+      isFetching: false,
       showingPage: "account-search",
       signInSuccessAt: new Date(),
       isSignInSuccess: false,
@@ -207,19 +214,8 @@ class App extends VuexModule implements IAppState {
     this.TOGGLE_DEVICE(device);
   }
   @Action
-  public async ResetSystem() {
-    try {
+  public async UnsetApp() {
       this.RESET_APP_STATE();
-
-      await Promise.all([
-        // this.UnsetCard"),
-        // this.UnsetLog"),
-        // this.UnsetTask"),
-        // this.UnsetWorker"),
-      ]);
-    } catch (error) {
-      // return this.SetConsole", { level: "error", message: error.toString() });
-    }
   }
 }
 

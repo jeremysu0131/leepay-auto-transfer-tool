@@ -13,7 +13,6 @@
       <el-button
         type="success"
         size="small"
-        :loading="isHandlingSuccess"
         @click="handleTaskSuccess"
       >
         Success
@@ -27,6 +26,7 @@
       </el-button>
       <el-button
         size="small"
+        :disabled="true"
         @click="handleTaskToConfirm"
       >
         To Confirm
@@ -39,43 +39,36 @@
 import { Component, Vue, Watch, Mixins } from "vue-property-decorator";
 import TaskOperationMixin from "../mixins/taskOperation";
 
-@Component({ name: "TaskProcessDialog", mixins: [TaskOperationMixin] })
+@Component({ name: "TaskProcessDialog" })
 export default class extends Mixins(TaskOperationMixin) {
-  isHandlingSuccess = false;
-  form = {
-    transferFee: "0",
-    note: ""
-  };
-  rules = {
-    transferFee: [{ required: true, trigger: "blur" }]
-  };
   get app() {
     return this.$store.state.app;
   }
-  get task() {
-    return this.$store.state.task;
-  }
-  get selectedTask() {
-    return this.task.selected;
+  @Watch("app.task.isShowCheckProcessDialog")
+  onProcessDialogChange() {
+    var audio = new Audio(require("@/assets/sounds/alarm.mp3"));
+    if (this.app.task.isShowCheckProcessDialog) {
+      audio.play();
+    }
   }
   private async handleTaskSuccess() {
     this.$store.commit("HANDLE_MARK_AS_SUCCESS_DIALOG", true);
     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
-    this.$store.commit("HANDLE_TASK_PROCESSING", false);
+    // this.$store.commit("HANDLE_TASK_PROCESSING", false);
   }
   private async handleTaskFail() {
     this.$store.commit("HANDLE_MARK_AS_FAIL_DIALOG", true);
     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
-    this.$store.commit("HANDLE_TASK_PROCESSING", false);
+    // this.$store.commit("HANDLE_TASK_PROCESSING", false);
   }
   private async handleTaskToConfirm() {
     // await this.markAsToConfirm(true, this.selectedTask);
     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
-    this.$store.commit("HANDLE_TASK_PROCESSING", false);
+    // this.$store.commit("HANDLE_TASK_PROCESSING", false);
   }
-  private closeDialog() {
-    this.$store.commit("HANDLE_TASK_HANDLING", false);
-  }
+  // private closeDialog() {
+  //   this.$store.commit("HANDLE_TASK_HANDLING", false);
+  // }
 }
 </script>
 <style lang="scss" scoped>

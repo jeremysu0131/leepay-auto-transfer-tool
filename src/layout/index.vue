@@ -2,7 +2,7 @@
   <div>
     <top-header />
     <el-tabs
-      :value="showingTab"
+      v-model="showingTab"
       type="border-card"
       class="tabs"
     >
@@ -47,6 +47,10 @@ export default class extends mixins(ResizeMixin) {
   get showingTab() {
     return AppModule.showingTab;
   }
+  set showingTab(newValue) {
+    AppModule.HANDLE_SHOWING_TAB(newValue);
+  }
+
   get taskTabVisible() {
     return AppModule.task.isVisible;
   }
