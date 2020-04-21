@@ -60,6 +60,8 @@ import { Component, Vue, Watch, Prop } from "vue-property-decorator";
 import { TaskModule } from "../../../store/modules/task";
 import TaskDetailModel from "@/models/taskDetailModel";
 import { AppModule } from "../../../store/modules/app";
+import TaskStatusEnum from "@/enums/taskStatusEnum";
+import LastSelectedTaskDetailModel from "../../../models/lastSelectedTaskDetailModel";
 
 @Component({
   name: "TaskSuccessDialog"
@@ -99,6 +101,11 @@ export default class extends Vue {
         task: this.taskDetail,
         note: this.form.note
       });
+      await TaskModule.MoveCurrentTaskToLast({
+        ...this.taskDetail,
+        status: TaskStatusEnum.SUCCESS
+      });
+      await TaskModule.GetAll();
 
       this.$message.success("Task has been mark as success");
       this.closeDialog();

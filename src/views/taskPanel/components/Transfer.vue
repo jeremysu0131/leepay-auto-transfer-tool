@@ -41,9 +41,9 @@
               {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"})
                 .format(lastSelectedTask.amount) }}
             </div>
-            <!-- <div v-if="lastSelectedTask">
-              {{ lastSelectedTask.toolStatus }}
-            </div>-->
+            <div v-if="lastSelectedTask">
+              {{ lastSelectedTask.status }}
+            </div>
           </div>
         </div>
       </div>

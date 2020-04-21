@@ -17,10 +17,11 @@ import { UserModule } from "./user";
 import TaskStatusEnum from "../../enums/taskStatusEnum";
 import { AccountModule } from "./account";
 import TaskCheckToolModel from "@/models/taskCheckToolModel";
+import LastSelectedTaskDetailModel from "@/models/lastSelectedTaskDetailModel";
 
 export interface ITaskState {
   list: TaskModel[];
-  lastSelected: TaskDetailModel;
+  lastSelected: LastSelectedTaskDetailModel;
   selectedDetail: TaskDetailModel;
   selectedForOperation: TaskDetailModel;
 }
@@ -28,7 +29,7 @@ export interface ITaskState {
 @Module({ dynamic: true, store, name: "task" })
 class Task extends VuexModule implements ITaskState {
   public list = [] as TaskModel[];
-  public lastSelected = new TaskDetailModel();
+  public lastSelected = new LastSelectedTaskDetailModel();
   public selectedDetail = new TaskDetailModel();
   public selectedForOperation = new TaskDetailModel();
 
@@ -37,7 +38,7 @@ class Task extends VuexModule implements ITaskState {
     this.list = tasks;
   }
   @Mutation
-  public SET_LAST_SELECTED_DATA(taskDetail: TaskDetailModel) {
+  public SET_LAST_SELECTED_DATA(taskDetail: LastSelectedTaskDetailModel) {
     this.lastSelected = taskDetail;
   }
   @Mutation
@@ -183,11 +184,6 @@ class Task extends VuexModule implements ITaskState {
         default:
           break;
       }
-      await this.MoveCurrentTaskToLast({
-        task,
-        status: TaskStatusEnum.SUCCESS
-      });
-      await this.GetAll();
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       //   throw new Error("Mark task as success fail, please contact admin");
@@ -229,24 +225,19 @@ class Task extends VuexModule implements ITaskState {
         default:
           break;
       }
-      await this.MoveCurrentTaskToLast({
-        task,
-        status: TaskStatusEnum.SUCCESS
-      });
-      await this.GetAll();
+      // FIXME
+      // await this.MoveCurrentTaskToLast({
+      //   task,
+      //   status: TaskStatusEnum.SUCCESS
+      // });
+      // await this.GetAll();
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       // throw new Error("Mark task as fail error, please contact admin");
     }
   }
   @Action
-  private async MoveCurrentTaskToLast({
-    task,
-    status
-  }: {
-    task: TaskDetailModel;
-    status: string;
-  }) {
+  public async MoveCurrentTaskToLast(task: LastSelectedTaskDetailModel) {
     // Clear selected task
     this.SET_LAST_SELECTED_DATA(task);
     this.SET_SELECTED_DETAIL(new TaskDetailModel());

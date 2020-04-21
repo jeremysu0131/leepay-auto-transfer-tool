@@ -9,6 +9,7 @@ import { WorkflowEnum } from "@/workers/utils/workflowHelper";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import { UserModule } from "@/store/modules/user";
+import TaskModel from "@/models/taskModel";
 @Component
 export default class TaskOperationMixin extends Vue {
   public async getTasks() {
@@ -84,14 +85,16 @@ export default class TaskOperationMixin extends Vue {
     //   });
     // }
   }
-  public async markAsSuccess(task: TaskDetailModel) {
+  public async markAsSuccess(task: TaskModel) {
     AppModule.HANDLE_TASK_HANDLING(true);
-    TaskModule.SET_SELECTED_FOR_OPERATION(task);
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
-  public async markAsFail(task: TaskDetailModel) {
+  public async markAsFail(task: TaskModel) {
     AppModule.HANDLE_TASK_HANDLING(true);
-    TaskModule.SET_SELECTED_FOR_OPERATION(task);
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
   public confirmMarkAsFail(isHandleCurrentTask: any) {
