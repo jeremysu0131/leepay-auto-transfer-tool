@@ -21,9 +21,6 @@ export default class TaskOperationMixin extends Vue {
       if (data) {
         task.checkTool.id = data.id;
         task.checkTool.status = data.status;
-      } else {
-        var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-        // TaskCheckHelper.create(taskDetail, AccountModule.current, UserModule.name);
       }
     });
     TaskModule.SET_TASK_LIST(tasks);
