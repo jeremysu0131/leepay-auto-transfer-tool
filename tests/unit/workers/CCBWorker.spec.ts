@@ -2,12 +2,11 @@ import BankWorker from "@/workers/BankWorker";
 import BankModel from "../../../src/workers/models/bankModel";
 import PayeeAccountModel from "../../../src/workers/models/payeeAccountModel";
 import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
-import { workerData } from "worker_threads";
 
 var worker: BankWorker;
 var remitterAccount = {
   balance: 0,
-  code: "5.CCB.327",
+  code: "5.CCB.327-1",
   loginName: "judjencjd",
   loginPassword: "zz800525",
   usbPassword: "zz800525",
@@ -16,7 +15,7 @@ var remitterAccount = {
 
 jest.setTimeout(300 * 1000);
 describe("CCBWorker", () => {
-  beforeAll(async() => {
+  beforeAll(async () => {
     worker = new BankWorker(remitterAccount);
     await worker.setProxy();
     var isLaunched = await worker.launchSelenium({
@@ -27,23 +26,23 @@ describe("CCBWorker", () => {
     expect(isLaunched.isFlowExecutedSuccess).toBe(true);
   });
 
-  afterAll(async() => {
+  afterAll(async () => {
     // await worker.closeSelenium();
   });
 
-  it("login:setAccount", async() => {
-    const bank = { chineseName: "中国邮政储蓄银行" } as BankModel;
-    const payAccount = {
-      holderName: "康贻龙",
-      cardNumber: "6217993000391513895",
-      bank
-    } as PayeeAccountModel;
-    worker.setTask({ id: new Date().getTime(), amount: 0.1, payeeAccount: payAccount } as TaskDetailModel);
-    const result = await worker.inputSignInInformation();
-    expect(result.isFlowExecutedSuccess).toEqual(true);
-  });
+  // it("login:setAccount", async () => {
+  //   const bank = { chineseName: "中国邮政储蓄银行" } as BankModel;
+  //   const payAccount = {
+  //     holderName: "康贻龙",
+  //     cardNumber: "6217993000391513895",
+  //     bank
+  //   } as PayeeAccountModel;
+  //   worker.setTask({ id: new Date().getTime(), amount: 0.1, payeeAccount: payAccount } as TaskDetailModel);
+  //   const result = await worker.inputSignInInformation();
+  //   expect(result.isFlowExecutedSuccess).toEqual(true);
+  // });
 
-  it("login:submit", async() => {
+  it("login:submit", async () => {
     await worker.submitToSignIn();
     const success = await worker.checkIfLoginSuccess({});
     expect(success.isFlowExecutedSuccess).toEqual(true);
