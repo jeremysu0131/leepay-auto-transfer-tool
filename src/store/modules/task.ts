@@ -52,77 +52,29 @@ class Task extends VuexModule implements ITaskState {
   public SET_BANK_CHARGE_FOR_OPERATION(bankCharge: number) {
     this.selectedForOperation.bankCharge = bankCharge;
   }
-  // actions: {
   @Action
-  public async GetAll() {
+  public async GetAll(): Promise<TaskModel[]> {
     AppModule.HANDLE_TASK_FETCHING(true);
     try {
       var { data } = await TaskApi.getAll();
-      var tasks = (data.data as []).map((task: any) => {
-        switch (task.workflow) {
-          case "Partial Withdraw":
-            return {
-              id: task.id,
-              amount: task.field5,
-              assignee: task.asignee,
-              assigneeId: task.asigneeId,
-              assignedAt: task.asigneeAt,
-              bank: {
-                id: 0,
-                code: "",
-                chineseName: ""
-              },
-              checkTool: new TaskCheckToolModel(),
-              status: "",
-              remitterAccountCode: task.field4,
-              payeeAccountCode: "",
-              pendingTime: task.pendingTime,
-              priority: task.priority,
-              ref: task.ref,
-              remark: task.remarks,
-              createdAt: task.createdAt,
-              createdBy: task.createdBy,
-              transferFee: isNaN(task.field8) ? 0 : task.field8,
-              updatedAt: task.updatedAt,
-              updatedBy: task.updatedBy,
-              workflow: task.workflow
-            } as TaskModel;
-          case "Fund Transfer":
-            return {
-              id: task.id,
-              amount: task.field5,
-              assignee: task.asignee,
-              assigneeId: task.asigneeId,
-              assignedAt: task.asigneeAt,
-              bank: {
-                id: 0,
-                code: "",
-                chineseName: ""
-              },
-              checkTool: new TaskCheckToolModel(),
-              status: "",
-              remitterAccountCode: task.field7,
-              payeeAccountCode: task.toAcct,
-              pendingTime: task.pendingTime,
-              priority: task.priority,
-              ref: task.ref,
-              remark: task.remarks,
-              createdAt: task.createdAt,
-              createdBy: task.createdBy,
-              transferFee: isNaN(task.field6) ? 0 : task.field6,
-              updatedAt: task.updatedAt,
-              updatedBy: task.updatedBy,
-              workflow: task.workflow
-            } as TaskModel;
-          case TaskTypeEnum.WITHDRAW_DISTRIBUTION:
-            return new TaskModel();
-          default:
-            throw new Error("No such task type");
-        }
-      });
+      var tasks = (data.data as [])
+        .filter(
+          (task: any) => task.workflow !== TaskTypeEnum.WITHDRAW_DISTRIBUTION
+        )
+        .map((task: any) => {
+          switch (task.workflow) {
+            case TaskTypeEnum.PARTIAL_WITHDRAW:
+              return mappingPartialWithdraw(task);
+            case TaskTypeEnum.FUND_TRANSFER:
+              return mappingFundTransfer(task);
+            default:
+              throw new Error("No such task type");
+          }
+        });
       return tasks;
     } catch (error) {
-      throw new Error("Get all tasks fail");
+      LogModule.SetConsole({ level: "error", message: error });
+      return [];
     } finally {
       AppModule.HANDLE_TASK_FETCHING(false);
     }
@@ -310,6 +262,7 @@ class Task extends VuexModule implements ITaskState {
     this.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
   }
 }
+
 //   async SetTaskInfomationToTool() {
 //     const taskID = getters.task.dataForAPI.id;
 //     const platform = getters.app.platform;
@@ -391,4 +344,60 @@ class Task extends VuexModule implements ITaskState {
 //   // This for unset everything
 // }
 
+function mappingPartialWithdraw(task: any) {
+  return {
+    id: task.id,
+    amount: task.field5,
+    assignee: task.asignee,
+    assigneeId: task.asigneeId,
+    assignedAt: task.asigneeAt,
+    bank: {
+      id: 0,
+      code: "",
+      chineseName: ""
+    },
+    checkTool: new TaskCheckToolModel(),
+    status: "",
+    remitterAccountCode: task.field4,
+    payeeAccountCode: "",
+    pendingTime: task.pendingTime,
+    priority: task.priority,
+    ref: task.ref,
+    remark: task.remarks,
+    createdAt: task.createdAt,
+    createdBy: task.createdBy,
+    transferFee: isNaN(task.field8) ? 0 : task.field8,
+    updatedAt: task.updatedAt,
+    updatedBy: task.updatedBy,
+    workflow: task.workflow
+  } as TaskModel;
+}
+function mappingFundTransfer(task: any) {
+  return {
+    id: task.id,
+    amount: task.field5,
+    assignee: task.asignee,
+    assigneeId: task.asigneeId,
+    assignedAt: task.asigneeAt,
+    bank: {
+      id: 0,
+      code: "",
+      chineseName: ""
+    },
+    checkTool: new TaskCheckToolModel(),
+    status: "",
+    remitterAccountCode: task.field7,
+    payeeAccountCode: task.toAcct,
+    pendingTime: task.pendingTime,
+    priority: task.priority,
+    ref: task.ref,
+    remark: task.remarks,
+    createdAt: task.createdAt,
+    createdBy: task.createdBy,
+    transferFee: isNaN(task.field6) ? 0 : task.field6,
+    updatedAt: task.updatedAt,
+    updatedBy: task.updatedBy,
+    workflow: task.workflow
+  } as TaskModel;
+}
 export const TaskModule = getModule(Task);
