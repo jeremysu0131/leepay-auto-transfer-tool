@@ -151,7 +151,7 @@
                     <el-button
                       class="el-row--popover__el-button"
                       type="danger"
-                      @click="markTaskAsFail(false, scope.row)"
+                      @click="markTaskAsFail(scope.row)"
                     >
                       <svg-icon
                         name="error"
@@ -273,6 +273,7 @@ export default class extends Mixins(TaskOperationMixin) {
      this.markAsSuccess(taskDetail);
   }
   private async markTaskAsFail(task: TaskModel) {
+    console.log(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
      this.markAsFail(taskDetail);
   }
