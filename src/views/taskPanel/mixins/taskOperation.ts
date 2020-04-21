@@ -27,32 +27,6 @@ export default class TaskOperationMixin extends Vue {
 
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
-  private async runAutoTransferFlows() {
-    try {
-      await WorkerModule.RunFlow({
-        name: WorkflowEnum.SET_TASK,
-        args: TaskModule.selectedDetail
-      });
-      await WorkerModule.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
-      await WorkerModule.RunFlow({
-        name: WorkflowEnum.FILL_TRANSFER_INFORMATION
-      });
-      await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_NOTE });
-      await WorkerModule.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
-      return true;
-    } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
-      LogModule.SetConsole({
-        level: "error",
-        message:
-          'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
-      });
-      return false;
-    } finally {
-      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
-      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
-    }
-  }
   public async handleTransferSuccess() {
     await TaskModule.MarkTaskSuccess({
       task: TaskModule.selectedForOperation
@@ -62,24 +36,6 @@ export default class TaskOperationMixin extends Vue {
   public async handleTransferFail() {
     TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
-  }
-  public async startTask() {
-    WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-    AppModule.HANDLE_TASK_PROCESSING(true);
-    TaskCheckHelper.updateStatus(
-      TaskModule.selectedDetail.id,
-      TaskStatusEnum.PROCESSING,
-      UserModule.name
-    );
-
-    if (await this.runAutoTransferFlows()) {
-      if (
-        (await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS }))
-          .isFlowExecutedSuccess
-      ) {
-        this.handleTransferSuccess();
-      } else this.handleTransferFail();
-    }
   }
   // private async loginToBankWebsite() {
   //   try {

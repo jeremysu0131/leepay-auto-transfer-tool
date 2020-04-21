@@ -17,11 +17,17 @@ class CreateTaskRiskModel {
   remark: string = "";
 }
 
-export const create = async(task: TaskDetailModel, operator: string) => {
+export const create = async(
+  task: TaskDetailModel,
+  remitterAccountCode: string,
+  operator: string
+) => {
   var data = new CreateTaskRiskModel();
   data.taskID = task.id;
   data.platform = "skypay";
   data.merchant = "";
+  data.cardCode = remitterAccountCode;
+  data.payee = task.payeeAccount.holderName;
   data.payeeAccount = task.payeeAccount.cardNumber;
   data.payeeBank = task.payeeAccount.bank.chineseName || "";
   data.amount = task.amount;
@@ -30,11 +36,7 @@ export const create = async(task: TaskDetailModel, operator: string) => {
   var response = await requestRisk({
     url: "/task",
     method: "POST",
-    data: {
-      platform: "skypay",
-      status: TaskStatusEnum.PROCESSING,
-      operator
-    }
+    data
   });
   return response.status === 201;
 };
@@ -64,7 +66,7 @@ export const get = async(task: TaskModel) => {
   });
   return response.data || null;
 };
-export const checkIfExecuted = async(toolID: number) => {
+export const getExecutedResult = async(toolID: number) => {
   var response = await requestRisk({
     url: `/task/${toolID}/executed`,
     method: "GET"
@@ -78,7 +80,12 @@ export const checkIfExecuted = async(toolID: number) => {
     note: string;
   }>;
 };
-export const createExecuteRecord = async(toolID:number, operateType:string, operator:string, note:string) => {
+export const createExecuteRecord = async(
+  toolID: number,
+  operateType: string,
+  operator: string,
+  note: string
+) => {
   return requestRisk({
     url: `/task/${toolID}/detail`,
     method: "POST",

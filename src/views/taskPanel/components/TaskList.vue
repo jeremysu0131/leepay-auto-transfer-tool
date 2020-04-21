@@ -220,6 +220,9 @@ import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import TaskOperateEnum from "../../../enums/taskOperateEnum";
 import { MessageBoxData } from "element-ui/types/message-box";
 import TaskDetailModel from "../../../models/taskDetailModel";
+import { WorkerModule } from "@/store/modules/worker";
+import TaskStatusEnum from "@/enums/taskStatusEnum";
+import { WorkflowEnum } from "@/workers/utils/workflowHelper";
 
 @Component({
   name: "TaskList",
@@ -236,6 +239,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private taskDialogVisible = false;
   private isFetchBoBalanceFail = false;
   private isWarnedBankTokenExpire = false;
+  private confirmExecuteMessage = "";
 
   get app() {
     return AppModule;
@@ -286,22 +290,33 @@ export default class extends Mixins(TaskOperationMixin) {
     }
     return true;
   }
-  private async handleIfTaskCanExecute(
+  private async checkIfTaskExecuted(
     task: TaskModel,
     taskDetail: TaskDetailModel
   ) {
-    var result = await TaskCheckHelper.checkIfExecuted(task.checkTool.id);
-    if (result.length > 0) {
-      var isConfirmToExecute = await this.confirmExecution(
-        task.checkTool.id,
-        result
+    // check tool id was 0 means not execute
+    if (task.checkTool.id === 0) {
+      await TaskCheckHelper.create(
+        taskDetail,
+        AccountModule.current.code,
+        UserModule.name
       );
-      return isConfirmToExecute;
+      return false;
     }
+
+    var result = await TaskCheckHelper.getExecutedResult(task.checkTool.id);
+    return result.length > 0;
+    // if (result.length > 0) {
+    //   var isConfirmToExecute = await this.confirmExecution(
+    //     task.checkTool.id,
+    //     result
+    //   );
+    //   return isConfirmToExecute;
+    // }
     // FIXME
     //  TaskCheckHelper.createExecuteRecord();
   }
-  private confirmExecution(
+  private confirmBeforeExecute(
     toolId: number,
     executedTasks: Array<{
       id: number;
@@ -334,12 +349,7 @@ export default class extends Mixins(TaskOperationMixin) {
       }
     )
       .then(async({ value }) => {
-        await TaskCheckHelper.createExecuteRecord(
-          toolId,
-          TaskOperateEnum.EXECUTE,
-          UserModule.name,
-          value
-        );
+        this.confirmExecuteMessage = value;
         return true;
       })
       .catch(() => {
@@ -349,16 +359,85 @@ export default class extends Mixins(TaskOperationMixin) {
   private async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
+
+      // Check if task can be claim
       if (await this.lockTask(task)) {
         var taskDetail = await this.getTaskDetail(task);
-        if (await this.handleIfTaskCanExecute(task, taskDetail)) {
-          TaskModule.SET_SELECTED_DETAIL(taskDetail);
-          TaskModule.GetAll();
-          await this.startTask();
+
+        if (await this.checkIfTaskExecuted(task, taskDetail)) {
+          var result = await TaskCheckHelper.getExecutedResult(
+            task.checkTool.id
+          );
+          if (await this.confirmBeforeExecute(task.checkTool.id, result)) {
+            TaskCheckHelper.createExecuteRecord(
+              task.checkTool.id,
+              TaskOperateEnum.EXECUTE,
+              UserModule.name,
+              this.confirmExecuteMessage
+            );
+            await this.startTask(taskDetail);
+          }
+        } else {
+          TaskCheckHelper.createExecuteRecord(
+            task.checkTool.id,
+            TaskOperateEnum.EXECUTE,
+            UserModule.name,
+            "First time run, create by system."
+          );
+          await this.startTask(taskDetail);
         }
       }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
+    }
+  }
+  public async startTask(taskDetail: TaskDetailModel) {
+    this.beforeExecuteTask(taskDetail);
+
+    if (await this.runAutoTransferFlows()) {
+      if (
+        (await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS }))
+          .isFlowExecutedSuccess
+      ) {
+        this.handleTransferSuccess();
+      } else this.handleTransferFail();
+    }
+  }
+  private beforeExecuteTask(taskDetail: TaskDetailModel) {
+    TaskModule.SET_SELECTED_DETAIL(taskDetail);
+    TaskModule.GetAll();
+    WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
+    AppModule.HANDLE_TASK_PROCESSING(true);
+    TaskCheckHelper.updateStatus(
+      TaskModule.selectedDetail.id,
+      TaskStatusEnum.PROCESSING,
+      UserModule.name
+    );
+  }
+  private async runAutoTransferFlows() {
+    try {
+      await WorkerModule.RunFlow({
+        name: WorkflowEnum.SET_TASK,
+        args: TaskModule.selectedDetail
+      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
+      await WorkerModule.RunFlow({
+        name: WorkflowEnum.FILL_TRANSFER_INFORMATION
+      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_NOTE });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
+      return true;
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetConsole({
+        level: "error",
+        message:
+          'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
+      });
+      return false;
+    } finally {
+      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
+      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     }
   }
   private async getTaskDetail(task: TaskModel) {
