@@ -1,6 +1,8 @@
 /* tslint:disable */
 import "./caret-down";
+import "./check";
 import "./dashboard";
+import "./error";
 import "./example";
 import "./eye-off";
 import "./eye-on";
