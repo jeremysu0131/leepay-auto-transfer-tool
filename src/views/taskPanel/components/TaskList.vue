@@ -462,7 +462,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return taskDetail;
   }
   private isMoreButtonDisabled(row: TaskModel) {
-    if (row.checkTool.status === TaskStatusEnum.TO_CONFIRM) return true;
+    if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) return true;
     return false;
   }
   private isProcessButtonShow(row:TaskModel) {
@@ -478,28 +478,28 @@ return row.checkTool.status !== "to-confirm";
     return false;
   }
   private isSuccessButtonVisible(row:TaskModel) {
-    if (row.checkTool.status === "to-process") {
+    if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) {
       return false;
     }
     return true;
   }
   private isFailButtonVisible(row: TaskModel) {
-    if (row.checkTool.status === "to-process") {
+    if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) {
       return false;
     }
     return true;
   }
   private isToConfirmButtonVisible(row:TaskModel) {
-    if (row.checkTool.status === "processing") {
+    if (row.checkTool.status === TaskStatusEnum.PROCESSING) {
       return true;
     }
     return false;
   }
-  private isReassignButtonVisible(row:TaskModel) {
-    if (row.checkTool.status !== "I") {
-      return false;
-    }
-    return true;
-  }
+  // private isReassignButtonVisible(row:TaskModel) {
+  //   if (row.checkTool.status !== "I") {
+  //     return false;
+  //   }
+  //   return true;
+  // }
 }
 </script>
