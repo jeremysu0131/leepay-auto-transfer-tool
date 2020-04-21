@@ -269,13 +269,14 @@ export default class extends Mixins(TaskOperationMixin) {
     // return window.innerHeight - 300;
   }
   private async markTaskAsSuccess(task: TaskModel) {
+    await this.lockTask(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-     this.markAsSuccess(taskDetail);
+    this.markAsSuccess(taskDetail);
   }
   private async markTaskAsFail(task: TaskModel) {
-    console.log(task);
+    await this.lockTask(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-     this.markAsFail(taskDetail);
+    this.markAsFail(taskDetail);
   }
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {
