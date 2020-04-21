@@ -99,6 +99,7 @@
           <div style="display: flex; justify-content: space-around">
             <div>
               <el-button
+                v-if="isProcessButtonShow(scope.row)"
                 class="task-operator__button"
                 style="width:80px"
                 size="mini"
@@ -107,17 +108,17 @@
               >
                 {{ scope.row.checkTool.status === "processing" ? "Reprocess" : "Process" }}
               </el-button>
-              <!-- <el-button
-                v-if="scope.row.toolStatus === 'to-confirm'"
+              <el-button
+                v-if="!isProcessButtonShow(scope.row)"
                 class="task-operator__button"
                 style="width:80px"
                 size="mini"
                 type="success"
                 :disabled="isSuccessButtonDisabled(scope.row)"
-                @click="markAsSuccess(scope.row)"
+                @click="markTaskAsSuccess(scope.row)"
               >
                 Success
-              </el-button>-->
+              </el-button>
             </div>
             <div>
               <el-popover
@@ -166,7 +167,7 @@
                   >
                     <el-button
                       class="el-row--popover__el-button"
-                      @click="markAsToConfirm(false, scope.row)"
+                      @click="markTaskAsToConfirm(scope.row)"
                     >
                       <svg-icon
                         name="check-circle"
@@ -174,7 +175,7 @@
                       />To Confirm
                     </el-button>
                   </el-col>
-                  <el-col
+                  <!-- <el-col
                     v-if="isReassignButtonVisible(scope.row)"
                     :span="24"
                     class="el-row--popover__el-col"
@@ -188,7 +189,7 @@
                         class="el-row--popover__el-button--icon"
                       />Re-assign
                     </el-button>
-                  </el-col>
+                  </el-col> -->
                 </el-row>
                 <el-button
                   slot="reference"
@@ -271,13 +272,20 @@ export default class extends Mixins(TaskOperationMixin) {
   private async markTaskAsSuccess(task: TaskModel) {
     await this.lockTask(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    this.markAsSuccess(taskDetail);
+     this.markAsSuccess(taskDetail);
   }
   private async markTaskAsFail(task: TaskModel) {
     await this.lockTask(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    this.markAsFail(taskDetail);
+     this.markAsFail(taskDetail);
   }
+
+  private async markTaskAsToConfirm(task: TaskModel) {
+    await this.lockTask(task);
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+     this.markAsToConfirm(taskDetail);
+  }
+
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {
       if (this.selectedTask.id === row.id) {
@@ -457,35 +465,38 @@ export default class extends Mixins(TaskOperationMixin) {
     if (row.checkTool.status === TaskStatusEnum.TO_CONFIRM) return true;
     return false;
   }
-  private isProcessButtonDisabled(row: any) {
-    // if (row.status !== "I" || row.toolStatus === "to-confirm") return true;
+  private isProcessButtonShow(row:TaskModel) {
+return row.checkTool.status !== "to-confirm";
+  }
+  private isProcessButtonDisabled(row: TaskModel) {
+    // FIXME
     // else if (this.app.task.isProcessing) return true;
     return false;
   }
-  private isSuccessButtonDisabled(row: any) {
-    if (row.status !== "I") return true;
+  private isSuccessButtonDisabled(row: TaskModel) {
+    if (row.checkTool.status !== TaskStatusEnum.TO_CONFIRM) return true;
     return false;
   }
-  private isSuccessButtonVisible(row: any) {
-    if (row.toolStatus === "to-process") {
+  private isSuccessButtonVisible(row:TaskModel) {
+    if (row.checkTool.status === "to-process") {
       return false;
     }
     return true;
   }
-  private isFailButtonVisible(row: any) {
-    if (row.toolStatus === "to-process") {
+  private isFailButtonVisible(row: TaskModel) {
+    if (row.checkTool.status === "to-process") {
       return false;
     }
     return true;
   }
-  private isToConfirmButtonVisible(row: any) {
-    if (row.toolStatus === "processing") {
+  private isToConfirmButtonVisible(row:TaskModel) {
+    if (row.checkTool.status === "processing") {
       return true;
     }
     return false;
   }
-  private isReassignButtonVisible(row: any) {
-    if (row.status !== "I") {
+  private isReassignButtonVisible(row:TaskModel) {
+    if (row.checkTool.status !== "I") {
       return false;
     }
     return true;

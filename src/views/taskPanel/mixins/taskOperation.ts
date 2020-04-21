@@ -103,14 +103,21 @@ export default class TaskOperationMixin extends Vue {
     //     return false;
     //   });
   }
-  public async markAsToConfirm(isHandleCurrentTask: any, task: any) {
-    // this.isHandlingToConfirm = true;
-    // this.$store.commit("HANDLE_TASK_HANDLING", true);
-    // try {
-    //   await this.$store.dispatch("MarkTaskToConfirm", { isHandleCurrentTask, taskID: task.id });
-    // } finally {
-    //   this.isHandlingToConfirm = false;
-    // }
+  public async markAsToConfirm(taskDetail: TaskDetailModel) {
+    AppModule.HANDLE_TASK_HANDLING(true);
+    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
+    try {
+      await TaskCheckHelper.updateStatus(
+        taskDetail.id,
+        TaskStatusEnum.TO_CONFIRM,
+        UserModule.name
+      );
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+    } finally {
+      TaskModule.GetAll();
+      AppModule.HANDLE_TASK_HANDLING(true);
+    }
   }
   public async markAsReassign(isHandleCurrentTask: any, task: any) {
     //   this.$store.commit("HANDLE_TASK_HANDLING", true);
