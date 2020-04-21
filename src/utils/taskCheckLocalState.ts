@@ -3,6 +3,8 @@ import sqlite3 from "sqlite3";
 var sqlite = sqlite3.verbose();
 var db = new sqlite.Database("./state.db");
 
+// TODO Refactor
+
 db.serialize(function() {
   // Check and create
   db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='task'", (

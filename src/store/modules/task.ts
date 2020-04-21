@@ -236,12 +236,6 @@ class Task extends VuexModule implements ITaskState {
         default:
           break;
       }
-      // FIXME
-      // await this.MoveCurrentTaskToLast({
-      //   task,
-      //   status: TaskStatusEnum.SUCCESS
-      // });
-      // await this.GetAll();
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       // throw new Error("Mark task as fail error, please contact admin");
