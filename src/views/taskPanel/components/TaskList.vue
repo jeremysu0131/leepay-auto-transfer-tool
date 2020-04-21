@@ -105,7 +105,7 @@
                 :disabled="isProcessButtonDisabled(scope.row)"
                 @click="handleRowSelect(scope.row)"
               >
-                {{ scope.row.toolStatus === "processing" ? "Reprocess" : "Process" }}
+                {{ scope.row.checkTool.status === "processing" ? "Reprocess" : "Process" }}
               </el-button>
               <!-- <el-button
                 v-if="scope.row.toolStatus === 'to-confirm'"
@@ -134,10 +134,11 @@
                   >
                     <el-button
                       class="el-row--popover__el-button"
+                      type="success"
                       @click="markAsSuccess(scope.row)"
                     >
                       <svg-icon
-                        icon-class="check"
+                        name="check"
                         class="el-row--popover__el-button--icon"
                       />Success
                     </el-button>
@@ -149,10 +150,11 @@
                   >
                     <el-button
                       class="el-row--popover__el-button"
+                      type="danger"
                       @click="markAsFail(false, scope.row)"
                     >
                       <svg-icon
-                        icon-class="error"
+                        name="error"
                         class="el-row--popover__el-button--icon"
                       />Fail
                     </el-button>
@@ -167,7 +169,7 @@
                       @click="markAsToConfirm(false, scope.row)"
                     >
                       <svg-icon
-                        icon-class="check-circle"
+                        name="check-circle"
                         class="el-row--popover__el-button--icon"
                       />To Confirm
                     </el-button>
@@ -182,7 +184,7 @@
                       @click="markAsReassign(false, scope.row)"
                     >
                       <svg-icon
-                        icon-class="unlock"
+                        name="unlock"
                         class="el-row--popover__el-button--icon"
                       />Re-assign
                     </el-button>
@@ -441,8 +443,8 @@ export default class extends Mixins(TaskOperationMixin) {
     // taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
     return taskDetail;
   }
-  private isMoreButtonDisabled(row: any) {
-    if (row.status !== "I") return true;
+  private isMoreButtonDisabled(row:TaskModel) {
+    if (row.checkTool.status === TaskStatusEnum.TO_CONFIRM) return true;
     return false;
   }
   private isProcessButtonDisabled(row: any) {
