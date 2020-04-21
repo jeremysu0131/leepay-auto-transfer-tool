@@ -17,7 +17,6 @@ export function getAll() {
 export function getFundTransferDetail(data: {
   taskId: number;
   ref: string;
-  bankId: number;
 }) {
   return request({
     url: "/adminWF!loadTrans.do",
