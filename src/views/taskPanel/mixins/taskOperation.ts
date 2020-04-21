@@ -85,15 +85,13 @@ export default class TaskOperationMixin extends Vue {
     //   });
     // }
   }
-  public async markAsSuccess(task: TaskModel) {
+  public markAsSuccess(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_HANDLING(true);
-    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
-  public async markAsFail(task: TaskModel) {
+  public markAsFail(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_HANDLING(true);
-    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }

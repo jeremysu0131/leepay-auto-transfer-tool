@@ -135,7 +135,7 @@
                     <el-button
                       class="el-row--popover__el-button"
                       type="success"
-                      @click="markAsSuccess(scope.row)"
+                      @click="markTaskAsSuccess(scope.row)"
                     >
                       <svg-icon
                         name="check"
@@ -151,7 +151,7 @@
                     <el-button
                       class="el-row--popover__el-button"
                       type="danger"
-                      @click="markAsFail(false, scope.row)"
+                      @click="markTaskAsFail(false, scope.row)"
                     >
                       <svg-icon
                         name="error"
@@ -267,6 +267,14 @@ export default class extends Mixins(TaskOperationMixin) {
     // top header, tab margin, tab content, info header, task detail, others
     return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 100;
     // return window.innerHeight - 300;
+  }
+  private async markTaskAsSuccess(task: TaskModel) {
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+     this.markAsSuccess(taskDetail);
+  }
+  private async markTaskAsFail(task: TaskModel) {
+    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+     this.markAsFail(taskDetail);
   }
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {
@@ -443,7 +451,7 @@ export default class extends Mixins(TaskOperationMixin) {
     // taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
     return taskDetail;
   }
-  private isMoreButtonDisabled(row:TaskModel) {
+  private isMoreButtonDisabled(row: TaskModel) {
     if (row.checkTool.status === TaskStatusEnum.TO_CONFIRM) return true;
     return false;
   }
