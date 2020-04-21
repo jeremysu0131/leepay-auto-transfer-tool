@@ -50,6 +50,7 @@ import { Component, Vue, Watch, Prop } from "vue-property-decorator";
 import { TaskModule } from "../../../store/modules/task";
 import TaskDetailModel from "@/models/taskDetailModel";
 import { AppModule } from "../../../store/modules/app";
+import TaskStatusEnum from "@/enums/taskStatusEnum";
 
 @Component({
   name: "TaskFailDialog"
@@ -92,7 +93,11 @@ export default class extends Vue {
         task: this.taskDetail,
         reason: this.form.note
       });
-
+      TaskModule.MoveCurrentTaskToLast({
+        ...this.taskDetail,
+        status: TaskStatusEnum.SUCCESS
+      });
+      await TaskModule.GetAll();
       this.$message.success("Task has been mark as fail");
       this.closeDialog();
     } catch (error) {

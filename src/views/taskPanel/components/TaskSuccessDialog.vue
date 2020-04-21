@@ -101,7 +101,7 @@ export default class extends Vue {
         task: this.taskDetail,
         note: this.form.note
       });
-      await TaskModule.MoveCurrentTaskToLast({
+      TaskModule.MoveCurrentTaskToLast({
         ...this.taskDetail,
         status: TaskStatusEnum.SUCCESS
       });
