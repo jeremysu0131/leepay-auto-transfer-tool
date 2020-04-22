@@ -195,6 +195,7 @@ export default class TaskOperationMixin extends Vue {
       return false;
     } finally {
       AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
+      AppModule.HANDLE_TASK_PROCESSING(true);
       TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     }
   }
