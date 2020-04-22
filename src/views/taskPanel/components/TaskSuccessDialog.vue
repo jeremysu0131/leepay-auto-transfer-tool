@@ -112,6 +112,7 @@ export default class extends Vue {
     } catch (error) {
       this.$message.error(error.toString());
     } finally {
+      AppModule.HANDLE_TASK_PROCESSING(false);
       this.isHandlingSuccess = false;
     }
   }

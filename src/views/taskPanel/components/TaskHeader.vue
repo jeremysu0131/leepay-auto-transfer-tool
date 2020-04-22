@@ -48,6 +48,7 @@ import { MessageBox } from "element-ui";
 import { AppModule } from "@/store/modules/app";
 import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
+import TaskStatusEnum from "../../../enums/taskStatusEnum";
 // import { getAccountCodeListInSkypay } from "../../../api/card";
 
 @Component({
@@ -70,17 +71,6 @@ export default class extends Mixins(TaskOperationMixin) {
     var refreshPageCounter = 0;
     var lastTime = +dayjs() / 1000;
     this.fetchInvervalID = setInterval(async() => {
-      /// Start check if interval delay
-      var nowTime = +dayjs() / 1000;
-      // if (lastTime < nowTime - 2) {
-      //   LogModule.SetLog({
-      //     level: "error",
-      //     message: `Interval delay, last: ${lastTime}, now: ${nowTime}`
-      //   });
-      // }
-      lastTime = nowTime;
-      /// End check if interval delay
-
       if (this.app.task.isFetchable && !this.app.account.isProcessingSignIn) {
         // Refresh task list
         if (this.app.task.fetchTimer === 0) {
@@ -93,13 +83,11 @@ export default class extends Mixins(TaskOperationMixin) {
             !this.app.task.isProcessing &&
             this.app.account.isSignInSuccess
           ) {
-            // This for keep skypay session
-            // getAccountCodeListInSkypay();
             await this.getBankBalance();
             refreshPageCounter = 0;
           }
         } else {
-          // this.$store.commit("MINUS_TASK_FETCH_TIMER");
+          AppModule.MINUS_TASK_FETCH_TIMER();
           if (this.checkBankCookieExpired()) {
             if (!this.app.task.isProcessing) {
               this.handleCookieExpired();
@@ -160,10 +148,11 @@ export default class extends Mixins(TaskOperationMixin) {
       if (taskLength !== 0 && !this.app.task.isProcessing) {
         for (let index = taskLength - 1; index >= 0; index--) {
           const task = this.task.list[index];
-          // if (task.toolStatus === "to-process" || task.toolStatus === "processing") {
-          //   this.handleRowSelect(task);
-          //   break;
-          // }
+          if (task.checkTool.status === TaskStatusEnum.TO_PROCESS ||
+          task.checkTool.status === TaskStatusEnum.PROCESSING) {
+            this.handleRowSelect(task);
+            break;
+          }
         }
       }
     }
@@ -174,11 +163,11 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private checkBankCookieExpired() {
     if (this.isWarnedBankTokenExpire) return;
-    if (this.account.current.code.indexOf("ABC") === -1) return;
-
-    return (
-      dayjs().subtract(30, "minute") > dayjs(this.app.account.signInSuccessAt)
-    );
+    if (this.account.current.code.indexOf("ABC") === -1) {
+      return (
+        dayjs().subtract(30, "minute") > dayjs(this.app.account.signInSuccessAt)
+      );
+    }
   }
   private handleCookieExpired() {
     if (this.app.task.isAutoProcess) {

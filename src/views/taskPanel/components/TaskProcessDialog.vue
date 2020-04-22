@@ -54,13 +54,12 @@ export default class extends Mixins(TaskOperationMixin) {
   private async handleTaskSuccess() {
     this.$store.commit("HANDLE_MARK_AS_SUCCESS_DIALOG", true);
     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
-    // this.$store.commit("HANDLE_TASK_PROCESSING", false);
   }
   private async handleTaskFail() {
     this.$store.commit("HANDLE_MARK_AS_FAIL_DIALOG", true);
     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
-    // this.$store.commit("HANDLE_TASK_PROCESSING", false);
   }
+  // TODO
   private async handleTaskToConfirm() {
     // await this.markAsToConfirm(true, this.selectedTask);
     this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
