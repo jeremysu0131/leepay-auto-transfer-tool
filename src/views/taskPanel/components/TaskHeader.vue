@@ -49,7 +49,6 @@ import { AppModule } from "@/store/modules/app";
 import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
 import TaskStatusEnum from "../../../enums/taskStatusEnum";
-// import { getAccountCodeListInSkypay } from "../../../api/card";
 
 @Component({
   name: "TaskHeader",

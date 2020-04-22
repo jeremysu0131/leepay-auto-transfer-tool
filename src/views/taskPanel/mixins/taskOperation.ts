@@ -29,9 +29,13 @@ export default class TaskOperationMixin extends Vue {
 
       // Check if task can be claim
       if (await this.lockTask(task)) {
-    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+        var taskDetail = await TaskModule.GetDetail(
+          task,
+          AccountModule.current.id
+        );
 
         if (await this.checkIfTaskExecuted(task, taskDetail)) {
+          AppModule.HANDLE_TASK_AUTO_PROCESS(false);
           if (
             await this.confirmBeforeExecute(
               task.checkTool.id,
@@ -45,6 +49,8 @@ export default class TaskOperationMixin extends Vue {
               this.confirmExecuteMessage
             );
             await this.startTask(taskDetail);
+          } else {
+            AppModule.HANDLE_TASK_PROCESSING(false);
           }
         } else {
           TaskCheckHelper.createExecuteRecord(
