@@ -7,14 +7,14 @@ export function focusAndCheckIE() {
 
 function run() {
   try {
-    execSync("WindowFocusTool.exe", {
+    execSync("BankWorkerTool.exe WINDOW_FOCUS_TOOL", {
       // shell: false,
       cwd:
         process.env.NODE_ENV === "production"
-          ? process.resourcesPath + "/windowFocusTool"
-          : "windowFocusTool"
+          ? process.resourcesPath + "/bankWorkerTool"
+          : "bankWorkerTool"
     });
   } catch (error) {
-     logger({ level: "error", message: error });
+    logger({ level: "error", message: error });
   }
 }
