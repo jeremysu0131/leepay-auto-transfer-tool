@@ -265,7 +265,7 @@ export async function waitPageLoad(driver: WebDriver) {
  * @param interval (second) default 1s
  */
 export async function waitPageLoadCondition(
-  name : string,
+  name: string,
   driver: WebDriver,
   condition: WebElementCondition,
   maxRetry = 60,
@@ -335,7 +335,7 @@ export async function waitUtilGetText(
  */
 export async function isElementExist(driver: WebDriver, locator: Locator) {
   var elements = await driver.findElements(locator);
-  if (elements) {
+  if (elements && elements.length > 0) {
     return true;
   }
   return false;

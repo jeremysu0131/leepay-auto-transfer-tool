@@ -1,6 +1,6 @@
 const { exec } = require("child_process");
 const cwd =
-  process.env.NODE_ENV === "production" ? process.resourcesPath + "/keySender" : "keySender";
+  process.env.NODE_ENV === "production" ? process.resourcesPath + "/bankWorkerTool" : "bankWorkerTool";
 
 export const KeyEnum = {
   TAB: "VK_TAB",
@@ -13,7 +13,7 @@ Object.freeze(KeyEnum);
 
 export async function sendText(text: any, waitingTime = 3000, textInterval = 200) {
   return new Promise((resolve, reject) => {
-    var child = exec(`KeySender.exe "${text}" "${waitingTime}"`, { shell: false, cwd });
+    var child = exec(`BankWorkerTool.exe "KEY_SENDER ${text}" "${waitingTime}"`, { shell: false, cwd });
     child.on("error", (err: any) => reject(err));
     child.on("exit", () => resolve());
   });

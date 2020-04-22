@@ -15,9 +15,9 @@ var remitterAccount = {
 
 jest.setTimeout(300 * 1000);
 describe("CCBWorker", () => {
-  beforeAll(async() => {
+  beforeAll(async () => {
     worker = new BankWorker(remitterAccount);
-
+    await worker.setProxy();
     var isLaunched = await worker.launchSelenium({
       width: 1920,
       height: 980
@@ -26,16 +26,11 @@ describe("CCBWorker", () => {
     expect(isLaunched.isFlowExecutedSuccess).toBe(true);
   });
 
-  afterAll(async() => {
-    await worker.closeSelenium();
+  afterAll(async () => {
+    // await worker.closeSelenium();
   });
-  it("login:setAccount", async() => {
-    // const bank = { chineseName: "中国农业银行" } as BankModel;
-    // const payAccount = {
-    //   holderName: "植鎏颖",
-    //   cardNumber: "6230520850012468076",
-    //   bank
-    // } as PayeeAccountModel;
+
+  it("login:setAccount", async () => {
     const bank = { chineseName: "中国邮政储蓄银行" } as BankModel;
     const payAccount = {
       holderName: "康贻龙",
@@ -47,33 +42,33 @@ describe("CCBWorker", () => {
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });
 
-  it("login:submit", async() => {
+  it("login:submit", async () => {
     await worker.submitToSignIn();
     const success = await worker.checkIfLoginSuccess({});
     expect(success.isFlowExecutedSuccess).toEqual(true);
   });
 
-  it("get Balance", async() => {
+  it("get Balance", async () => {
     const result = await worker.getBalance();
     expect(result.balance).toBeGreaterThan(0);
   });
 
-  it("transfer:go transfer page", async() => {
+  it("transfer:go transfer page", async () => {
     const result = await worker.goTransferPage();
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });
 
-  it("transfer:fill transfer form", async() => {
+  it("transfer:fill transfer form", async () => {
     const result = await worker.fillTransferFrom();
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });
 
-  it("transfer:confirm transfer form", async() => {
+  it("transfer:confirm transfer form", async () => {
     const result = await worker.confirmTransaction();
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });
 
-  it("transfer:check transaction result", async() => {
+  it("transfer:check transaction result", async () => {
     const result = await worker.checkIfTransactionSuccess();
     expect(result.isFlowExecutedSuccess).toEqual(true);
   });

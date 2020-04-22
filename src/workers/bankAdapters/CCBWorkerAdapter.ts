@@ -1,14 +1,16 @@
 import dayjs, { Dayjs } from "dayjs";
 import * as fs from "fs";
-import { By, until, WebDriver, WebElement } from "selenium-webdriver";
+import { isElementExist, executeJavaScript, sendKeysV2, waitAndSwitchToTargetFrame, waitPageLoad, waitPageLoadCondition, waitUtilGetText } from "../utils/seleniumHelper";
+import { By, until, WebDriver, WebElement, error, Locator } from "selenium-webdriver";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import RemitterAccountModel from "../models/remitterAccountModel";
 import TaskDetailModel from "../models/taskDetailModel";
 import * as FormatHelper from "../utils/formatHelper";
 import * as KeySender from "../utils/keySender";
 import Logger from "../utils/logger";
-import { executeJavaScript, sendKeysV2, waitAndSwitchToTargetFrame, waitPageLoad, waitPageLoadCondition, waitUtilGetText } from "../utils/seleniumHelper";
+
 import * as UsbTrigger from "../utils/usbTrigger";
+import * as BankActivexTool from "../utils/bankActivexTool";
 import * as WindowFocusTool from "../utils/windowFocusTool";
 
 export class CCBWorkerAdapter implements IWorkerAdapter {
@@ -21,6 +23,7 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   private transactionTime: Dayjs;
   private bankMappingList: any;
   private screenshotPath: string = "";
+  private bankCode: string = "CCB";
   private readonly loginFrame = "fQRLGIN";
   private readonly wattingTime = 10 * 1000;
 
@@ -130,7 +133,6 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     }
     this.logInfo("fill login info success");
   }
-
   public async checkSignInInformationCorrectly(): Promise<boolean> {
     // 確認頁面載入
     await waitPageLoad(this.driver);
@@ -145,10 +147,9 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     );
     var userText = await user.getAttribute("value");
     if (userText !== this.remitterAccount.loginName) {
-      Logger({
-        level: "warn",
-        message: `Login user account incorrectly. Message on bank: CCB value : (${userText})`
-      });
+      this.logDebug(
+        `Login user account incorrectly. Message on bank: CCB value : (${userText})`
+      );
       return false;
     }
 
@@ -163,10 +164,9 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     );
     var passwordText = await password.getAttribute("value");
     if (passwordText !== this.remitterAccount.loginPassword) {
-      Logger({
-        level: "warn",
-        message: `Login password incorrectly. Message on bank: CCB value : (${passwordText})`
-      });
+      this.logDebug(
+        `Login password incorrectly. Message on bank: CCB value : (${passwordText})`
+      );
       return false;
     }
     return true;
@@ -179,16 +179,10 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
         until.elementLocated(By.id("loginButton"))
       );
       await webElement.click();
-      // 確認頁面載入
-      await waitPageLoad(this.driver);
+      await this.driver.wait(until.urlContains("B2CMainPlat"), this.wattingTime);
     } catch (e) {
-      throw new Error("can not find submit button");
+      throw new Error("can not find submit button - " + e);
     }
-    await waitPageLoadCondition(
-      "login to home page",
-      this.driver,
-      until.elementLocated(By.id("idxmaincontainer"))
-    );
   }
 
   async sendUSBKey(): Promise<void> {
@@ -198,14 +192,75 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   async checkIfLoginSuccess(globalState: {
     isManualLogin: boolean;
   }): Promise<boolean> {
-    // 確認頁面載入
-    // await waitPageLoad(this.driver);
     this.logInfo("check login status");
+    await this.waitPageLoading();
+    // 看看是不是有裝置驗證選擇畫面，如果有則點選U頓
+    if (await this.isInVerifyPage()) {
+      await this.selectTypeU(By.id("btnNext"));
+      if (!await this.inputUSBPassword()) {
+        throw new Error("input usb password fail");
+      }
+      await this.clickUSB();
+    }
+
+    let wait = this.wattingTime;
+    if (globalState.isManualLogin) {
+      wait = 30;
+    }
     const container = await this.driver.wait(
       until.elementLocated(By.id("idxmaincontainer")),
-      this.wattingTime
+      wait
     );
     return !!container;
+  }
+
+  async waitPageLoading(waitIntervel: number = 1000): Promise<void> {
+    let waitCount = 20;
+    while (waitCount > 0) {
+      try {
+        await this.driver.sleep(waitIntervel);
+        await waitPageLoad(this.driver);
+        this.logDebug("page load success");
+        return;
+      } catch (e) {
+        if (e instanceof (error.JavascriptError)) {
+          waitCount--;
+          continue;
+        }
+        console.log(e);
+        throw e;
+      }
+    }
+    throw new Error("wait for page load fail...");
+  }
+
+  async isInVerifyPage(): Promise<boolean> {
+    this.logDebug("try to check now!");
+    let retry = 3;
+    while (retry > 0) {
+      try {
+        await waitPageLoad(this.driver);
+        if (!await isElementExist(this.driver, By.id("mainfrm"))) {
+          return false;
+        }
+        await this.driver.switchTo().frame(this.driver.wait(until.elementLocated(By.id("mainfrm")), 3 * 1000));
+        await waitPageLoad(this.driver);
+        if (await isElementExist(this.driver, By.id("SafeTypeU"))) {
+          this.logInfo("in the device selection page");
+          return true;
+        }
+        this.logDebug("not in device selection page");
+        return false;
+      } catch (e) {
+        this.handleVerifyPageError(e);
+        retry--;
+        if (retry <= 0) {
+          this.logDebug("check is in verfiy page has error - " + e);
+          throw e;
+        }
+      }
+    }
+    return false;
   }
 
   async getCookie(): Promise<void> {
@@ -357,7 +412,6 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       until.elementLocated(By.className("pbd_table_step_title_no_line")),
       5 * 1000
     );
-    // check U 盾 id SafeTypeU switchAuthType(this.id);checkU();
     if (!checkTransactionPage) {
       throw new Error("not exist transaction check page");
     }
@@ -422,12 +476,69 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
   }
   async fillNote(): Promise<void> {
     // not necessary
-    this.logInfo("skip fill note");
+    this.logDebug("skip fill note");
   }
   async checkIfNoteFilled(): Promise<boolean> {
     this.logInfo("skip fill note");
     return true;
   }
+
+  async selectTypeU(nextButton: Locator) {
+    try {
+      const button = await this.driver.wait(
+        until.elementLocated(By.id("SafeTypeU")),
+        this.wattingTime
+      );
+      await button.click();
+      this.logDebug("type u clicked");
+
+      await this.driver.sleep(1 * 1000);
+      await this.driver.wait(until.elementLocated(nextButton), 10 * 1000).click();
+      this.logDebug("next button clicked");
+    } catch (e) {
+      this.handleVerifyPageError(e);
+    }
+  }
+
+  async inputUSBPassword(): Promise<boolean> {
+    let retry = 3;
+    while (retry > 0) {
+      this.logInfo("input usb password #" + retry);
+      var inputResult = await BankActivexTool.execute(this.bankCode, "INPUT_USB_PASSWORD", this.remitterAccount.usbPassword);
+      if (inputResult > 0) {
+        this.logInfo("usb password input success");
+        return true;
+      }
+      retry--;
+      if (retry <= 0) {
+        throw new Error("input usb fail - " + inputResult);
+      }
+      continue;
+    }
+    return false;
+  }
+
+  async clickUSB() {
+    this.logInfo("try to click usb");
+    try {
+      // click usb now
+      let retry = 10;
+      while (retry > 0) {
+        // UsbTrigger.run(this.remitterAccount.code);
+        this.logInfo("usb clicked!");
+        await this.driver.sleep(1 * 1000);
+        let stage = await BankActivexTool.execute(this.bankCode, "GET_CURRENT_STAGE", "");
+        if (stage !== 2) {
+          return;
+        }
+        retry--;
+      }
+    } catch (error) {
+      this.logDebug(error);
+    }
+    throw new Error("try to click usb fail");
+  }
+
   async checkBankReceivedTransferInformation(): Promise<boolean> {
     this.logInfo("start check transaction info and setting remark");
     const task = this.getTask();
@@ -480,19 +591,10 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
       ),
       this.wattingTime
     );
-    let confirmButton;
-    for (const e of buttons) {
-      const value = await e.getAttribute("value");
-      if (!value) continue;
-      if (value === "确 认") {
-        confirmButton = e;
-        this.logInfo("found confirm button");
-        break;
-      }
-    }
-    if (!confirmButton) throw new Error("not found confirm button");
-    this.logInfo("confirm button click");
-    await confirmButton.click();
+
+    // 使用U盾傳帳 click #SafeTypeU;
+    await this.selectTypeU(By.css("input.btn[type=submit]"));
+
     await waitPageLoad(this.driver);
 
     return true;
@@ -501,45 +603,35 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
    *  等待 Loading 並輸入密碼
    * */
   async sendPasswordToPerformTransaction(): Promise<void> {
-    await KeySender.sendText(this.remitterAccount.usbPassword);
-    await KeySender.sendKey(KeySender.KeyEnum.RETURN);
-    this.logInfo("Send USB password success");
   }
 
   /**
    * 輸入玩U頓密碼後要觸發機械手臂 (測試中暫不執行)
    */
   async sendUsbPasswordToPerformTransaction(): Promise<void> {
-    // var retryTimes = 20;
-    // while (retryTimes >= 0) {
-    //   try {
-    //     if (retryTimes === 0) {
-    //       throw new Error("USB didn't press, please restart the task");
-    //     }
-    //     this.sleep(3);
-    //     this.sendUSBKey();
-    //     this.sleep(3);
-    //     const waitingCon = until.elementLocated(By.id("trnTips"));
-    //     await waitPageLoadCondition(this.driver, waitingCon);
-    //     var message = await this.driver.wait(waitingCon, 10 * 1000);
-    //     if (message) {
-    //       this.logInfo("USB pressed");
-    //       break;
-    //     }
-    //   } catch (error) {
-    //     if (error.name === "UnexpectedAlertOpenError") {
-    //       this.logWarn(`Waiting for usb press, remaining times: ${retryTimes}`);
-    //       continue;
-    //     } else if (error.name === "TimeoutError") {
-    //       this.logWarn("Can't get the element 'trnTips'");
-    //       break;
-    //     } else throw error;
-    //   } finally {
-    //     retryTimes--;
-    //   }
-    // }
-    // TODO 等待跳轉 用工具取代計時
-    await this.sleep(60);
+    if (!await this.inputUSBPassword()) {
+      throw new Error("input usb password fail");
+    }
+    this.logInfo("Send USB password success");
+    // click u key
+    let retry = 10;
+    while (retry > 0) {
+      try {
+        UsbTrigger.run(this.remitterAccount.code);
+        let stage = await BankActivexTool.execute(this.bankCode, "GET_CURRENT_STAGE", "");
+        this.logDebug("current stage - " + stage);
+        if (stage !== 2) {
+          break;
+        }
+      } catch (err) {
+        this.logDebug("click usb error - " + err);
+        throw new Error("click usb error - " + err);
+      }
+      this.driver.sleep(1 * 1000);
+      retry--;
+    }
+    this.logInfo("usb clicked!");
+
     // 結果頁面 截圖
     const base64Png = await this.driver.takeScreenshot();
     if (!base64Png) {
@@ -718,14 +810,14 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
 
   async getTransactionList(): Promise<
     | Array<{
-        cardNumber: string;
-        distName: string;
-        amount: string;
-        timeStr: string;
-        remark: string;
-        // 摘要
-        title: string;
-      }>
+      cardNumber: string;
+      distName: string;
+      amount: string;
+      timeStr: string;
+      remark: string;
+      // 摘要
+      title: string;
+    }>
     | undefined
     | null
   > {
@@ -866,8 +958,28 @@ export class CCBWorkerAdapter implements IWorkerAdapter {
     return balance;
   }
 
+  // 處理已知的錯誤
+  async handleVerifyPageError(e: any) {
+    if (e instanceof (error.UnexpectedAlertOpenError)) {
+      if (e.getAlertText().indexOf("短信验证码") > -1) {
+        // send click to off the alert;
+        this.driver.sleep(1 * 1000);
+        await KeySender.sendKey(KeySender.KeyEnum.RETURN);
+      }
+    } else if (e instanceof (error.JavascriptError)) {
+      this.logDebug("ignore....");
+    } else {
+      this.logWarn("error - " + e);
+      throw e;
+    }
+  }
+
   async sleep(s: number = 7) {
     await new Promise(resolve => setTimeout(resolve, s * 1000));
+  }
+
+  logDebug(message: string): void {
+    Logger({ level: "debug", message: message });
   }
 
   logInfo(message: string): void {
