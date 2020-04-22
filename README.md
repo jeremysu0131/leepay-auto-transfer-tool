@@ -3,25 +3,25 @@
 ## Project setup
 
 ```bash
-yarn install
+npm install
 ```
 
 ### Compiles and hot-reloads for development
 
 ```bash
-yarn serve
+npm run serve
 ```
 
 ### Compiles and minifies for production
 
 ```bash
-yarn build
+npm run build
 ```
 
 ### Lints and fixes files
 
 ```bash
-yarn lint
+npm run lint
 ```
 
 ### Run your unit tests
@@ -33,31 +33,19 @@ npm run test:unit --  '--runInBand' 'ABCWorker.spec.ts'
 ### Run your end-to-end tests
 
 ```bash
-yarn test:e2e
+npm run test:e2e
 ```
 
 ### Generate all svg components
 
 ```bash
-yarn svg
+npm run svg
 ```
 
 ### Customize Vue configuration
 
 See [Configuration Reference](https://cli.vuejs.org/config/).
 
-## Browsers support
-
-Modern browsers and Internet Explorer 10+.
-
-| [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="IE / Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>IE / Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Safari |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IE10, IE11, Edge                                                                                                                                                                                                | last 2 versions                                                                                                                                                                                                   | last 2 versions                                                                                                                                                                                               | last 2 versions                                                                                                                                                                                               |
-
-## Contributing
-
-See [CONTRIBUTING.md](https://github.com/Armour/vue-typescript-admin-template/blob/master/.github/CONTRIBUTING.md)
-
-## License
-
-[MIT License](https://github.com/Armour/vue-typescript-admin-template/blob/master/LICENSE)
+### 測試完成標準
+1. 自動登入
+2. 內轉 / 提現任務各跑三次以上
