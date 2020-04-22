@@ -13,6 +13,7 @@ import TaskModel from "@/models/taskModel";
 import TaskOperateEnum from "@/enums/taskOperateEnum";
 import dayjs from "dayjs";
 import { MessageBox } from "element-ui";
+import soundHelper from "@/utils/soundHelper";
 @Component
 export default class TaskOperationMixin extends Vue {
   public taskExecutedResult = [] as any[];
@@ -123,6 +124,7 @@ export default class TaskOperationMixin extends Vue {
         `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
         "<br>";
     });
+    soundHelper.play("danger");
     return MessageBox.prompt(
       message +
         '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
@@ -134,12 +136,15 @@ export default class TaskOperationMixin extends Vue {
         dangerouslyUseHTMLString: true
       }
     )
-      .then(async({ value }) => {
+      .then(({ value }) => {
         this.confirmExecuteMessage = value;
         return true;
       })
       .catch(() => {
         return false;
+      })
+      .finally(() => {
+        soundHelper.stop("danger");
       });
   }
   public async startTask(taskDetail: TaskDetailModel) {
