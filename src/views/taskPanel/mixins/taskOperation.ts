@@ -151,14 +151,12 @@ export default class TaskOperationMixin extends Vue {
     this.beforeExecuteTask(taskDetail);
     try {
       if (await this.runAutoTransferFlows()) {
-        await WorkerModule.RunFlow({
-          name: WorkflowEnum.CHECK_IF_SUCCESS
-        });
         this.handleTransferSuccess();
+      } else {
+        this.handleTransferFail();
       }
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
-      this.handleTransferFail();
     }
   }
   private beforeExecuteTask(taskDetail: TaskDetailModel) {
@@ -184,18 +182,19 @@ export default class TaskOperationMixin extends Vue {
       });
       await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_NOTE });
       await WorkerModule.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS });
       return true;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
-      LogModule.SetConsole({
-        level: "error",
-        message:
-          'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
-      });
+      // LogModule.SetConsole({
+      //   level: "error",
+      //   message:
+      //     'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
+      // });
       return false;
     } finally {
       AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
-      AppModule.HANDLE_TASK_PROCESSING(true);
+      // AppModule.HANDLE_TASK_PROCESSING(true);
       TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     }
   }
