@@ -297,8 +297,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return row.checkTool.status !== "to-confirm";
   }
   private isProcessButtonDisabled(row: TaskModel) {
-    // FIXME
-    // else if (this.app.task.isProcessing) return true;
+    if (this.app.task.isProcessing) return true;
     return false;
   }
   private isSuccessButtonDisabled(row: TaskModel) {
