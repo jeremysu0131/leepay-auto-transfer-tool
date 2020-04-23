@@ -7,7 +7,7 @@ import "winston-daily-rotate-file";
 import { join } from "path";
 const logFolderLocation =
   process.env.NODE_ENV === "production"
-    ? "/var/logs/bank-auto-transfer"
+    ? "/var/logs/bank-internal-fund-transfer"
     : "./logs";
 
 const errorStackTracerFormat = _format(info => {
