@@ -28,6 +28,7 @@
       </el-button>
       <el-button
         size="small"
+        :disabled="isSignInAutomaticallyDisable()"
         @click="signInAutomatically"
       >
         Auto Login
@@ -66,6 +67,12 @@ export default class extends Vue {
 
   handleClose() {
     this.dialogVisible = false;
+  }
+  private isSignInAutomaticallyDisable() {
+    if (AccountModule.selected.code.indexOf("PSBC") !== -1) {
+      return true;
+    }
+    return false;
   }
   signInAutomatically() {
     AppModule.HANDLE_MANUAL_LOGIN(false);
