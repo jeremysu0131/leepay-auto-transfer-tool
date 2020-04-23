@@ -64,7 +64,7 @@
         v-if="!currentAccount.accountCode"
         class="account-search__footer-button"
         :loading="isSigningInBank"
-        :disabled="!selectedBankCard"
+        :disabled="!selectedBankCard.id"
         @click="handleAccountSelect"
       >
         Select
