@@ -65,23 +65,25 @@ export default class extends Mixins(TaskOperationMixin) {
   private taskDialogVisible = false;
   private isFetchBoBalanceFail = false;
   private isWarnedBankTokenExpire = false;
+  private isFetchingTask = false;
 
   async beforeMount() {
     var refreshPageCounter = 0;
     var lastTime = +dayjs() / 1000;
     this.fetchInvervalID = setInterval(async() => {
-      if (this.app.task.isFetchable && !this.app.account.isProcessingSignIn) {
+      if (
+        !this.isFetchingTask &&
+        this.app.task.isFetchable &&
+        !this.app.account.isProcessingSignIn &&
+        this.app.account.isSignInSuccess
+      ) {
         // Refresh task list
         if (this.app.task.fetchTimer === 0) {
           await this.handleFetch();
           refreshPageCounter++;
 
           // Get bank balance each 30s
-          if (
-            refreshPageCounter >= 3 &&
-            !this.app.task.isProcessing &&
-            this.app.account.isSignInSuccess
-          ) {
+          if (refreshPageCounter >= 3 && !this.app.task.isProcessing) {
             await this.getBankBalance();
             refreshPageCounter = 0;
           }
@@ -147,8 +149,10 @@ export default class extends Mixins(TaskOperationMixin) {
       if (taskLength !== 0 && !this.app.task.isProcessing) {
         for (let index = taskLength - 1; index >= 0; index--) {
           const task = this.task.list[index];
-          if (task.checkTool.status === TaskStatusEnum.TO_PROCESS ||
-          task.checkTool.status === TaskStatusEnum.PROCESSING) {
+          if (
+            task.checkTool.status === TaskStatusEnum.TO_PROCESS ||
+            task.checkTool.status === TaskStatusEnum.PROCESSING
+          ) {
             this.handleRowSelect(task);
             break;
           }
@@ -191,6 +195,7 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private async handleFetch() {
     try {
+      this.isFetchingTask = true;
       await this.getTasks();
       // await Promise.all([this.getBoBalance(), this.getTasks()]);
       this.fetchButton.type = "success";
@@ -199,6 +204,7 @@ export default class extends Mixins(TaskOperationMixin) {
       LogModule.SetConsole({ level: "error", message: error });
       TaskModule.SET_TASK_LIST([]);
     } finally {
+      this.isFetchingTask = false;
       AppModule.RESET_TASK_FETCH_TIMER(9);
     }
   }
