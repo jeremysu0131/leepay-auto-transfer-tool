@@ -125,27 +125,30 @@ export default class TaskOperationMixin extends Vue {
         "<br>";
     });
     soundHelper.play("danger");
-    return MessageBox.prompt(
-      message +
-        '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
-      "",
-      {
-        inputPattern: /\S+/,
-        inputErrorMessage: "The reason can't be empty",
-        type: "warning",
-        dangerouslyUseHTMLString: true
-      }
-    )
-      .then(({ value }) => {
-        this.confirmExecuteMessage = value;
-        return true;
-      })
-      .catch(() => {
-        return false;
-      })
-      .finally(() => {
-        soundHelper.stop("danger");
-      });
+    return (
+      MessageBox.prompt(
+        message +
+          '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
+        "",
+        {
+          inputPattern: /\S+/,
+          inputErrorMessage: "The reason can't be empty",
+          type: "warning",
+          dangerouslyUseHTMLString: true
+        }
+      )
+        // @ts-ignore
+        .then(({ value }) => {
+          this.confirmExecuteMessage = value;
+          return true;
+        })
+        .catch(() => {
+          return false;
+        })
+        .finally(() => {
+          soundHelper.stop("danger");
+        })
+    );
   }
   public async startTask(taskDetail: TaskDetailModel) {
     this.beforeExecuteTask(taskDetail);
