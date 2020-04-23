@@ -65,6 +65,7 @@ export default class TaskOperationMixin extends Vue {
       }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
+      AppModule.HANDLE_TASK_PROCESSING(false);
     }
   }
   public async lockTask(task: TaskModel) {
