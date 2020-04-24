@@ -70,36 +70,36 @@ export default class extends Mixins(TaskOperationMixin) {
   async beforeMount() {
     var refreshPageCounter = 0;
     var lastTime = +dayjs() / 1000;
-    this.fetchInvervalID = setInterval(async() => {
-      if (
-        !this.isFetchingTask &&
-        this.app.task.isFetchable &&
-        !this.app.account.isProcessingSignIn &&
-        this.app.account.isSignInSuccess
-      ) {
-        // Refresh task list
-        if (this.app.task.fetchTimer === 0) {
-          await this.handleFetch();
-          refreshPageCounter++;
+    // this.fetchInvervalID = setInterval(async() => {
+    //   if (
+    //     !this.isFetchingTask &&
+    //     this.app.task.isFetchable &&
+    //     !this.app.account.isProcessingSignIn &&
+    //     this.app.account.isSignInSuccess
+    //   ) {
+    //     // Refresh task list
+    //     if (this.app.task.fetchTimer === 0) {
+    //       await this.handleFetch();
+    //       refreshPageCounter++;
 
-          // Get bank balance each 30s
-          if (refreshPageCounter >= 3 && !this.app.task.isProcessing) {
-            await this.getBankBalance();
-            refreshPageCounter = 0;
-          }
-        } else {
-          AppModule.MINUS_TASK_FETCH_TIMER();
-          if (this.checkBankCookieExpired()) {
-            if (!this.app.task.isProcessing) {
-              this.handleCookieExpired();
-            }
-          } else {
-            // Check if run auto process
-            this.handleAutoRowSelect();
-          }
-        }
-      }
-    }, 1 * 1000);
+    //       // Get bank balance each 30s
+    //       if (refreshPageCounter >= 3 && !this.app.task.isProcessing) {
+    //         await this.getBankBalance();
+    //         refreshPageCounter = 0;
+    //       }
+    //     } else {
+    //       AppModule.MINUS_TASK_FETCH_TIMER();
+    //       if (this.checkBankCookieExpired()) {
+    //         if (!this.app.task.isProcessing) {
+    //           this.handleCookieExpired();
+    //         }
+    //       } else {
+    //         // Check if run auto process
+    //         this.handleAutoRowSelect();
+    //       }
+    //     }
+    //   }
+    // }, 1 * 1000);
   }
   beforeDestroy() {
     clearInterval(this.fetchInvervalID);

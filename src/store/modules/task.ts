@@ -98,7 +98,7 @@ class Task extends VuexModule implements ITaskState {
   public async GetDetail(
     task: TaskModel,
     accountId: number // selected account id
-  ): Promise<TaskDetailModel> {
+  ): Promise<TaskDetailModel|null> {
     try {
       var data;
       switch (task.workflow) {
@@ -142,7 +142,7 @@ class Task extends VuexModule implements ITaskState {
       });
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
-      throw new Error(error);
+      return null;
     }
   }
 

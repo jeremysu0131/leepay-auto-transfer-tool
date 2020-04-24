@@ -34,6 +34,7 @@ export default class TaskOperationMixin extends Vue {
           task,
           AccountModule.current.id
         );
+        if (!taskDetail) return;
 
         if (await this.checkIfTaskExecuted(task, taskDetail)) {
           AppModule.HANDLE_TASK_AUTO_PROCESS(false);
