@@ -1,4 +1,4 @@
-import { Builder, By, until, WebDriver } from "selenium-webdriver";
+import { By, until, WebDriver } from "selenium-webdriver";
 import cheerio from "cheerio";
 import * as KeySender from "../utils/keySender";
 import * as UsbTrigger from "../utils/usbTrigger";
@@ -12,6 +12,7 @@ import {
   sendKeysV2
 } from "../utils/seleniumHelper";
 import * as WindowFocusTool from "../utils/windowFocusTool";
+import * as BankActivexTool from "../utils/bankActivexTool";
 import { IWorkerAdapter } from "../IWorkerAdapter";
 import dayjs, { Dayjs } from "dayjs";
 import Logger from "../utils/logger";
@@ -30,9 +31,11 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   private charge: string;
   private transactionTime: Dayjs;
   private bankMappingList: any;
+  private bankCode: string;
 
   constructor() {
     this.driver = {} as WebDriver;
+    this.bankCode = "ABC";
     this.bankUrl = "https://perbank.abchina.com/EbankSite/startup.do";
     // this.card = {};
     this.remitterAccount = new RemitterAccountModel();
@@ -264,11 +267,26 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   async inputPassword() {
     if (this.remitterAccount.loginPassword) {
       WindowFocusTool.focusAndCheckIE();
-      await KeySender.sendText(
-        this.remitterAccount.loginPassword,
-        3 * 1000,
-        250
-      );
+      // await KeySender.sendText(
+      //   this.remitterAccount.loginPassword,
+      //   3 * 1000,
+      //   250
+      // );
+      if (await BankActivexTool.execute(this.bankCode, "GET_CURRENT_STAGE", "") === 1) {
+        Logger({
+          level: "debug",
+          message: "login password field is ready"
+        });
+
+        if (await BankActivexTool.execute(this.bankCode, "INPUT_LOGIN_PASSWORD", this.remitterAccount.loginPassword) === 1) {
+          Logger({
+            level: "info",
+            message: "login password input success"
+          });
+        } else {
+          throw new Error("input login password fail");
+        }
+      }
     } else {
       throw new Error("Account password is null");
     }
@@ -299,9 +317,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
       await KeySender.sendKey(KeySender.KeyEnum.BACKSPACE, 200);
     }
   }
-  async submitToSignIn() {}
+  async submitToSignIn() { }
 
-  async sendUSBKey() {}
+  async sendUSBKey() { }
 
   async checkIfLoginSuccess(globalState: { isManualLogin: boolean }) {
     try {
@@ -489,9 +507,9 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
     return true;
   }
 
-  async fillNote() {}
+  async fillNote() { }
 
-  async confirmTransaction() {}
+  async confirmTransaction() { }
 
   async sendQueryPassword() {
     var retryTimes = 3;
@@ -509,9 +527,19 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           "Focus password box",
           "document.getElementById('agreeBtn').click();"
         );
-        await KeySender.sendText(this.remitterAccount.usbPassword);
-        await KeySender.sendKey(KeySender.KeyEnum.RETURN, 1000);
 
+        let inputQueryPasswordResult = await BankActivexTool.execute(this.bankCode, "INPUT_QUERY_PASSWORD", this.remitterAccount.queryPassword!);
+        if (inputQueryPasswordResult !== 1) {
+          Logger({
+            level: "warn",
+            message: "input query password fail - #" + retryTimes
+          });
+          continue;
+        } else {
+          // 點擊進行到下一步
+          await KeySender.sendKey(KeySender.KeyEnum.RETURN, 1000);
+          Logger({ level: "info", message: "Query password sent1" });
+        }
         var passwordMessage = await this.driver
           .wait(until.elementLocated(By.css("#powerpass_ieMsg")), 5 * 1000)
           .getText();
@@ -579,8 +607,25 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
    */
   // FIXME: 有時不需要輸入這個欄位, 可以增加一個判斷是否已經到轉帳成功頁面
   async sendUSBPasswordForTransfer() {
-    await KeySender.sendText(this.remitterAccount.usbPassword, 3 * 3000);
-    await KeySender.sendKey(KeySender.KeyEnum.RETURN);
+    let retry = 20;
+    while (retry > 0) {
+      let currentStage = await BankActivexTool.execute(this.bankCode, "GET_CURRENT_STAGE", "");
+      // 進到 usb 輸入頁面
+      if (currentStage === 3) {
+        Logger({ level: "info", message: "start to input usb password" });
+        if (await BankActivexTool.execute(this.bankCode, "INPUT_USB_PASSWORD", this.remitterAccount.loginPassword) !== 1) {
+          break;
+        }
+      }
+      // 進入到按確認按鈕頁面
+      if (currentStage === 4) {
+        break;
+      }
+      retry--;
+    }
+
+    // await KeySender.sendText(this.remitterAccount.usbPassword, 3 * 3000);
+    // await KeySender.sendKey(KeySender.KeyEnum.RETURN);
     Logger({
       level: "info",
       message: "Send USB password success"
@@ -595,8 +640,8 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
           throw new Error("USB didn't press, please restart the task");
         }
 
-        await this.driver.sleep(3 * 1000);
-        UsbTrigger.run(this.remitterAccount.code);
+        // 沒有機器人的時候要記得 commit 掉...
+        await UsbTrigger.run(this.remitterAccount.code);
         await this.driver.sleep(3 * 1000);
         // TODO: wait if page load
         // this wait 10 sec it because we need to wait the success page
@@ -622,7 +667,13 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
             message: "Can't get the element 'trnTips'"
           });
           break;
-        } else throw error;
+        } else {
+          Logger({
+            level: "error",
+            message: "wait for usb press has error - " + error
+          });
+          throw error;
+        }
       } finally {
         retryTimes--;
       }
@@ -775,7 +826,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         level: "info",
         message: `Customer advice - status: ${adviceTitle}, amount: ${amount}, charge: ${
           this.charge
-        }, time: ${this.transactionTime.format("HH:mm:ss")}`
+          }, time: ${this.transactionTime.format("HH:mm:ss")}`
       });
       // If the result shows success, than stop doing following job
       if (adviceTitle.indexOf("成功") !== -1) return true;
