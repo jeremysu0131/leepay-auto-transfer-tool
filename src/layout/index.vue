@@ -52,7 +52,7 @@ export default class extends mixins(ResizeMixin) {
   }
 
   get taskTabVisible() {
-    return AppModule.task.isVisible;
+    return AppModule.tabs.isTaskVisible;
   }
   get taskList() {
     return TaskModule.list;

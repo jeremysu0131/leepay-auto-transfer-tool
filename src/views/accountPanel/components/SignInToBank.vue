@@ -112,7 +112,7 @@ export default class extends Vue {
     AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
     AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
 
-    AppModule.HANDLE_TASK_VISIBLE(true);
+    AppModule.HANDLE_TASK_TAB_VISIBLE(true);
     AppModule.HANDLE_TASK_FETCHABLE(true);
     AppModule.HANDLE_SHOWING_TAB("tasks");
     AccountModule.SET_CURRENT(AccountModule.selected);
