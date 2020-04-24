@@ -529,7 +529,8 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         );
         // await KeySender.sendText(this.remitterAccount.usbPassword);
         // await KeySender.sendKey(KeySender.KeyEnum.RETURN, 1000);
-        let inputQueryPasswordResult = await BankActivexTool.execute(this.bankCode, "INPUT_QUERY_PASSWORD", this.remitterAccount.usbPassword);
+        let inputQueryPasswordResult = await BankActivexTool.execute(this.bankCode, "INPUT_QUERY_PASSWORD", this.remitterAccount.queryPassword!);
+        Logger({ level: "debug", message: "query password - " + this.remitterAccount.queryPassword });
         if (inputQueryPasswordResult !== 1) {
           Logger({
             level: "warn",
@@ -642,7 +643,7 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         }
 
         // 沒有機器人的時候要記得 commit 掉...
-        await UsbTrigger.run(this.remitterAccount.code);
+        // await UsbTrigger.run(this.remitterAccount.code);
         await this.driver.sleep(3 * 1000);
         // TODO: wait if page load
         // this wait 10 sec it because we need to wait the success page

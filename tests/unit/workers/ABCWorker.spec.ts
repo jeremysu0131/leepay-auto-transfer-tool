@@ -1,15 +1,17 @@
 import BankWorker from "@/workers/BankWorker";
 import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
+import RemitterAccountModel from '@/workers/models/remitterAccountModel';
 
 var worker: BankWorker;
-var remitterAccount = {
+var remitterAccount: RemitterAccountModel = {
   id: 63819,
   balance: 1,
   code: "TEST.ABC.237",
   loginName: "kdjroufe",
   loginPassword: "zz326598",
-  usbPassword: "326598",
-  proxy: "10.203.0.14:8800"
+  usbPassword: "zz326598",
+  queryPassword: "326598",
+  proxy: "52.175.31.129:8800"
 };
 var task: TaskDetailModel = {
   amount: 1,
