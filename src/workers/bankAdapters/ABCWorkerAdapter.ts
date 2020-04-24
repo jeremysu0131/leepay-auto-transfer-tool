@@ -165,11 +165,18 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         );
 
       await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
+      await this.getTransactionFee();
       return await this.checkSubmittedValue();
-      // TODO: Get transfer fee here
     } finally {
       await this.driver.switchTo().defaultContent();
     }
+  }
+
+  async getTransactionFee() {
+    await this.driver.wait(until.elementTextContains(this.driver.findElement(By.className("trn_confirmBalance")), "."), 3 * 1000);
+    let fee = await (await this.driver.findElements(By.className("trn_confirmBalance")))[1].getText();
+    Logger({ level: "info", message: "trasaction fee - " + fee });
+    this.charge = fee;
   }
   async sendPasswordToPerformTransaction(): Promise<void> {
     try {
@@ -184,7 +191,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
       await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
       await this.sendQueryPassword();
-      // TODO: Get transfer fee here
     } finally {
       await this.driver.switchTo().defaultContent();
     }
@@ -605,7 +611,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   /**
    * This to check if show the confirm message box
    */
-  // FIXME: 有時不需要輸入這個欄位, 可以增加一個判斷是否已經到轉帳成功頁面
   async sendUSBPasswordForTransfer() {
     let retry = 20;
     while (retry > 0) {
@@ -643,7 +648,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         // 沒有機器人的時候要記得 commit 掉...
         await UsbTrigger.run(this.remitterAccount.code);
         await this.driver.sleep(3 * 1000);
-        // TODO: wait if page load
         // this wait 10 sec it because we need to wait the success page
         var message = await this.driver.wait(
           until.elementLocated(By.id("trnTips")),
