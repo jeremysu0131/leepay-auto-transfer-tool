@@ -2,7 +2,7 @@
   <div class="task-list__container-header">
     <div class="current-account">
       <span>Current Account:</span>
-      <span style="font-weight: bold;">{{ account.current.code || "" }}</span>
+      <span style="font-weight: bold;">{{ currentAccount.code || "" }}</span>
     </div>
 
     <div class="bo-balance">
@@ -108,8 +108,8 @@ export default class extends Mixins(TaskOperationMixin) {
   get app() {
     return AppModule;
   }
-  get account() {
-    return AccountModule;
+  get currentAccount() {
+    return AccountModule.current;
   }
   get task() {
     return TaskModule;
@@ -122,20 +122,20 @@ export default class extends Mixins(TaskOperationMixin) {
   }
 
   get balanceInSystem() {
-    if (this.account.current.balance) {
+    if (this.currentAccount.balance) {
       return new Intl.NumberFormat("zh-CN", {
         style: "currency",
         currency: "CNY"
-      }).format(this.account.current.balance);
+      }).format(this.currentAccount.balance);
     }
     return "-";
   }
   get balanceInOnlineBank() {
-    if (this.account.current.balanceInBank) {
+    if (this.currentAccount.balanceInBank) {
       return new Intl.NumberFormat("zh-CN", {
         style: "currency",
         currency: "CNY"
-      }).format(this.account.current.balanceInBank);
+      }).format(this.currentAccount.balanceInBank);
     }
     return "-";
   }
@@ -166,7 +166,7 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private checkBankCookieExpired() {
     if (this.isWarnedBankTokenExpire) return;
-    if (this.account.current.code.indexOf("ABC") === -1) {
+    if (this.currentAccount.code.indexOf("ABC") === -1) {
       return (
         dayjs().subtract(30, "minute") > dayjs(this.app.account.signInSuccessAt)
       );
@@ -196,8 +196,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private async handleFetch() {
     try {
       this.isFetchingTask = true;
-      await this.getTasks();
-      // await Promise.all([this.getBoBalance(), this.getTasks()]);
+      await Promise.all([this.getBoBalance(), this.getTasks()]);
       this.fetchButton.type = "success";
     } catch (error) {
       this.fetchButton.type = "danger";
@@ -210,7 +209,8 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private async getBoBalance() {
     try {
-      await this.$store.dispatch("GetCurrentCardBoBalance");
+      var detail = await AccountModule.GetAccountDetail(this.currentAccount.id);
+      if (detail) AccountModule.SET_BANK_BO_BALANCE(detail.balance);
     } catch (error) {
       this.isFetchBoBalanceFail = true;
       throw error;
