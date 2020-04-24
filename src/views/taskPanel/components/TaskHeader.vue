@@ -49,6 +49,7 @@ import { AppModule } from "@/store/modules/app";
 import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
 import TaskStatusEnum from "../../../enums/taskStatusEnum";
+import { WorkerModule } from "../../../store/modules/worker";
 
 @Component({
   name: "TaskHeader",
@@ -218,10 +219,11 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private async getBankBalance() {
     try {
-      this.$store.commit("HANDLE_TASK_PROCESSING", true);
-      await this.$store.dispatch("GetBankBalance");
+      AppModule.HANDLE_TASK_PROCESSING(true);
+      var balance = await WorkerModule.GetBankBalance();
+      AccountModule.SET_BANK_BALANCE(balance);
     } finally {
-      this.$store.commit("HANDLE_TASK_PROCESSING", false);
+      AppModule.HANDLE_TASK_PROCESSING(false);
     }
   }
 }

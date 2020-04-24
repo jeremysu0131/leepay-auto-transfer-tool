@@ -248,14 +248,18 @@ class Worker extends VuexModule implements IWorkerState {
       return false;
     }
   }
-  // TODO
   @Action
-  async GetBankBalance() {
+  async GetBankBalance(): Promise<number> {
     try {
-      await transponder(ipcRenderer, WorkflowEnum.GET_BALANCE);
+      var { isFlowExecutedSuccess, balance } = await transponder(
+        ipcRenderer,
+        WorkflowEnum.GET_BALANCE
+      );
+      return balance || 0;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: "Fail to get balance" });
       LogModule.SetLog({ level: "error", message: error });
+      return 0;
     }
   }
 }

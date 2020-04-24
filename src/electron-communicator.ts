@@ -24,10 +24,27 @@ export const transponder = async (
   ipcRenderer: IpcRenderer,
   flowName: any,
   flowArgs?: any
-): Promise<{ isFlowExecutedSuccess: boolean; message?: string }> => {
+): Promise<{
+  isFlowExecutedSuccess: boolean;
+  message?: string;
+  balance?: number;
+}> => {
   return new Promise(resolve => {
-    ipcRenderer.once("asynchronous-reply", (event: Event, { isFlowExecutedSuccess, message }: { isFlowExecutedSuccess: boolean; message?: string }) => {
-        resolve({ isFlowExecutedSuccess, message });
+    ipcRenderer.once(
+      "asynchronous-reply",
+      (
+        event: Event,
+        {
+          isFlowExecutedSuccess,
+          message,
+          balance
+        }: {
+          isFlowExecutedSuccess: boolean;
+          message?: string;
+          balance?: number;
+        }
+      ) => {
+        resolve({ isFlowExecutedSuccess, message, balance });
       }
     );
     ipcRenderer.send("asynchronous-message", flowName, flowArgs);
