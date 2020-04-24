@@ -225,7 +225,7 @@ class Worker extends VuexModule implements IWorkerState {
         AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
         AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
         AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
-        AppModule.HANDLE_TASK_VISIBLE(true);
+        AppModule.HANDLE_TASK_TAB_VISIBLE(true);
         AppModule.HANDLE_TASK_FETCHABLE(true);
         AppModule.HANDLE_SHOWING_TAB("tasks");
 

@@ -34,6 +34,7 @@ export default class TaskOperationMixin extends Vue {
           task,
           AccountModule.current.id
         );
+        if (!taskDetail) return;
 
         if (await this.checkIfTaskExecuted(task, taskDetail)) {
           AppModule.HANDLE_TASK_AUTO_PROCESS(false);
@@ -167,7 +168,6 @@ export default class TaskOperationMixin extends Vue {
     TaskModule.SET_SELECTED_DETAIL(taskDetail);
     TaskModule.GetAll();
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-    AppModule.HANDLE_TASK_PROCESSING(true);
     TaskCheckHelper.updateStatus(
       TaskModule.selectedDetail.id,
       TaskStatusEnum.PROCESSING,
@@ -190,16 +190,7 @@ export default class TaskOperationMixin extends Vue {
       return true;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
-      // LogModule.SetConsole({
-      //   level: "error",
-      //   message:
-      //     'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
-      // });
       return false;
-    } finally {
-      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
-      // AppModule.HANDLE_TASK_PROCESSING(true);
-      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     }
   }
   public async handleTransferSuccess() {
@@ -260,12 +251,12 @@ export default class TaskOperationMixin extends Vue {
     // }
   }
   public markAsSuccess(taskDetail: TaskDetailModel) {
-    AppModule.HANDLE_TASK_HANDLING(true);
+    AppModule.HANDLE_TASK_PROCESSING(true);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
   public markAsFail(taskDetail: TaskDetailModel) {
-    AppModule.HANDLE_TASK_HANDLING(true);
+    AppModule.HANDLE_TASK_PROCESSING(true);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
@@ -288,7 +279,7 @@ export default class TaskOperationMixin extends Vue {
     //   });
   }
   public async markAsToConfirm(taskDetail: TaskDetailModel) {
-    AppModule.HANDLE_TASK_HANDLING(true);
+    AppModule.HANDLE_TASK_PROCESSING(true);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     try {
       await TaskCheckHelper.updateStatus(
@@ -306,11 +297,10 @@ export default class TaskOperationMixin extends Vue {
       await TaskModule.GetAll();
       TaskModule.GetAll();
       AppModule.HANDLE_TASK_PROCESSING(false);
-      AppModule.HANDLE_TASK_HANDLING(true);
     }
   }
   public async markAsReassign(isHandleCurrentTask: any, task: any) {
-    //   this.$store.commit("HANDLE_TASK_HANDLING", true);
+    //   this.$store.commit("HANDLE_TASK_PROCESSING", true);
     //   if (task) {
     //     this.$store.commit("SET_DATA_FOR_API", task);
     //   } else {
@@ -338,11 +328,11 @@ export default class TaskOperationMixin extends Vue {
     //           level: "error"
     //         });
     //       } finally {
-    //         this.$store.commit("HANDLE_TASK_HANDLING", false);
+    //         this.$store.commit("HANDLE_TASK_PROCESSING", false);
     //       }
     //     })
     //     .catch(() => {
-    //       this.$store.commit("HANDLE_TASK_HANDLING", false);
+    //       this.$store.commit("HANDLE_TASK_PROCESSING", false);
     //     });
     // }
   }
