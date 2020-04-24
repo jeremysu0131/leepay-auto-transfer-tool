@@ -605,7 +605,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
   /**
    * This to check if show the confirm message box
    */
-  // FIXME: 有時不需要輸入這個欄位, 可以增加一個判斷是否已經到轉帳成功頁面
   async sendUSBPasswordForTransfer() {
     let retry = 20;
     while (retry > 0) {

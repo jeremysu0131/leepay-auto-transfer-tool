@@ -6,5 +6,6 @@ export default class RemitterAccountModel extends AccountModel {
   loginName = "";
   loginPassword = "";
   usbPassword = "";
-  proxy="";
+  queryPassword?= "";
+  proxy = "";
 }
