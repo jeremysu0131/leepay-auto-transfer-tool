@@ -5,7 +5,7 @@ var db = new sqlite.Database("./state.db");
 
 // TODO Refactor
 
-db.serialize(function() {
+db.serialize(function () {
   // Check and create
   db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='task'", (
     selectError,
@@ -17,7 +17,7 @@ db.serialize(function() {
       console.log("creating table");
       db.run(
         "CREATE TABLE task (taskID INT, platform TEXT, reason TEXT, createBy TEXT, createAt TEXT)",
-        function(createError) {
+        function (createError) {
           if (createError) console.log(createError);
         }
       );

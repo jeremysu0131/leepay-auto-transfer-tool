@@ -16,10 +16,16 @@ module.exports = {
     "no-trailing-spaces": "off",
     indent: "off",
     quotes: [2, "double", { avoidEscape: true }],
-    // semi: [2, "always"],
     semi: "off",
     "@typescript-eslint/semi": ["error"],
-    "space-before-function-paren": [2, "never"],
+    "space-before-function-paren": [
+      "error",
+      {
+        anonymous: "always",
+        named: "never",
+        asyncArrow: "always"
+      }
+    ],
     "vue/array-bracket-spacing": "error",
     "vue/arrow-spacing": "error",
     "vue/block-spacing": "error",

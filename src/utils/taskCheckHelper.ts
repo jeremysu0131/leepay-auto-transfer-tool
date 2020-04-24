@@ -17,7 +17,7 @@ class CreateTaskRiskModel {
   remark: string = "";
 }
 
-export const create = async(
+export const create = async (
   task: TaskDetailModel,
   remitterAccountCode: string,
   operator: string
@@ -40,7 +40,7 @@ export const create = async(
   });
   return response.status === 201;
 };
-export const updateStatus = async(
+export const updateStatus = async (
   taskId: number,
   status: TaskStatusEnum,
   operator: string
@@ -56,7 +56,7 @@ export const updateStatus = async(
   });
   return response.data.status === status;
 };
-export const get = async(task: TaskModel) => {
+export const get = async (task: TaskModel) => {
   var response = await requestRisk({
     url: `/task/${task.id}`,
     method: "GET",
@@ -66,7 +66,7 @@ export const get = async(task: TaskModel) => {
   });
   return response.data || null;
 };
-export const getExecutedResult = async(toolID: number) => {
+export const getExecutedResult = async (toolID: number) => {
   var response = await requestRisk({
     url: `/task/${toolID}/executed`,
     method: "GET"
@@ -80,7 +80,7 @@ export const getExecutedResult = async(toolID: number) => {
     note: string;
   }>;
 };
-export const createExecuteRecord = async(
+export const createExecuteRecord = async (
   toolID: number,
   operateType: string,
   operator: string,
