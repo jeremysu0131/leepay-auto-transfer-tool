@@ -242,8 +242,6 @@ export default class extends Mixins(TaskOperationMixin) {
   private taskDialogVisible = false;
   private isFetchBoBalanceFail = false;
   private isWarnedBankTokenExpire = false;
-  private confirmExecuteMessage = "";
-  private taskExecutedResult = [] as any[];
 
   get app() {
     return AppModule;
@@ -263,7 +261,6 @@ export default class extends Mixins(TaskOperationMixin) {
   get selectedTask() {
     return this.task.selectedDetail;
   }
-
   get tableHeight() {
     // top header, tab margin, tab content, info header, task detail, others
     return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 100;
@@ -279,13 +276,11 @@ export default class extends Mixins(TaskOperationMixin) {
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     this.markAsFail(taskDetail);
   }
-
   private async markTaskAsToConfirm(task: TaskModel) {
     await this.lockTask(task);
     var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     this.markAsToConfirm(taskDetail);
   }
-
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {
       if (this.selectedTask.id === row.id) {
@@ -293,175 +288,6 @@ export default class extends Mixins(TaskOperationMixin) {
       }
     }
     return "";
-  }
-  private async lockTask(task: TaskModel) {
-    // check if locked
-    if (+task.assigneeId !== +UserModule.id) {
-      if (!(await TaskModule.Lock(task.id))) {
-        LogModule.SetConsole({
-          // title: "Automation Stopped",
-          level: "error",
-          message:
-            "Can not claim the tasks. Task has been assigned.\r\n" +
-            "Please claim it manully in order to process it\r\n" +
-            'Note: the "auto process task" has been turned off as the result.'
-        });
-        return false;
-      }
-    }
-    return true;
-  }
-  private async checkIfTaskExecuted(
-    task: TaskModel,
-    taskDetail: TaskDetailModel
-  ) {
-    // check tool id was 0 means not execute
-    if (task.checkTool.id === 0) {
-      await TaskCheckHelper.create(
-        taskDetail,
-        AccountModule.current.code,
-        UserModule.name
-      );
-      return false;
-    }
-
-    this.taskExecutedResult = await TaskCheckHelper.getExecutedResult(
-      task.checkTool.id
-    );
-    return this.taskExecutedResult.length > 0;
-  }
-  private confirmBeforeExecute(
-    toolId: number,
-    executedTasks: Array<{
-      id: number;
-      taskID: number;
-      operateType: string;
-      operator: string;
-      createAt: Date;
-      note: string;
-    }>
-  ): Promise<boolean> {
-    var message = "Previous executed record:" + "<br>";
-    executedTasks.forEach((executedTask, index) => {
-      message +=
-        `${index + 1}.` +
-        `At <span style="font-weight:bold">${dayjs(
-          executedTask.createAt
-        ).format("HH:mm:ss")}</span>` +
-        `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
-        "<br>";
-    });
-    return MessageBox.prompt(
-      message +
-        '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
-      "",
-      {
-        inputPattern: /\S+/,
-        inputErrorMessage: "The reason can't be empty",
-        type: "warning",
-        dangerouslyUseHTMLString: true
-      }
-    )
-      .then(async({ value }) => {
-        this.confirmExecuteMessage = value;
-        return true;
-      })
-      .catch(() => {
-        return false;
-      });
-  }
-  private async handleRowSelect(task: TaskModel) {
-    try {
-      AppModule.HANDLE_TASK_PROCESSING(true);
-
-      // Check if task can be claim
-      if (await this.lockTask(task)) {
-        var taskDetail = await this.getTaskDetail(task);
-
-        if (await this.checkIfTaskExecuted(task, taskDetail)) {
-          if (
-            await this.confirmBeforeExecute(
-              task.checkTool.id,
-              this.taskExecutedResult
-            )
-          ) {
-            TaskCheckHelper.createExecuteRecord(
-              task.checkTool.id,
-              TaskOperateEnum.EXECUTE,
-              UserModule.name,
-              this.confirmExecuteMessage
-            );
-            await this.startTask(taskDetail);
-          }
-        } else {
-          TaskCheckHelper.createExecuteRecord(
-            task.checkTool.id,
-            TaskOperateEnum.EXECUTE,
-            UserModule.name,
-            "First time run, create by system."
-          );
-          await this.startTask(taskDetail);
-        }
-      }
-    } catch (error) {
-      LogModule.SetConsole({ level: "error", message: error });
-    }
-  }
-  public async startTask(taskDetail: TaskDetailModel) {
-    this.beforeExecuteTask(taskDetail);
-    try {
-      if (await this.runAutoTransferFlows()) {
-        await WorkerModule.RunFlow({
-          name: WorkflowEnum.CHECK_IF_SUCCESS
-        });
-        this.handleTransferSuccess();
-      }
-    } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
-      this.handleTransferFail();
-    }
-  }
-  private beforeExecuteTask(taskDetail: TaskDetailModel) {
-    TaskModule.SET_SELECTED_DETAIL(taskDetail);
-    TaskModule.GetAll();
-    WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-    AppModule.HANDLE_TASK_PROCESSING(true);
-    TaskCheckHelper.updateStatus(
-      TaskModule.selectedDetail.id,
-      TaskStatusEnum.PROCESSING,
-      UserModule.name
-    );
-  }
-  private async runAutoTransferFlows() {
-    try {
-      await WorkerModule.RunFlow({
-        name: WorkflowEnum.SET_TASK,
-        args: TaskModule.selectedDetail
-      });
-      await WorkerModule.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
-      await WorkerModule.RunFlow({
-        name: WorkflowEnum.FILL_TRANSFER_INFORMATION
-      });
-      await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_NOTE });
-      await WorkerModule.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
-      return true;
-    } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
-      LogModule.SetConsole({
-        level: "error",
-        message:
-          'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
-      });
-      return false;
-    } finally {
-      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
-      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
-    }
-  }
-  private async getTaskDetail(task: TaskModel) {
-    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    // taskDetail.remitterAccount.proxy = await AccountModule.GetProxy(accountId);
-    return taskDetail;
   }
   private isMoreButtonDisabled(row: TaskModel) {
     if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) return true;
@@ -471,8 +297,7 @@ export default class extends Mixins(TaskOperationMixin) {
     return row.checkTool.status !== "to-confirm";
   }
   private isProcessButtonDisabled(row: TaskModel) {
-    // FIXME
-    // else if (this.app.task.isProcessing) return true;
+    if (this.app.task.isProcessing) return true;
     return false;
   }
   private isSuccessButtonDisabled(row: TaskModel) {

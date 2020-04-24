@@ -16,34 +16,29 @@
             <div>Request Amount:</div>
             <div>Status:</div>
           </div>
-          <div class="detail-data">
-            <div v-if="lastSelectedTask">
-              {{ lastSelectedTask.id }}
-            </div>
+          <div
+            v-show="lastSelectedTask.id!==0"
+            class="detail-data"
+          >
+            <div>{{ lastSelectedTask.id }}</div>
             <!-- <div v-if="lastSelectedTask && lastSelectedTask.bank">
               {{ card.currentDetail.channelGroup || ' - ' }}
             </div>-->
             <!-- <div v-if="lastSelectedTask">
               {{ lastSelectedTask.merchantName }}
             </div>-->
-            <div v-if="lastSelectedTask ">
-              {{ lastSelectedTask.payeeAccount.holderName }}
-            </div>
+            <div>{{ lastSelectedTask.payeeAccount.holderName }}</div>
             <div
               v-if="lastSelectedTask && lastSelectedTask.payeeAccount.bank.chineseName"
             >
               {{ lastSelectedTask.payeeAccount.bank.chineseName }}
             </div>
-            <div v-if="lastSelectedTask">
-              {{ lastSelectedTask.payeeAccount.cardNumber }}
-            </div>
-            <div v-if="lastSelectedTask">
+            <div>{{ lastSelectedTask.payeeAccount.cardNumber }}</div>
+            <div>
               {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"})
                 .format(lastSelectedTask.amount) }}
             </div>
-            <div v-if="lastSelectedTask">
-              {{ lastSelectedTask.status }}
-            </div>
+            <div>{{ lastSelectedTask.status }}</div>
           </div>
         </div>
       </div>
@@ -68,8 +63,11 @@
             <div>A/C Number:</div>
             <div>Request Amount:</div>
           </div>
-          <div class="detail-data">
-            <div v-if="selectedTaskDetail">
+          <div
+            v-if="selectedTaskDetail.id"
+            class="detail-data"
+          >
+            <div>
               {{ selectedTaskDetail.id }}
             </div>
             <!-- <div v-if="selectedTaskDetail">
@@ -78,18 +76,16 @@
             <div v-if="selectedTaskDetail">
               {{ selectedTaskDetail.merchantName }}
             </div>-->
-            <div v-if="selectedTaskDetail ">
+            <div>
               {{ selectedTaskDetail.payeeAccount.holderName }}
             </div>
-            <div
-              v-if="selectedTaskDetail && selectedTaskDetail.payeeAccount.bank.chineseName"
-            >
+            <div v-if="selectedTaskDetail && selectedTaskDetail.payeeAccount.bank.chineseName">
               {{ selectedTaskDetail.payeeAccount.bank.chineseName }}
             </div>
-            <div v-if="selectedTaskDetail">
+            <div>
               {{ selectedTaskDetail.payeeAccount.cardNumber }}
             </div>
-            <div v-if="selectedTaskDetail">
+            <div>
               {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"})
                 .format(selectedTaskDetail.amount) }}
             </div>
