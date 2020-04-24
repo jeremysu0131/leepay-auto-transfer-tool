@@ -1,9 +1,8 @@
 import BankWorker from "@/workers/BankWorker";
 import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
-import RemitterAccountModel from '@/workers/models/remitterAccountModel';
 
 var worker: BankWorker;
-var remitterAccount: RemitterAccountModel = {
+var remitterAccount = {
   id: 63819,
   balance: 1,
   code: "TEST.ABC.237",
