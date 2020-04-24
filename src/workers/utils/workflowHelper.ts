@@ -59,6 +59,11 @@ export function manualSignInWorkflowEnum() {
     {
       status: "pending",
       message: "",
+      name: WorkflowEnum.INPUT_SIGN_IN_INFORMATION
+    },
+    {
+      status: "pending",
+      message: "",
       name: WorkflowEnum.CHECK_IF_LOGIN_SUCCESS
     }
   ];
