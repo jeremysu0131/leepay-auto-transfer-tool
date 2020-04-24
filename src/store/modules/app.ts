@@ -15,11 +15,13 @@ export enum DeviceType {
 
 export interface IAppState {
   device: DeviceType;
+  platform: string;
   sidebar: {
     opened: boolean;
     withoutAnimation: boolean;
   };
   tabs: {
+    showing: string;
     isTaskVisible: boolean;
   };
   task: {
@@ -34,7 +36,6 @@ export interface IAppState {
   };
   account: {
     isFetching: boolean;
-    showingPage: string;
     signInSuccessAt: Date;
     isSignInSuccess: boolean;
     isProcessingSignIn: boolean;
@@ -48,12 +49,12 @@ class App extends VuexModule implements IAppState {
     withoutAnimation: false
   };
   public device = DeviceType.Desktop;
-  public platform = "leepay";
-  public showingTab = "accounts";
+  public platform = "skypay";
   public isManualLogin = true;
   public isProxySet = false;
   public tabs = {
-    isTaskVisible: false
+    isTaskVisible: false,
+    showing: "accounts"
   };
   public task = {
     isFetchable: true,
@@ -75,7 +76,7 @@ class App extends VuexModule implements IAppState {
 
   @Mutation
   public HANDLE_SHOWING_TAB(tabName: string) {
-    this.showingTab = tabName;
+    this.tabs.showing = tabName;
   }
   @Mutation
   public HANDLE_MANUAL_LOGIN(status: boolean) {
@@ -150,10 +151,10 @@ class App extends VuexModule implements IAppState {
   }
   @Mutation public RESET_APP_STATE() {
     this.platform = "leepay";
-    this.showingTab = "accounts";
     this.isManualLogin = true;
     this.isProxySet = false;
     this.tabs = {
+      showing: "accounts",
       isTaskVisible: false
     };
     this.task = {

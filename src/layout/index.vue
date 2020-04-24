@@ -45,7 +45,7 @@ export default class extends mixins(ResizeMixin) {
   private taskPanelLabel = "Task";
 
   get showingTab() {
-    return AppModule.showingTab;
+    return AppModule.tabs.showing;
   }
   set showingTab(newValue) {
     AppModule.HANDLE_SHOWING_TAB(newValue);
