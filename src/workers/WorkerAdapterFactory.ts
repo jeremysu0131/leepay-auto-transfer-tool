@@ -1,4 +1,4 @@
-import { ABCWorkerAdapter, CCBWorkerAdapter } from "./bankAdapters";
+import { ABCWorkerAdapter, CCBWorkerAdapter, PSBCWorkerAdapter } from "./bankAdapters";
 import { IWorkerAdapter } from "./IWorkerAdapter";
 
 /**
@@ -23,7 +23,7 @@ export class WorkerAdapterFactory {
     // else if (accountCode.indexOf("ICBC") !== -1) return new ICBCWorker();
     // else if (accountCode.indexOf("JZB") !== -1) return new JZBWorker();
     // else if (accountCode.indexOf("PINGAN") !== -1) return new PINGANWorker();
-    // else if (accountCode.indexOf("PSBC") !== -1) return new PSBCWorker();
+    else if (accountCode.indexOf("PSBC") !== -1) return new PSBCWorkerAdapter();
     throw new Error("No such bank rule");
   }
 }
