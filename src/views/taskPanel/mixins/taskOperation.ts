@@ -167,7 +167,6 @@ export default class TaskOperationMixin extends Vue {
     TaskModule.SET_SELECTED_DETAIL(taskDetail);
     TaskModule.GetAll();
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-    AppModule.HANDLE_TASK_PROCESSING(true);
     TaskCheckHelper.updateStatus(
       TaskModule.selectedDetail.id,
       TaskStatusEnum.PROCESSING,
@@ -190,16 +189,7 @@ export default class TaskOperationMixin extends Vue {
       return true;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
-      // LogModule.SetConsole({
-      //   level: "error",
-      //   message:
-      //     'Error happened during login, please login manually and click "confirm" button below when complete Note: the "auto process task" has been turned off as the result'
-      // });
       return false;
-    } finally {
-      AppModule.HANDLE_ACCOUNT_PROCESSING_SIGN_IN(false);
-      // AppModule.HANDLE_TASK_PROCESSING(true);
-      TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     }
   }
   public async handleTransferSuccess() {
@@ -306,7 +296,6 @@ export default class TaskOperationMixin extends Vue {
       await TaskModule.GetAll();
       TaskModule.GetAll();
       AppModule.HANDLE_TASK_PROCESSING(false);
-      AppModule.HANDLE_TASK_PROCESSING(true);
     }
   }
   public async markAsReassign(isHandleCurrentTask: any, task: any) {

@@ -99,7 +99,7 @@ class App extends VuexModule implements IAppState {
     this.task.isShowCheckProcessDialog = status;
   }
   @Mutation
-  HANDLE_TASK_TAB_VISIBLE(status: boolean) {
+ public HANDLE_TASK_TAB_VISIBLE(status: boolean) {
     this.tabs.isTaskVisible = status;
   }
   @Mutation
