@@ -86,20 +86,28 @@ class Account extends VuexModule implements IAccountState {
   }
 
   @Action
-  async GetAccountDetail(accountId: number): Promise<RemitterAccountModel> {
-    var response = await AccountApi.getDetailById(accountId);
-    const detail = response.data.data[0];
+  async GetAccountDetail(
+    accountId: number
+  ): Promise<RemitterAccountModel | null> {
+    try {
+      var response = await AccountApi.getDetailById(accountId);
+      const detail = response.data.data;
 
-    if (!detail) throw new Error("Get account detail fail");
-    var account = new RemitterAccountModel();
-    account.id = accountId;
-    account.balance = detail.balance;
-    account.code = detail.acctCode;
-    account.loginName = detail.acctUsername;
-    account.loginPassword = detail.acctPassword;
-    account.usbPassword = detail.acctUSBPass;
+      if (!detail) throw new Error("Get account detail fail");
+      var account = new RemitterAccountModel();
+      account.id = accountId;
+      account.balance = detail.balance;
+      account.code = detail.acctCode;
+      account.loginName = detail.acctUsername;
+      account.loginPassword = detail.acctPassword;
+      account.usbPassword = detail.acctUSBPass;
+      account.queryPassword = detail.acctQueryPass;
 
-    return account;
+      return account;
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+      return null;
+    }
   }
 
   @Action({ rawError: true })
