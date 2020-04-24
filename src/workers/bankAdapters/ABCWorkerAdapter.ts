@@ -643,7 +643,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         // 沒有機器人的時候要記得 commit 掉...
         await UsbTrigger.run(this.remitterAccount.code);
         await this.driver.sleep(3 * 1000);
-        // TODO: wait if page load
         // this wait 10 sec it because we need to wait the success page
         var message = await this.driver.wait(
           until.elementLocated(By.id("trnTips")),
