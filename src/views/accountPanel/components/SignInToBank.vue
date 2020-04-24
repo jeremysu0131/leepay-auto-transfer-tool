@@ -83,7 +83,6 @@ export default class extends Vue {
     this.checkResult.message = "Checking login status, please wait ...";
     if (await WorkerModule.CheckIfLoginSuccess()) {
       this.$message({ type: "success", message: "You have already loggin" });
-      this.handleSignInSuccess();
     } else {
       this.checkResult.type = "error";
       this.checkResult.message =
@@ -103,21 +102,9 @@ export default class extends Vue {
       }
     )
       .then(() => {
-        this.handleSignInSuccess();
+        WorkerModule.HandleSignInSuccess();
       })
       .catch(() => {});
-  }
-  handleSignInSuccess() {
-    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
-    AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
-    AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
-
-    AppModule.HANDLE_TASK_TAB_VISIBLE(true);
-    AppModule.HANDLE_TASK_FETCHABLE(true);
-    AppModule.HANDLE_SHOWING_TAB("tasks");
-    AccountModule.SET_CURRENT(AccountModule.selected);
-    AccountModule.SET_SELECTED(new RemitterAccountModel());
-    WorkerModule.UNSET_WORKFLOW();
   }
   cancel() {
     this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "account-search");

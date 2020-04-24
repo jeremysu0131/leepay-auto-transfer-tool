@@ -212,6 +212,21 @@ class Worker extends VuexModule implements IWorkerState {
     // if (this.worker) await this.worker.closeSelenium();
     await transponder(ipcRenderer, WorkflowEnum.CLOSE_SELENIUM);
   }
+  @Action
+  async HandleSignInSuccess() {
+    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
+    AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
+    AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
+
+    AppModule.HANDLE_TASK_TAB_VISIBLE(true);
+    AppModule.HANDLE_TASK_FETCHABLE(true);
+    AppModule.HANDLE_SHOWING_TAB("tasks");
+    AccountModule.SET_CURRENT(AccountModule.selected);
+    AccountModule.SET_SELECTED(new RemitterAccountModel());
+    WorkerModule.UNSET_WORKFLOW();
+    WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
+    await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
+  }
   @Action({ rawError: true })
   async CheckIfLoginSuccess() {
     const isManualLogin = AppModule.isManualLogin;
@@ -222,20 +237,10 @@ class Worker extends VuexModule implements IWorkerState {
       });
 
       if (isFlowExecutedSuccess) {
-        AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("account-search");
-        AppModule.HANDLE_ACCOUNT_SIGN_IN_SUCCESS(true);
-        AppModule.SET_SIGN_IN_SUCCESS_TIME(new Date());
-        AppModule.HANDLE_TASK_TAB_VISIBLE(true);
-        AppModule.HANDLE_TASK_FETCHABLE(true);
-        AppModule.HANDLE_SHOWING_TAB("tasks");
-
         // If selected card is empty, means this is called by relogin
         // if (AccountModule.selected.id) {
         // }
-        AccountModule.SET_CURRENT(AccountModule.selected);
-        AccountModule.SET_SELECTED(new RemitterAccountModel());
-        WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-        await Promise.all([this.GetBankBalance(), TaskModule.GetAll()]);
+        this.HandleSignInSuccess();
         return true;
       }
       return false;
