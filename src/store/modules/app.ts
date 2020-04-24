@@ -25,13 +25,12 @@ export interface IAppState {
   task: {
     isFetchable: boolean;
     isFetching: boolean;
-    isShowMarkAsSuccessDialog: boolean;
-    isShowMarkAsFailDialog: boolean;
-    isShowCheckProcessDialog: boolean;
-    isTaskHandling: boolean;
     fetchTimer: number;
     isAutoProcess: boolean;
     isProcessing: boolean;
+    isShowMarkAsSuccessDialog: boolean;
+    isShowMarkAsFailDialog: boolean;
+    isShowCheckProcessDialog: boolean;
   };
   account: {
     isFetching: boolean;
@@ -62,7 +61,6 @@ class App extends VuexModule implements IAppState {
     isShowMarkAsFailDialog: false,
     isShowMarkAsSuccessDialog: false,
     isShowCheckProcessDialog: false,
-    isTaskHandling: false,
     fetchTimer: 9,
     isAutoProcess: false,
     isProcessing: false
@@ -126,10 +124,6 @@ class App extends VuexModule implements IAppState {
   public RESET_TASK_FETCH_TIMER(time = 9) {
     this.task.fetchTimer = time;
   }
-  @Mutation
-  public HANDLE_TASK_HANDLING(status: boolean) {
-    this.task.isTaskHandling = status;
-  }
 
   @Mutation
   // Account
@@ -168,7 +162,6 @@ class App extends VuexModule implements IAppState {
       isShowMarkAsFailDialog: false,
       isShowMarkAsSuccessDialog: false,
       isShowCheckProcessDialog: false,
-      isTaskHandling: false,
       fetchTimer: 9,
       isAutoProcess: false,
       isProcessing: false

@@ -118,7 +118,7 @@ export default class extends Vue {
   }
   private closeDialog() {
     TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
-    AppModule.HANDLE_TASK_HANDLING(false);
+    AppModule.HANDLE_TASK_PROCESSING(false);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(false);
 
     this.form = {
