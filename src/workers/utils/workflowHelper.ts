@@ -187,6 +187,16 @@ const PSBCWorkflow = [
     status: "pending",
     message: "",
     name: WorkflowEnum.FILL_TRANSFER_INFORMATION
+  },
+  {
+    status: "pending",
+    message: "",
+    name: WorkflowEnum.CONFIRM_TRANSACTION
+  },
+  {
+    status: "pending",
+    message: "",
+    name: WorkflowEnum.CHECK_IF_SUCCESS
   }
 ];
 Object.freeze(PSBCWorkflow);
