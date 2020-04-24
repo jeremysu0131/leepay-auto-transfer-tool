@@ -98,7 +98,7 @@ class Task extends VuexModule implements ITaskState {
   public async GetDetail(
     task: TaskModel,
     accountId: number // selected account id
-  ): Promise<TaskDetailModel|null> {
+  ): Promise<TaskDetailModel | null> {
     try {
       var data;
       switch (task.workflow) {
@@ -164,7 +164,7 @@ class Task extends VuexModule implements ITaskState {
   }: {
     task: TaskDetailModel;
     note?: string;
-  }) {
+  }): Promise<boolean> {
     LogModule.SetLog({
       level: "debug",
       message: `Mark task success parameters: charge: ${task.bankCharge}`
@@ -198,9 +198,14 @@ class Task extends VuexModule implements ITaskState {
         default:
           break;
       }
+      return true;
     } catch (error) {
-      LogModule.SetConsole({ level: "error", message: error });
-      //   throw new Error("Mark task as success fail, please contact admin");
+      LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetConsole({
+        level: "error",
+        message: "Mark task as success fail, please contact admin"
+      });
+      return false;
     }
   }
   @Action

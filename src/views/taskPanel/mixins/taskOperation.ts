@@ -156,12 +156,26 @@ export default class TaskOperationMixin extends Vue {
     this.beforeExecuteTask(taskDetail);
     try {
       if (await this.runAutoTransferFlows()) {
-        this.handleTransferSuccess();
+        this.handleAutoMarkTaskSuccess(taskDetail);
       } else {
         this.handleTransferFail();
       }
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
+    }
+  }
+  async handleAutoMarkTaskSuccess(taskDetail: TaskDetailModel) {
+    var isSuccess = await TaskModule.MarkTaskSuccess({
+      task: taskDetail,
+      note: "Auto process by tool"
+    });
+    if (isSuccess) {
+      TaskModule.MoveCurrentTaskToLast({
+        ...taskDetail,
+        status: TaskStatusEnum.SUCCESS
+      });
+      await TaskModule.GetAll();
+      AppModule.HANDLE_TASK_PROCESSING(false);
     }
   }
   private beforeExecuteTask(taskDetail: TaskDetailModel) {
@@ -192,12 +206,6 @@ export default class TaskOperationMixin extends Vue {
       LogModule.SetLog({ level: "error", message: error });
       return false;
     }
-  }
-  public async handleTransferSuccess() {
-    await TaskModule.MarkTaskSuccess({
-      task: TaskModule.selectedForOperation
-    });
-    AppModule.HANDLE_TASK_PROCESSING(false);
   }
   public async handleTransferFail() {
     TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
