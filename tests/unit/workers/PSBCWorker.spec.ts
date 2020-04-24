@@ -89,13 +89,13 @@ describe("PSBCWorker", () => {
     expect(isSuccess.isFlowExecutedSuccess).toBe(true);
   });
 
-  // it("Confirm Transfer Result", async () => {
-  //   var isSuccess = await worker.confirmTransaction();
-  //   expect(isSuccess.isFlowExecutedSuccess).toBe(true);
-  // });
+  it("Confirm Transfer Result", async () => {
+    var isSuccess = await worker.confirmTransaction();
+    expect(isSuccess.isFlowExecutedSuccess).toBe(true);
+  });
 
-  // it("check transaction success", async () => {
-  //   var isSuccess = await worker.checkIfTransactionSuccess();
-  //   expect(isSuccess.isFlowExecutedSuccess).toBe(true);
-  // });
+  it("check transaction success", async () => {
+    var isSuccess = await worker.checkIfTransactionSuccess();
+    expect(isSuccess.isFlowExecutedSuccess).toBe(true);
+  });
 });
