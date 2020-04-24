@@ -20,7 +20,7 @@ import BankWorker from "./workers/BankWorker";
 //   });
 // };
 
-export const transponder = async(
+export const transponder = async (
   ipcRenderer: IpcRenderer,
   flowName: any,
   flowArgs?: any

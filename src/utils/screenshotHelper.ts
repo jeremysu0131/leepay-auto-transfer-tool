@@ -23,7 +23,7 @@ const capture = (filename: string) => {
     (error, sources) => {
       if (error) logger.log({ level: "error", message: error.toString() });
 
-      sources.forEach(function(source) {
+      sources.forEach(function (source) {
         if (source.name === "Entire screen" || source.name === "Screen 1") {
           fs.writeFile(
             `${folderPath}/${dayjs().format("YYYYMMDDHHmmss")}-${filename}.png`,

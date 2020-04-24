@@ -35,7 +35,7 @@ afterAll(() => {
 });
 
 describe("ABCWorker", () => {
-  it("Set IE Environment", async() => {
+  it("Set IE Environment", async () => {
       var isSuccess = await worker.setIEEnvironment();
       expect(isSuccess).toBe(true);
     });
@@ -43,7 +43,7 @@ describe("ABCWorker", () => {
   //     var isSuccess = await worker.setProxy();
   //     expect(isSuccess).toBe(true);
   //   });
-  it("Launch Selenium", async() => {
+  it("Launch Selenium", async () => {
       var isSuccess = await worker.launchSelenium({
         width: 1920,
         height: 1080
@@ -51,42 +51,42 @@ describe("ABCWorker", () => {
       expect(isSuccess).toBe(true);
     });
 
-  it("Input Sign In Information", async() => {
+  it("Input Sign In Information", async () => {
       var isSuccess = await worker.inputSignInInformation();
       expect(isSuccess).toBe(true);
     });
 
-  it("Submit to sign in", async() => {
+  it("Submit to sign in", async () => {
       var isSuccess = await worker.submitToSignIn();
       expect(isSuccess).toBe(true);
     });
 
-  it("Check if sign success", async() => {
+  it("Check if sign success", async () => {
       var isSuccess = await worker.checkIfLoginSuccess(false);
       expect(isSuccess).toBe(true);
     });
 
-  it("Set Task", async() => {
+  it("Set Task", async () => {
       var isSuccess = await worker.setTask(task);
       expect(isSuccess).toBe(true);
     });
 
-  it("Go Transfer Page", async() => {
+  it("Go Transfer Page", async () => {
       var isSuccess = await worker.goTransferPage();
       expect(isSuccess).toBe(true);
     });
 
-  it("Fill Transfer Form", async() => {
+  it("Fill Transfer Form", async () => {
       var isSuccess = await worker.fillTransferFrom();
       expect(isSuccess).toBe(true);
     });
 
-  it("", async() => {
+  it("", async () => {
       var isSuccess = await worker.confirmTransaction();
       expect(isSuccess).toBe(true);
     });
 
-  it("", async() => {
+  it("", async () => {
       var isSuccess = await worker.checkIfTransactionSuccess();
       expect(isSuccess).toBe(true);
     });

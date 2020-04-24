@@ -32,7 +32,7 @@ protocol.registerSchemesAsPrivileged([
 const workerCommunicator = (ipcMain: IpcMain) => {
   ipcMain.on(
     "asynchronous-message",
-    async(event: Event, flowName: any, flowArgs: any) => {
+    async (event: Event, flowName: any, flowArgs: any) => {
       logger({
         level: "debug",
         message: `Running flow name: ${flowName}, args: ${JSON.stringify(
@@ -41,7 +41,7 @@ const workerCommunicator = (ipcMain: IpcMain) => {
       });
       try {
         // eslint-disable-next-line no-async-promise-executor
-        var result = await new Promise(async(resolve, reject) => {
+        var result = await new Promise(async (resolve, reject) => {
           try {
             switch (flowName) {
               case WorkflowEnum.SET_WORKER:
@@ -151,7 +151,7 @@ app.on("activate", () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", async() => {
+app.on("ready", async () => {
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

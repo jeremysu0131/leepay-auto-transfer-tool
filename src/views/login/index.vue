@@ -140,7 +140,7 @@ export default class extends Vue {
   }
 
   private handleLogin() {
-    (this.$refs.loginForm as ElForm).validate(async(valid: boolean) => {
+    (this.$refs.loginForm as ElForm).validate(async (valid: boolean) => {
       if (valid) {
         this.loading = true;
         try {

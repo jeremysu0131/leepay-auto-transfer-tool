@@ -84,7 +84,7 @@ export default class extends Vue {
   };
 
   private handleConfirm() {
-    (this.$refs.taskSuccessForm as any).validate(async(valid: boolean) => {
+    (this.$refs.taskSuccessForm as any).validate(async (valid: boolean) => {
       if (valid) {
         await this.setTaskAsSuccess();
       } else {
