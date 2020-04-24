@@ -165,11 +165,18 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
         );
 
       await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
+      await this.getTransactionFee();
       return await this.checkSubmittedValue();
-      // TODO: Get transfer fee here
     } finally {
       await this.driver.switchTo().defaultContent();
     }
+  }
+
+  async getTransactionFee() {
+    await this.driver.wait(until.elementTextContains(this.driver.findElement(By.className("trn_confirmBalance")), "."), 3 * 1000);
+    let fee = await (await this.driver.findElements(By.className("trn_confirmBalance")))[1].getText();
+    Logger({ level: "info", message: "trasaction fee - " + fee });
+    this.charge = fee;
   }
   async sendPasswordToPerformTransaction(): Promise<void> {
     try {
@@ -184,7 +191,6 @@ export class ABCWorkerAdapter implements IWorkerAdapter {
 
       await this.driver.wait(until.elementLocated(By.id("agreeBtn")));
       await this.sendQueryPassword();
-      // TODO: Get transfer fee here
     } finally {
       await this.driver.switchTo().defaultContent();
     }
