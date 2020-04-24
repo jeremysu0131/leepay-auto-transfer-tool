@@ -59,30 +59,33 @@ class Task extends VuexModule implements ITaskState {
     AppModule.HANDLE_TASK_FETCHING(true);
     try {
       var { data } = await TaskApi.getAll();
-      var tasks = (data.data as [])
-        .filter(
-          (task: any) => task.workflow !== TaskTypeEnum.WITHDRAW_DISTRIBUTION
-        )
-        .map((task: any) => {
-          switch (task.workflow) {
-            case TaskTypeEnum.PARTIAL_WITHDRAW:
-              return mappingPartialWithdraw(task);
-            case TaskTypeEnum.FUND_TRANSFER:
-              return mappingFundTransfer(task);
-            default:
-              throw new Error("No such task type");
-          }
-        })
-        .filter(
-          task => task.remitterAccountCode === AccountModule.current.code
-        );
-      tasks.forEach(async task => {
-        var data = await TaskCheckHelper.get(task);
-        if (data) {
-          task.checkTool.id = data.id;
-          task.checkTool.status = data.status;
-        }
-      });
+      var tasks = await Promise.all(
+        (data.data as [])
+          .filter(
+            (task: any) => task.workflow !== TaskTypeEnum.WITHDRAW_DISTRIBUTION
+          )
+          .map((task: any) => {
+            switch (task.workflow) {
+              case TaskTypeEnum.PARTIAL_WITHDRAW:
+                return mappingPartialWithdraw(task);
+              case TaskTypeEnum.FUND_TRANSFER:
+                return mappingFundTransfer(task);
+              default:
+                throw new Error("No such task type");
+            }
+          })
+          .filter(
+            task => task.remitterAccountCode === AccountModule.current.code
+          )
+          .map(async task => {
+            var data = await TaskCheckHelper.get(task);
+            if (data !== null) {
+              task.checkTool.id = data.id;
+              task.checkTool.status = data.status;
+            }
+            return task;
+          })
+      );
       TaskModule.SET_TASK_LIST(tasks);
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
@@ -95,7 +98,7 @@ class Task extends VuexModule implements ITaskState {
   public async GetDetail(
     task: TaskModel,
     accountId: number // selected account id
-  ): Promise<TaskDetailModel> {
+  ): Promise<TaskDetailModel|null> {
     try {
       var data;
       switch (task.workflow) {
@@ -139,7 +142,7 @@ class Task extends VuexModule implements ITaskState {
       });
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
-      throw new Error(error);
+      return null;
     }
   }
 

@@ -103,12 +103,13 @@ export default class extends Vue {
     } catch (error) {
       this.$message.error(error.toString());
     } finally {
+      AppModule.HANDLE_TASK_PROCESSING(false);
       this.isHandlingFail = false;
     }
   }
   closeDialog() {
     TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
-    AppModule.HANDLE_TASK_HANDLING(false);
+    AppModule.HANDLE_TASK_PROCESSING(false);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(false);
 
     this.form = { note: "" };

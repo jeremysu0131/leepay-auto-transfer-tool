@@ -48,7 +48,7 @@ import { MessageBox } from "element-ui";
 import { AppModule } from "@/store/modules/app";
 import TaskOperationMixin from "../mixins/taskOperation";
 import { LogModule } from "@/store/modules/log";
-// import { getAccountCodeListInSkypay } from "../../../api/card";
+import TaskStatusEnum from "../../../enums/taskStatusEnum";
 
 @Component({
   name: "TaskHeader",
@@ -65,52 +65,41 @@ export default class extends Mixins(TaskOperationMixin) {
   private taskDialogVisible = false;
   private isFetchBoBalanceFail = false;
   private isWarnedBankTokenExpire = false;
+  private isFetchingTask = false;
 
   async beforeMount() {
     var refreshPageCounter = 0;
     var lastTime = +dayjs() / 1000;
-    this.fetchInvervalID = setInterval(async() => {
-      /// Start check if interval delay
-      var nowTime = +dayjs() / 1000;
-      // if (lastTime < nowTime - 2) {
-      //   LogModule.SetLog({
-      //     level: "error",
-      //     message: `Interval delay, last: ${lastTime}, now: ${nowTime}`
-      //   });
-      // }
-      lastTime = nowTime;
-      /// End check if interval delay
+    // this.fetchInvervalID = setInterval(async() => {
+    //   if (
+    //     !this.isFetchingTask &&
+    //     this.app.task.isFetchable &&
+    //     !this.app.account.isProcessingSignIn &&
+    //     this.app.account.isSignInSuccess
+    //   ) {
+    //     // Refresh task list
+    //     if (this.app.task.fetchTimer === 0) {
+    //       await this.handleFetch();
+    //       refreshPageCounter++;
 
-      if (this.app.task.isFetchable && !this.app.account.isProcessingSignIn) {
-        // Refresh task list
-        if (this.app.task.fetchTimer === 0) {
-          await this.handleFetch();
-          refreshPageCounter++;
-
-          // Get bank balance each 30s
-          if (
-            refreshPageCounter >= 3 &&
-            !this.app.task.isProcessing &&
-            this.app.account.isSignInSuccess
-          ) {
-            // This for keep skypay session
-            // getAccountCodeListInSkypay();
-            await this.getBankBalance();
-            refreshPageCounter = 0;
-          }
-        } else {
-          // this.$store.commit("MINUS_TASK_FETCH_TIMER");
-          if (this.checkBankCookieExpired()) {
-            if (!this.app.task.isProcessing) {
-              this.handleCookieExpired();
-            }
-          } else {
-            // Check if run auto process
-            this.handleAutoRowSelect();
-          }
-        }
-      }
-    }, 1 * 1000);
+    //       // Get bank balance each 30s
+    //       if (refreshPageCounter >= 3 && !this.app.task.isProcessing) {
+    //         await this.getBankBalance();
+    //         refreshPageCounter = 0;
+    //       }
+    //     } else {
+    //       AppModule.MINUS_TASK_FETCH_TIMER();
+    //       if (this.checkBankCookieExpired()) {
+    //         if (!this.app.task.isProcessing) {
+    //           this.handleCookieExpired();
+    //         }
+    //       } else {
+    //         // Check if run auto process
+    //         this.handleAutoRowSelect();
+    //       }
+    //     }
+    //   }
+    // }, 1 * 1000);
   }
   beforeDestroy() {
     clearInterval(this.fetchInvervalID);
@@ -160,10 +149,13 @@ export default class extends Mixins(TaskOperationMixin) {
       if (taskLength !== 0 && !this.app.task.isProcessing) {
         for (let index = taskLength - 1; index >= 0; index--) {
           const task = this.task.list[index];
-          // if (task.toolStatus === "to-process" || task.toolStatus === "processing") {
-          //   this.handleRowSelect(task);
-          //   break;
-          // }
+          if (
+            task.checkTool.status === TaskStatusEnum.TO_PROCESS ||
+            task.checkTool.status === TaskStatusEnum.PROCESSING
+          ) {
+            this.handleRowSelect(task);
+            break;
+          }
         }
       }
     }
@@ -174,11 +166,11 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private checkBankCookieExpired() {
     if (this.isWarnedBankTokenExpire) return;
-    if (this.account.current.code.indexOf("ABC") === -1) return;
-
-    return (
-      dayjs().subtract(30, "minute") > dayjs(this.app.account.signInSuccessAt)
-    );
+    if (this.account.current.code.indexOf("ABC") === -1) {
+      return (
+        dayjs().subtract(30, "minute") > dayjs(this.app.account.signInSuccessAt)
+      );
+    }
   }
   private handleCookieExpired() {
     if (this.app.task.isAutoProcess) {
@@ -203,6 +195,7 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private async handleFetch() {
     try {
+      this.isFetchingTask = true;
       await this.getTasks();
       // await Promise.all([this.getBoBalance(), this.getTasks()]);
       this.fetchButton.type = "success";
@@ -211,6 +204,7 @@ export default class extends Mixins(TaskOperationMixin) {
       LogModule.SetConsole({ level: "error", message: error });
       TaskModule.SET_TASK_LIST([]);
     } finally {
+      this.isFetchingTask = false;
       AppModule.RESET_TASK_FETCH_TIMER(9);
     }
   }

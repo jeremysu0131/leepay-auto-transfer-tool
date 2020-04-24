@@ -45,10 +45,10 @@ export function getGroup(id: number) {
 
 export function getDetailById(id: number) {
   return request({
-    url: "/adminAcct!search.do",
+    url: "/adminAcct!load.do",
     method: "POST",
     params: {
-      "a.acctCode": id
+      "a.id": id
     }
   });
 }

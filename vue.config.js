@@ -17,6 +17,35 @@ module.exports = {
         path.resolve(__dirname, "src/styles/_variables.scss"),
         path.resolve(__dirname, "src/styles/_mixins.scss")
       ]
+    },
+    electronBuilder: {
+      builderOptions: {
+        extraResources: [
+          {
+            from: "bankWorkerTool",
+            to: "bankWorkerTool",
+            filter: ["**/*"]
+          }
+        ],
+        win: {
+          requestedExecutionLevel: "highestAvailable",
+          extraFiles: ["IEDriverServer.exe"]
+        }
+      },
+      chainWebpackMainProcess: config => {
+        // Chain webpack config for electron main process only
+      },
+      chainWebpackRendererProcess: config => {
+        // Chain webpack config for electron renderer process only
+        // The following example will set IS_ELECTRON to true in your app
+        // config.plugin("define").tap(args => {
+        //   args[0]["IS_ELECTRON"] = true;
+        //   return args;
+        // });
+      },
+      // Provide an array of files that, when changed, will recompile the main process and restart Electron
+      // Your main process file will be added by default
+      mainProcessWatch: ["src/workers"]
     }
   },
   chainWebpack(config) {

@@ -38,11 +38,14 @@
 <script lang="ts">
 import { Component, Vue, Watch, Mixins } from "vue-property-decorator";
 import TaskOperationMixin from "../mixins/taskOperation";
+import { TaskModule } from "../../../store/modules/task";
+import { LogModule } from "../../../store/modules/log";
+import { AppModule } from "../../../store/modules/app";
 
 @Component({ name: "TaskProcessDialog" })
 export default class extends Mixins(TaskOperationMixin) {
   get app() {
-    return this.$store.state.app;
+    return AppModule;
   }
   @Watch("app.task.isShowCheckProcessDialog")
   onProcessDialogChange() {
@@ -52,23 +55,17 @@ export default class extends Mixins(TaskOperationMixin) {
     }
   }
   private async handleTaskSuccess() {
-    this.$store.commit("HANDLE_MARK_AS_SUCCESS_DIALOG", true);
-    this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
-    // this.$store.commit("HANDLE_TASK_PROCESSING", false);
+    AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
+    AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(false);
   }
   private async handleTaskFail() {
-    this.$store.commit("HANDLE_MARK_AS_FAIL_DIALOG", true);
-    this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
-    // this.$store.commit("HANDLE_TASK_PROCESSING", false);
+    AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
+    AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(false);
   }
   private async handleTaskToConfirm() {
-    // await this.markAsToConfirm(true, this.selectedTask);
-    this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", false);
-    // this.$store.commit("HANDLE_TASK_PROCESSING", false);
+    await this.markAsToConfirm(TaskModule.selectedDetail);
+    AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(false);
   }
-  // private closeDialog() {
-  //   this.$store.commit("HANDLE_TASK_HANDLING", false);
-  // }
 }
 </script>
 <style lang="scss" scoped>

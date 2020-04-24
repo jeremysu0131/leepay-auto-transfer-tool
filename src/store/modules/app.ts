@@ -15,28 +15,30 @@ export enum DeviceType {
 
 export interface IAppState {
   device: DeviceType;
+  platform: string;
   sidebar: {
     opened: boolean;
     withoutAnimation: boolean;
   };
+  tabs: {
+    showing: string;
+    isTaskVisible: boolean;
+  };
   task: {
-    isVisible: boolean;
     isFetchable: boolean;
     isFetching: boolean;
-    isShowMarkAsSuccessDialog: boolean;
-    isShowMarkAsFailDialog: boolean;
-    isShowCheckProcessDialog: boolean;
-    isTaskHandling: boolean;
     fetchTimer: number;
     isAutoProcess: boolean;
     isProcessing: boolean;
+    isShowMarkAsSuccessDialog: boolean;
+    isShowMarkAsFailDialog: boolean;
+    isShowCheckProcessDialog: boolean;
   };
-   account : {
-     isFetching:boolean;
-    showingPage: string,
-    signInSuccessAt: Date,
-    isSignInSuccess: boolean,
-    isProcessingSignIn:boolean
+  account: {
+    isFetching: boolean;
+    signInSuccessAt: Date;
+    isSignInSuccess: boolean;
+    isProcessingSignIn: boolean;
   };
 }
 
@@ -47,18 +49,19 @@ class App extends VuexModule implements IAppState {
     withoutAnimation: false
   };
   public device = DeviceType.Desktop;
-  public platform = "leepay";
-  public showingTab = "accounts";
+  public platform = "skypay";
   public isManualLogin = true;
   public isProxySet = false;
+  public tabs = {
+    isTaskVisible: false,
+    showing: "accounts"
+  };
   public task = {
-    isVisible: false,
     isFetchable: true,
     isFetching: false,
     isShowMarkAsFailDialog: false,
     isShowMarkAsSuccessDialog: false,
     isShowCheckProcessDialog: false,
-    isTaskHandling: false,
     fetchTimer: 9,
     isAutoProcess: false,
     isProcessing: false
@@ -73,7 +76,7 @@ class App extends VuexModule implements IAppState {
 
   @Mutation
   public HANDLE_SHOWING_TAB(tabName: string) {
-    this.showingTab = tabName;
+    this.tabs.showing = tabName;
   }
   @Mutation
   public HANDLE_MANUAL_LOGIN(status: boolean) {
@@ -96,8 +99,8 @@ class App extends VuexModule implements IAppState {
     this.task.isShowCheckProcessDialog = status;
   }
   @Mutation
-  HANDLE_TASK_VISIBLE(status: boolean) {
-    this.task.isVisible = status;
+ public HANDLE_TASK_TAB_VISIBLE(status: boolean) {
+    this.tabs.isTaskVisible = status;
   }
   @Mutation
   public HANDLE_TASK_AUTO_PROCESS(status: boolean) {
@@ -121,10 +124,6 @@ class App extends VuexModule implements IAppState {
   @Mutation
   public RESET_TASK_FETCH_TIMER(time = 9) {
     this.task.fetchTimer = time;
-  }
-  @Mutation
-  public HANDLE_TASK_HANDLING(status: boolean) {
-    this.task.isTaskHandling = status;
   }
 
   @Mutation
@@ -152,17 +151,18 @@ class App extends VuexModule implements IAppState {
   }
   @Mutation public RESET_APP_STATE() {
     this.platform = "leepay";
-    this.showingTab = "accounts";
     this.isManualLogin = true;
     this.isProxySet = false;
+    this.tabs = {
+      showing: "accounts",
+      isTaskVisible: false
+    };
     this.task = {
-      isVisible: false,
       isFetchable: false,
       isFetching: false,
       isShowMarkAsFailDialog: false,
       isShowMarkAsSuccessDialog: false,
       isShowCheckProcessDialog: false,
-      isTaskHandling: false,
       fetchTimer: 9,
       isAutoProcess: false,
       isProcessing: false
@@ -215,7 +215,7 @@ class App extends VuexModule implements IAppState {
   }
   @Action
   public async UnsetApp() {
-      this.RESET_APP_STATE();
+    this.RESET_APP_STATE();
   }
 }
 

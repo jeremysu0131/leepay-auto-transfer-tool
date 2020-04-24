@@ -64,7 +64,7 @@
         v-if="!currentAccount.accountCode"
         class="account-search__footer-button"
         :loading="isSigningInBank"
-        :disabled="!selectedBankCard"
+        :disabled="!selectedBankCard.id"
         @click="handleAccountSelect"
       >
         Select
@@ -90,7 +90,8 @@ import { AppModule } from "@/store/modules/app";
 import { AccountModule } from "../../../store/modules/account";
 import RemitterAccountModel from "../../../models/remitterAccountModel";
 import { WorkerModule } from "../../../store/modules/worker";
-@Component({ name: "BankCardSearch" })
+
+@Component({ name: "AccountSearch" })
 export default class extends Vue {
   private isSearchingCard = false;
   private isSigningInBank = false;
@@ -132,11 +133,13 @@ export default class extends Vue {
     var account = await AccountModule.GetAccountDetail(
       this.selectedBankCard.id
     );
-    account.proxy = await AccountModule.GetProxy(this.selectedBankCard.id);
-    AccountModule.SET_SELECTED(account);
+    if (account) {
+      account.proxy = await AccountModule.GetProxy(this.selectedBankCard.id);
+      AccountModule.SET_SELECTED(account);
 
-    await WorkerModule.SetWorker(account);
-    AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("select-sign-in-type");
+      await WorkerModule.SetWorker(account);
+      AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("select-sign-in-type");
+    }
   }
   private async handleBankCardChange() {
     // this.$store.commit("SET_SELECTED_CARD", this.selectedBankCard);

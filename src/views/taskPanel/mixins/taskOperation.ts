@@ -10,13 +10,188 @@ import TaskStatusEnum from "@/enums/taskStatusEnum";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import { UserModule } from "@/store/modules/user";
 import TaskModel from "@/models/taskModel";
+import TaskOperateEnum from "@/enums/taskOperateEnum";
+import dayjs from "dayjs";
+import { MessageBox } from "element-ui";
+import soundHelper from "@/utils/soundHelper";
 @Component
 export default class TaskOperationMixin extends Vue {
+  public taskExecutedResult = [] as any[];
+  public confirmExecuteMessage = "";
   public async getTasks() {
     // let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
     await TaskModule.GetAll();
 
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
+  }
+  public async handleRowSelect(task: TaskModel) {
+    try {
+      AppModule.HANDLE_TASK_PROCESSING(true);
+
+      // Check if task can be claim
+      if (await this.lockTask(task)) {
+        var taskDetail = await TaskModule.GetDetail(
+          task,
+          AccountModule.current.id
+        );
+        if (!taskDetail) return;
+
+        if (await this.checkIfTaskExecuted(task, taskDetail)) {
+          AppModule.HANDLE_TASK_AUTO_PROCESS(false);
+          if (
+            await this.confirmBeforeExecute(
+              task.checkTool.id,
+              this.taskExecutedResult
+            )
+          ) {
+            TaskCheckHelper.createExecuteRecord(
+              task.checkTool.id,
+              TaskOperateEnum.EXECUTE,
+              UserModule.name,
+              this.confirmExecuteMessage
+            );
+            await this.startTask(taskDetail);
+          } else {
+            AppModule.HANDLE_TASK_PROCESSING(false);
+          }
+        } else {
+          TaskCheckHelper.createExecuteRecord(
+            task.checkTool.id,
+            TaskOperateEnum.EXECUTE,
+            UserModule.name,
+            "First time run, create by system."
+          );
+          await this.startTask(taskDetail);
+        }
+      }
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+      AppModule.HANDLE_TASK_PROCESSING(false);
+    }
+  }
+  public async lockTask(task: TaskModel) {
+    // check if locked
+    if (+task.assigneeId !== +UserModule.id) {
+      if (!(await TaskModule.Lock(task.id))) {
+        LogModule.SetConsole({
+          // title: "Automation Stopped",
+          level: "error",
+          message:
+            "Can not claim the tasks. Task has been assigned.\r\n" +
+            "Please claim it manully in order to process it\r\n" +
+            'Note: the "auto process task" has been turned off as the result.'
+        });
+        return false;
+      }
+    }
+    return true;
+  }
+  private async checkIfTaskExecuted(
+    task: TaskModel,
+    taskDetail: TaskDetailModel
+  ) {
+    // check tool id was 0 means not execute
+    if (task.checkTool.id === 0) {
+      await TaskCheckHelper.create(
+        taskDetail,
+        AccountModule.current.code,
+        UserModule.name
+      );
+      return false;
+    }
+
+    this.taskExecutedResult = await TaskCheckHelper.getExecutedResult(
+      task.checkTool.id
+    );
+    return this.taskExecutedResult.length > 0;
+  }
+  private confirmBeforeExecute(
+    toolId: number,
+    executedTasks: Array<{
+      id: number;
+      taskID: number;
+      operateType: string;
+      operator: string;
+      createAt: Date;
+      note: string;
+    }>
+  ): Promise<boolean> {
+    var message = "Previous executed record:" + "<br>";
+    executedTasks.forEach((executedTask, index) => {
+      message +=
+        `${index + 1}.` +
+        `At <span style="font-weight:bold">${dayjs(
+          executedTask.createAt
+        ).format("HH:mm:ss")}</span>` +
+        `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
+        "<br>";
+    });
+    soundHelper.play("danger");
+    return (
+      MessageBox.prompt(
+        message +
+          '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
+        "",
+        {
+          inputPattern: /\S+/,
+          inputErrorMessage: "The reason can't be empty",
+          type: "warning",
+          dangerouslyUseHTMLString: true
+        }
+      )
+        // @ts-ignore
+        .then(({ value }) => {
+          this.confirmExecuteMessage = value;
+          return true;
+        })
+        .catch(() => {
+          return false;
+        })
+        .finally(() => {
+          soundHelper.stop("danger");
+        })
+    );
+  }
+  public async startTask(taskDetail: TaskDetailModel) {
+    this.beforeExecuteTask(taskDetail);
+    try {
+      if (await this.runAutoTransferFlows()) {
+        this.handleTransferSuccess();
+      } else {
+        this.handleTransferFail();
+      }
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+    }
+  }
+  private beforeExecuteTask(taskDetail: TaskDetailModel) {
+    TaskModule.SET_SELECTED_DETAIL(taskDetail);
+    TaskModule.GetAll();
+    WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
+    TaskCheckHelper.updateStatus(
+      TaskModule.selectedDetail.id,
+      TaskStatusEnum.PROCESSING,
+      UserModule.name
+    );
+  }
+  private async runAutoTransferFlows() {
+    try {
+      await WorkerModule.RunFlow({
+        name: WorkflowEnum.SET_TASK,
+        args: TaskModule.selectedDetail
+      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
+      await WorkerModule.RunFlow({
+        name: WorkflowEnum.FILL_TRANSFER_INFORMATION
+      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_NOTE });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS });
+      return true;
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      return false;
+    }
   }
   public async handleTransferSuccess() {
     await TaskModule.MarkTaskSuccess({
@@ -76,12 +251,12 @@ export default class TaskOperationMixin extends Vue {
     // }
   }
   public markAsSuccess(taskDetail: TaskDetailModel) {
-    AppModule.HANDLE_TASK_HANDLING(true);
+    AppModule.HANDLE_TASK_PROCESSING(true);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
   public markAsFail(taskDetail: TaskDetailModel) {
-    AppModule.HANDLE_TASK_HANDLING(true);
+    AppModule.HANDLE_TASK_PROCESSING(true);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
@@ -104,7 +279,7 @@ export default class TaskOperationMixin extends Vue {
     //   });
   }
   public async markAsToConfirm(taskDetail: TaskDetailModel) {
-    AppModule.HANDLE_TASK_HANDLING(true);
+    AppModule.HANDLE_TASK_PROCESSING(true);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     try {
       await TaskCheckHelper.updateStatus(
@@ -121,11 +296,11 @@ export default class TaskOperationMixin extends Vue {
     } finally {
       await TaskModule.GetAll();
       TaskModule.GetAll();
-      AppModule.HANDLE_TASK_HANDLING(true);
+      AppModule.HANDLE_TASK_PROCESSING(false);
     }
   }
   public async markAsReassign(isHandleCurrentTask: any, task: any) {
-    //   this.$store.commit("HANDLE_TASK_HANDLING", true);
+    //   this.$store.commit("HANDLE_TASK_PROCESSING", true);
     //   if (task) {
     //     this.$store.commit("SET_DATA_FOR_API", task);
     //   } else {
@@ -153,11 +328,11 @@ export default class TaskOperationMixin extends Vue {
     //           level: "error"
     //         });
     //       } finally {
-    //         this.$store.commit("HANDLE_TASK_HANDLING", false);
+    //         this.$store.commit("HANDLE_TASK_PROCESSING", false);
     //       }
     //     })
     //     .catch(() => {
-    //       this.$store.commit("HANDLE_TASK_HANDLING", false);
+    //       this.$store.commit("HANDLE_TASK_PROCESSING", false);
     //     });
     // }
   }

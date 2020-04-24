@@ -9,6 +9,7 @@ import store from "@/store";
 import { MessageBox } from "element-ui";
 import logger from "../../utils/logger";
 import ILog from "../../models/logModel";
+import { AppModule } from "./app";
 
 export interface ILogState {
   log: any[];
@@ -46,7 +47,7 @@ class Log extends VuexModule implements ILogState {
   public SetConsole(logInfo: ILog) {
     let { level, message } = logInfo;
     message = message.toString();
-    // this.HANDLE_TASK_AUTO_PROCESS(false);
+    AppModule.HANDLE_TASK_AUTO_PROCESS(false);
     this.SET_LOG(logInfo);
 
     var audio = new Audio(require("@/assets/sounds/alarm.mp3"));
