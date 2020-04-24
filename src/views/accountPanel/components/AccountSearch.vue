@@ -4,32 +4,6 @@
       <div class="account-search__prompt">
         Please select the account to use
       </div>
-      <!-- <el-form
-        :model="form"
-        :inline="true"
-        class="account-search__form"
-        label-position="left"
-        @submit.native.prevent
-      >
-        <el-form-item
-          label="Bank Code"
-          label-width="90px"
-        >
-          <el-input
-            v-model="form.accountCode"
-            size="small"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button
-            :loading="isSearchingCard"
-            size="small"
-            @click="searchCardByBankCode"
-          >
-            Search
-          </el-button>
-        </el-form-item>
-      </el-form>-->
     </div>
     <div>
       <el-table
@@ -96,22 +70,20 @@ export default class extends Vue {
   private isSearchingCard = false;
   private isSigningInBank = false;
   private selectedBankCard = {} as any;
-  private accountList = [] as any;
   private form = {
     accountCode: process.env.NODE_ENV === "development" ? "PSS_ICBC_003" : ""
   };
 
   async mounted() {
-    this.accountList = await AccountModule.GetAvailableAccount();
+    var accountList = await AccountModule.GetAvailableAccount();
+    AccountModule.SET_LIST(accountList);
   }
-  // ...mapGetters(["app", "card", "worker"]),
   get app() {
     return AppModule;
   }
-  // get card(){
-  // }
-  // get worker(){
-  // }
+  get accountList() {
+    return AccountModule.list;
+  }
   get currentAccount() {
     return AccountModule.current;
   }
@@ -119,16 +91,6 @@ export default class extends Vue {
     // top header, tab margin, tab content, info header, bank search prompt, search, footer, others
     return window.innerHeight - 50 - 16 - 30 - 65 - 74 - 57 - 56 - 30;
   }
-  // private async searchCardByBankCode() {
-  //   try {
-  //     this.isSearchingCard = true;
-  //     this.accountList = await AccountModule.Search(this.form.accountCode);
-  //   } catch (error) {
-  //     console.log(error);
-  //   } finally {
-  //     this.isSearchingCard = false;
-  //   }
-  // }
   private async handleAccountSelect() {
     var account = await AccountModule.GetAccountDetail(
       this.selectedBankCard.id
@@ -140,10 +102,6 @@ export default class extends Vue {
       await WorkerModule.SetWorker(account);
       AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("select-sign-in-type");
     }
-  }
-  private async handleBankCardChange() {
-    // this.$store.commit("SET_SELECTED_CARD", this.selectedBankCard);
-    // this.$store.commit("HANDLE_ACCOUNT_SHOWING_PAGE", "change-card");
   }
   private handleSelectedRow(val: any) {
     this.selectedBankCard = val;
