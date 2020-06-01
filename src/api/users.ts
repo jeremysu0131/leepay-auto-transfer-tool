@@ -1,21 +1,57 @@
 import request from "@/utils/request";
-
-export const getUserInfo = (data: any) =>
-  request({
-    url: "/users/info",
-    method: "post",
-    data
+import requestSkypay from "@/utils/requestSkypay";
+export function login({ username, password }: { username: string; password: string }) {
+  return request({
+    url: "/ps-ops-mgmt/api/operator_sessions",
+    method: "POST",
+    data: {
+      operatorName: username,
+      password
+    }
   });
+}
 
-export const login = (data: any) =>
-  request({
+export function signInSkypay(username: string, password: string) {
+  return requestSkypay({
     url: "/aLogin!login.do",
-    method: "post",
-    data
+    method: "POST",
+    data: {
+      username,
+      password
+    }
   });
+}
 
-export const logout = () =>
-  request({
-    url: "/aLogin!logout.do",
-    method: "post"
+export function sendOTP(otp: string) {
+  return request({
+    url: "/ps-ops-mgmt/api/auth/google/valid-otp?otp=" + otp,
+    method: "POST"
   });
+}
+
+export function logout() {
+  return request({
+    url: "/ps-ops-mgmt/api/operator_sessions/logout",
+    method: "DELETE"
+  });
+}
+
+// export const getUserInfo = (data: any) =>
+//   request({
+//     url: "/users/info",
+//     method: "post",
+//     data
+//   });
+
+// export const login = (data: any) =>
+//   request({
+//     url: "/aLogin!login.do",
+//     method: "post",
+//     data
+//   });
+
+// export const logout = () =>
+//   request({
+//     url: "/aLogin!logout.do",
+//     method: "post"
+//   });

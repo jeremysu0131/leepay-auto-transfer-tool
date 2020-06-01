@@ -64,7 +64,7 @@
           <span>username: admin</span>
           <span>password: any</span>
         </div>
-      </div> -->
+      </div>-->
     </el-form>
   </div>
 </template>
@@ -73,7 +73,7 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { Route } from "vue-router";
 import { Dictionary } from "vue-router/types/router";
-import { Form as ElForm, Input } from "element-ui";
+import { Form as ElForm, Input, Message, MessageBox } from "element-ui";
 import { UserModule } from "@/store/modules/user";
 import { isValidUsername } from "@/utils/validate";
 
@@ -96,8 +96,8 @@ export default class extends Vue {
     }
   };
   private loginForm = {
-    username: "js",
-    password: "123456"
+    username: "jeremy",
+    password: "1qaz@WSX"
   };
   private loginRules = {
     username: [{ validator: this.validateUsername, trigger: "blur" }],
@@ -144,7 +144,8 @@ export default class extends Vue {
       if (valid) {
         this.loading = true;
         try {
-          await UserModule.Login(this.loginForm);
+          const [isSignIn, isSignInSkypay] = await Promise.all([this.SignIn(), this.SignInSkypay()]);
+          if (isSignIn && isSignInSkypay) await this.sendOTP();
           this.$router.push({
             path: this.redirect || "/",
             query: this.otherQuery
@@ -162,6 +163,37 @@ export default class extends Vue {
         return false;
       }
     });
+  }
+  async SignIn() {
+    let { isSignIn, message } = await UserModule.Login(this.loginForm);
+    if (!isSignIn) this.$message({ type: "error", message: message.toString() });
+    return isSignIn;
+  }
+  async SignInSkypay() {
+    let { isSignIn, message } = await UserModule.SignInSkypay(this.loginForm);
+    if (!isSignIn) this.$message({ type: "error", message: message.toString() });
+    return isSignIn;
+  }
+  sendOTP() {
+    MessageBox.prompt("Please input authentication code", "Login Authentication", {
+      confirmButtonText: "OK",
+      cancelButtonText: "Cancel",
+      inputPattern: /^[0-9]*$/,
+      inputErrorMessage: "Only number"
+    })
+      // @ts-ignore
+      .then(({ value }) => {
+        return UserModule.SendOTP(value);
+      })
+      .then(response => {
+        this.$router.push({ path: "/" });
+      })
+      .catch(error => {
+        return this.$message({
+          type: "error",
+          message: error.message
+        });
+      });
   }
 
   private getOtherQuery(query: Dictionary<string>) {

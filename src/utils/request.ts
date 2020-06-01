@@ -2,32 +2,46 @@ import axios from "axios";
 import qs from "qs";
 import { Message, MessageBox } from "element-ui";
 import { UserModule } from "@/store/modules/user";
+import http from "http";
+import https from "https";
 
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API,
   timeout: 15000,
-  transformRequest: data => {
-    return qs.stringify(data);
+  headers: {
+    Accept: "application/json;charset=utf-8"
+  },
+  // keepAlive pools and reuses TCP connections, so it's faster
+  httpAgent: new http.Agent({ keepAlive: true }),
+  httpsAgent: new https.Agent({ keepAlive: true }),
+
+  // follow up to 10 HTTP 3xx redirects
+  maxRedirects: 10,
+
+  // cap the maximum content length we'll accept to 50MBs, just in case
+  maxContentLength: 50 * 1000 * 1000,
+  paramsSerializer: function(params) {
+    return qs.stringify(params, { arrayFormat: "brackets" });
   }
 });
 
 // Request interceptors
 service.interceptors.request.use(
-  (config) => {
+  config => {
     // Add X-Access-Token header to every request, you can add other custom headers here
-    if (UserModule.token) {
-      config.headers["Set-Cookie"] = UserModule.token;
+    if (UserModule.leepayToken) {
+      config.headers["Authorization"] = UserModule.leepayToken;
     }
     return config;
   },
-  (error) => {
+  error => {
     Promise.reject(error);
   }
 );
 
 // Response interceptors
 service.interceptors.response.use(
-  (response) => {
+  response => {
     // code == 1: success
     // Some example codes here:
     // code == 50001: invalid access token
@@ -63,7 +77,7 @@ service.interceptors.response.use(
     return response;
     // }
   },
-  (error) => {
+  error => {
     Message({
       message: error.message,
       type: "error",

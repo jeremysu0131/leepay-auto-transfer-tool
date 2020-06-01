@@ -1,5 +1,5 @@
 import { VuexModule, Module, Action, Mutation, getModule } from "vuex-module-decorators";
-import { login, logout, getUserInfo } from "@/api/users";
+import { login, logout, sendOTP, signInSkypay } from "@/api/users";
 import { getToken, setToken, removeToken } from "@/utils/cookies";
 import { IUserData } from "@/api/types";
 import store from "@/store";
@@ -10,7 +10,8 @@ import { LogModule } from "./log";
 import { AppModule } from "./app";
 
 export interface IUserState {
-  token: string;
+  leepayToken: string;
+  skypayToken: string;
   name: string;
   avatar: string;
   introduction: string;
@@ -19,7 +20,8 @@ export interface IUserState {
 
 @Module({ dynamic: true, store, name: "user" })
 class User extends VuexModule implements IUserState {
-  public token = getToken() || "";
+  public leepayToken = getToken("LEEPAY") || "";
+  public skypayToken = getToken("SKYPAY") || "";
   public id = 0;
   public name = "";
   public avatar = "";
@@ -27,8 +29,12 @@ class User extends VuexModule implements IUserState {
   public roles: string[] = [];
 
   @Mutation
-  private SET_TOKEN(token: string) {
-    this.token = token;
+  private SET_LEEPAY_TOKEN(token: string) {
+    this.leepayToken = token;
+  }
+  @Mutation
+  private SET_SKYPAY_TOKEN(token: string) {
+    this.skypayToken = token;
   }
 
   @Mutation
@@ -56,20 +62,19 @@ class User extends VuexModule implements IUserState {
     this.roles = roles;
   }
 
-  @Action
+  @Action({ rawError: true })
   public async Login(userInfo: { username: string; password: string }) {
     let { username, password } = userInfo;
     username = username.trim();
-    this.SET_TOKEN("");
+    this.SET_LEEPAY_TOKEN("");
     try {
-      const { data } = await login({ username, password });
+      const response = await login({ username, password });
+      const data = response.data;
+      const token = data.token;
+      this.SET_LEEPAY_TOKEN(token);
 
-      const token = data.data.token;
-      this.SET_TOKEN(token);
-
-      const userData: IUserData = data.data.admin;
-      this.SET_ID(userData.id);
-      this.SET_NAME(userData.username);
+      // this.SET_ID(userData.id);
+      this.SET_NAME(data.username);
       return { isSignIn: true, message: undefined };
     } catch (error) {
       const message = error.response.data.message || error;
@@ -77,44 +82,92 @@ class User extends VuexModule implements IUserState {
       return { isSignIn: false, message };
     }
   }
+  @Action
+  async SendOTP(otp: string) {
+    return new Promise((resolve, reject) => {
+      sendOTP(otp)
+        .then(response => {
+          const isSuccess = response.data.success;
+          if (isSuccess) {
+            resolve();
+          } else {
+            throw new Error("Authentication Code Fail");
+          }
+        })
+        .catch(error => {
+          // if send OTP fail, clean token
+          this.SET_LEEPAY_TOKEN("");
+          this.SET_NAME("");
+          removeToken("LEEPAY");
+          removeToken("SKYPAY");
+          reject(error);
+        });
+    });
+  }
+  @Action
+  async SignInSkypay(userInfo: { username: string; password: string }) {
+    removeToken("SKYPAY");
+    this.SET_SKYPAY_TOKEN("");
+    const username = userInfo.username.trim();
+
+    try {
+      let response = await signInSkypay(username, userInfo.password);
+      let data = response.data;
+      if (data.code !== 1) {
+        if (data.message) throw new Error(data.message);
+        throw new Error("Login to Skypay fail");
+      }
+      const token = response.headers["set-cookie"][0];
+      setToken("SKYPAY", token);
+      this.SET_SKYPAY_TOKEN(token);
+      return { isSignIn: true, message: undefined };
+    } catch (error) {
+      LogModule.SetLog({ level: "warn", message: error });
+      return { isSignIn: false, message: error };
+    }
+  }
 
   @Action
   public ResetToken() {
-    removeToken();
-    this.SET_TOKEN("");
+    removeToken("LEEPAY");
+    removeToken("SKYPAY");
+    this.SET_SKYPAY_TOKEN("");
+    this.SET_SKYPAY_TOKEN("");
     this.SET_ROLES([]);
   }
 
-  @Action
-  public async GetUserInfo() {
-    if (this.token === "") {
-      throw Error("GetUserInfo: token is undefined!");
-    }
-    const { data } = await getUserInfo({
-      /* Your params here */
-    });
-    if (!data) {
-      throw Error("Verification failed, please Login again.");
-    }
-    const { roles, name, avatar, introduction } = data.user;
-    // roles must be a non-empty array
-    if (!roles || roles.length <= 0) {
-      throw Error("GetUserInfo: roles must be a non-null array!");
-    }
-    this.SET_ROLES(roles);
-    this.SET_NAME(name);
-    this.SET_AVATAR(avatar);
-    this.SET_INTRODUCTION(introduction);
-  }
+  // @Action
+  // public async GetUserInfo() {
+  //   if (this.leepayToken === "") {
+  //     throw Error("GetUserInfo: token is undefined!");
+  //   }
+  //   const { data } = await getUserInfo({
+  //     /* Your params here */
+  //   });
+  //   if (!data) {
+  //     throw Error("Verification failed, please Login again.");
+  //   }
+  //   const { roles, name, avatar, introduction } = data.user;
+  //   // roles must be a non-empty array
+  //   if (!roles || roles.length <= 0) {
+  //     throw Error("GetUserInfo: roles must be a non-null array!");
+  //   }
+  //   this.SET_ROLES(roles);
+  //   this.SET_NAME(name);
+  //   this.SET_AVATAR(avatar);
+  //   this.SET_INTRODUCTION(introduction);
+  // }
 
   @Action
   public async LogOut() {
-    if (this.token === "") {
+    if (this.leepayToken === "") {
       throw Error("LogOut: token is undefined!");
     }
     await logout();
-    removeToken();
-    this.SET_TOKEN("");
+    removeToken("LEEPAY");
+    removeToken("SKYPAY");
+    this.SET_LEEPAY_TOKEN("");
+    this.SET_SKYPAY_TOKEN("");
     this.SET_ROLES([]);
 
     AppModule.UnsetApp();
