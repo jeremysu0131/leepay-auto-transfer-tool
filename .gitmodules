@@ -1,0 +1,3 @@
+[submodule "src/workers"]
+	path = src/workers
+	url = git@gitlab.wlft-team.com:WL-FT/PAYMENT/bank-worker.git
