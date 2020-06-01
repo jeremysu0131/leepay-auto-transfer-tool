@@ -75,7 +75,7 @@ export default class extends Vue {
   };
 
   async mounted() {
-    var accountList = await AccountModule.GetAvailableAccount();
+    let accountList = await AccountModule.GetAvailableAccount();
     AccountModule.SET_LIST(accountList);
   }
   get app() {
@@ -92,7 +92,7 @@ export default class extends Vue {
     return window.innerHeight - 50 - 16 - 30 - 65 - 74 - 57 - 56 - 30;
   }
   private async handleAccountSelect() {
-    var account = await AccountModule.GetAccountDetail(
+    let account = await AccountModule.GetAccountDetail(
       this.selectedBankCard.id
     );
     if (account) {

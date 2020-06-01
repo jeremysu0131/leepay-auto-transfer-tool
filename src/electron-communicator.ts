@@ -1,52 +1,29 @@
 import { IpcMain, Event, IpcRenderer } from "electron";
 import BankWorker from "./workers/BankWorker";
+import WorkerResponseModel from "./workers/models/workerResponseModel";
+import WorkerIeStatusResponseModel from "./workers/models/workerIeStatusResponseModel";
+import WorkerBalanceResponseModel from "./workers/models/workerBalanceResponseModel";
+import WorkerTransferFeeResponseModel from "./workers/models/workerTransferFeeResponseModel";
 
-//  const communicator = (ipcMain: IpcMain) => {
-//   ipcMain.on("asynchronous-message", async(event: Event, arg: any) => {
-//     console.log(arg);
-//     switch (arg) {
-//       case "SET_WORKER":
-//         console.log("run");
-//         worker = new BankWorker({} as TaskDetailModel);
-//         await worker.launchSelenium();
-//         break;
-
-//       default:
-//         console.log("rund");
-//         break;
-//     }
-
-//     event.sender.send("asynchronous-reply", "c reply");
-//   });
-// };
-
-export const transponder = async (
+export async function transponder<T>(
   ipcRenderer: IpcRenderer,
   flowName: any,
   flowArgs?: any
-): Promise<{
-  isFlowExecutedSuccess: boolean;
-  message?: string;
-  balance?: number;
-}> => {
+): Promise<
+  WorkerResponseModel | WorkerBalanceResponseModel | WorkerIeStatusResponseModel | WorkerTransferFeeResponseModel
+> {
   return new Promise(resolve => {
     ipcRenderer.once(
       "asynchronous-reply",
       (
         event: Event,
-        {
-          isFlowExecutedSuccess,
-          message,
-          balance
-        }: {
-          isFlowExecutedSuccess: boolean;
-          message?: string;
-          balance?: number;
-        }
-      ) => {
-        resolve({ isFlowExecutedSuccess, message, balance });
-      }
+        executedResult:
+          | WorkerResponseModel
+          | WorkerBalanceResponseModel
+          | WorkerIeStatusResponseModel
+          | WorkerTransferFeeResponseModel
+      ) => resolve(executedResult)
     );
     ipcRenderer.send("asynchronous-message", flowName, flowArgs);
   });
-};
+}

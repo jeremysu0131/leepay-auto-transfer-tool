@@ -1,15 +1,11 @@
-import {
-  VuexModule,
-  Module,
-  Mutation,
-  Action,
-  getModule
-} from "vuex-module-decorators";
+import { VuexModule, Module, Mutation, Action, getModule } from "vuex-module-decorators";
 import store from "@/store";
 import { MessageBox } from "element-ui";
 import logger from "../../utils/logger";
 import ILog from "../../models/logModel";
 import { AppModule } from "./app";
+import * as ScreenshotHelper from "@/utils/screenshotHelper";
+import LoggerService from "@/utils/LoggerService";
 
 export interface ILogState {
   log: any[];
@@ -18,12 +14,14 @@ export interface ILogState {
 @Module({ dynamic: true, store, name: "log" })
 class Log extends VuexModule implements ILogState {
   public log = [];
+  private logger = new LoggerService("Application");
 
   // Record log
   @Mutation
   private SET_LOG(logInfo: ILog) {
     const { level, message } = logInfo;
-    logger.log({ level, message: message.toString() });
+    this.logger.log({ level, message: message.toString() });
+    if (level === "warn" || level === "error") ScreenshotHelper.capture("log");
     // this.log.push({ level, message: message.toString() });
   }
   @Mutation
@@ -50,9 +48,9 @@ class Log extends VuexModule implements ILogState {
     AppModule.HANDLE_TASK_AUTO_PROCESS(false);
     this.SET_LOG(logInfo);
 
-    var audio = new Audio(require("@/assets/sounds/alarm.mp3"));
-    var transferTime = 0;
-    var transferTimer = setInterval(() => {
+    let audio = new Audio(require("@/assets/sounds/alarm.mp3"));
+    let transferTime = 0;
+    let transferTimer = setInterval(() => {
       if (transferTime % 5 === 0) {
         audio.play();
       }

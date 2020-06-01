@@ -14,55 +14,146 @@ import TaskOperateEnum from "@/enums/taskOperateEnum";
 import dayjs from "dayjs";
 import { MessageBox } from "element-ui";
 import soundHelper from "@/utils/soundHelper";
+import RemitterAccountModel from "@/models/remitterAccountModel";
+import os from "os";
+import WorkerTransferFeeResponseModel from "@/workers/models/workerTransferFeeResponseModel";
+import WorkerBalanceResponseModel from "@/workers/models/workerBalanceResponseModel";
+import TaskTypeEnum from "@/enums/taskTypeEnum";
+import ScreenRecorder from "@/utils/ScreenRecorder";
 @Component
 export default class TaskOperationMixin extends Vue {
   public taskExecutedResult = [] as any[];
   public confirmExecuteMessage = "";
+
+  public get currentAccount() {
+    return AccountModule.current;
+  }
   public async getTasks() {
     // let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
     await TaskModule.GetAll();
 
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
   }
+  private checkIfAccountSignedInToBank(remitterAccountCode: string): boolean {
+    return this.currentAccount.code === remitterAccountCode;
+  }
+  private async handleAccountSignInToBank(remitterAccountCode: string): Promise<boolean> {
+    AccountModule.SET_CURRENT(new RemitterAccountModel());
+    let availableAccounts = await AccountModule.GetAvailableAccount();
+    let selectedAccount = availableAccounts.filter(account => account.code === remitterAccountCode)[0];
+
+    let account = await AccountModule.GetAccountDetail(selectedAccount.id);
+    if (account) {
+      account.proxy = await AccountModule.GetProxy(selectedAccount.id);
+      AccountModule.SET_SELECTED(account);
+
+      AppModule.HANDLE_MANUAL_LOGIN(false);
+
+      if (remitterAccountCode.indexOf("PSBC") !== -1) {
+        AppModule.HANDLE_MANUAL_LOGIN(true);
+      }
+
+      await WorkerModule.SetWorker(account);
+      AppModule.HANDLE_SHOWING_TAB("accounts");
+      AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
+
+      let isSignInSuccess = await this.accountSignInFinish();
+      return isSignInSuccess;
+    }
+    return false;
+  }
+  private accountSignInFinish(): Promise<boolean> {
+    return new Promise(resolve => {
+      const interval = setInterval(() => {
+        if (AccountModule.current.id !== 0) {
+          resolve(true);
+          clearInterval(interval);
+        }
+
+        // If selected has been unset, return false
+        if (AccountModule.selected.id === 0) {
+          resolve(false);
+        }
+      }, 500);
+    });
+  }
   public async handleRowSelect(task: TaskModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
 
       // Check if task can be claim
-      if (await this.lockTask(task)) {
-        var taskDetail = await TaskModule.GetDetail(
-          task,
-          AccountModule.current.id
-        );
-        if (!taskDetail) return;
+      if (!(await this.lockTask(task))) {
+        AppModule.HANDLE_TASK_PROCESSING(false);
+        return;
+      }
 
-        if (await this.checkIfTaskExecuted(task, taskDetail)) {
-          AppModule.HANDLE_TASK_AUTO_PROCESS(false);
-          if (
-            await this.confirmBeforeExecute(
-              task.checkTool.id,
-              this.taskExecutedResult
-            )
-          ) {
-            TaskCheckHelper.createExecuteRecord(
-              task.checkTool.id,
-              TaskOperateEnum.EXECUTE,
-              UserModule.name,
-              this.confirmExecuteMessage
-            );
-            await this.startTask(taskDetail);
-          } else {
-            AppModule.HANDLE_TASK_PROCESSING(false);
+      let accountCode = task.remitterAccountCode;
+      // Check if account is sign in to bank
+      // true - execute task if sign in fail
+      // false - Sign in to bank
+      if (!this.checkIfAccountSignedInToBank(accountCode)) {
+        if (!(await this.handleAccountSignInToBank(accountCode))) {
+          AppModule.HANDLE_TASK_PROCESSING(false);
+          return;
+        }
+      }
+
+      // true - start task
+      let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+      if (!taskDetail) {
+        AppModule.HANDLE_TASK_PROCESSING(false);
+        return;
+      }
+
+      // Check balance before run task
+      if (!(await this.checkIfBalanceEqual(task))) {
+        new Audio(require("@/assets/sounds/alarm.mp3")).play();
+        let isConfirmProcess = false;
+
+        await MessageBox.confirm(
+          "BO and bank balance are different, please check before process task",
+          "Balance incorrect",
+          {
+            type: "warning",
+            confirmButtonText: "OK",
+            cancelButtonText: "Cancel"
           }
-        } else {
+        )
+          .then(() => {
+            isConfirmProcess = true;
+          })
+          .catch(() => {
+            isConfirmProcess = false;
+            AppModule.HANDLE_TASK_PROCESSING(false);
+          });
+        if (!isConfirmProcess) {
+          AppModule.HANDLE_TASK_PROCESSING(false);
+          return;
+        }
+      }
+
+      if (await this.checkIfTaskExecuted(task, taskDetail)) {
+        if (await this.confirmBeforeExecute(task.checkTool.id, this.taskExecutedResult)) {
           TaskCheckHelper.createExecuteRecord(
             task.checkTool.id,
             TaskOperateEnum.EXECUTE,
             UserModule.name,
-            "First time run, create by system."
+            this.confirmExecuteMessage
           );
           await this.startTask(taskDetail);
+        } else {
+          AppModule.HANDLE_TASK_PROCESSING(false);
+          return;
         }
+      } else {
+        let checkToolResult = await TaskCheckHelper.get(taskDetail.id);
+        TaskCheckHelper.createExecuteRecord(
+          checkToolResult.id,
+          TaskOperateEnum.EXECUTE,
+          UserModule.name,
+          "First time run, create by system."
+        );
+        await this.startTask(taskDetail);
       }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
@@ -86,23 +177,14 @@ export default class TaskOperationMixin extends Vue {
     }
     return true;
   }
-  private async checkIfTaskExecuted(
-    task: TaskModel,
-    taskDetail: TaskDetailModel
-  ) {
+  private async checkIfTaskExecuted(task: TaskModel, taskDetail: TaskDetailModel) {
     // check tool id was 0 means not execute
     if (task.checkTool.id === 0) {
-      await TaskCheckHelper.create(
-        taskDetail,
-        AccountModule.current.code,
-        UserModule.name
-      );
+      await TaskCheckHelper.create(task, taskDetail, AccountModule.current.code, UserModule.name);
       return false;
     }
 
-    this.taskExecutedResult = await TaskCheckHelper.getExecutedResult(
-      task.checkTool.id
-    );
+    this.taskExecutedResult = await TaskCheckHelper.getExecutedResult(task.checkTool.id);
     return this.taskExecutedResult.length > 0;
   }
   private confirmBeforeExecute(
@@ -116,21 +198,18 @@ export default class TaskOperationMixin extends Vue {
       note: string;
     }>
   ): Promise<boolean> {
-    var message = "Previous executed record:" + "<br>";
+    let message = "Previous executed record:" + "<br>";
     executedTasks.forEach((executedTask, index) => {
       message +=
         `${index + 1}.` +
-        `At <span style="font-weight:bold">${dayjs(
-          executedTask.createAt
-        ).format("HH:mm:ss")}</span>` +
+        `At <span style="font-weight:bold">${dayjs(executedTask.createAt).format("HH:mm:ss")}</span>` +
         `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
         "<br>";
     });
     soundHelper.play("danger");
     return (
       MessageBox.prompt(
-        message +
-          '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
+        message + '<span style="color:#E6A23C">Please enter the reason what you want to run this task again:</span>',
         "",
         {
           inputPattern: /\S+/,
@@ -154,60 +233,108 @@ export default class TaskOperationMixin extends Vue {
   }
   public async startTask(taskDetail: TaskDetailModel) {
     this.beforeExecuteTask(taskDetail);
+    const screenRecorder = new ScreenRecorder(this.currentAccount.code);
     try {
-      if (await this.runAutoTransferFlows()) {
-        this.handleAutoMarkTaskSuccess(taskDetail);
+      LogModule.SetLog({ level: "info", message: "Task start" });
+      screenRecorder.start();
+      let result = await this.runAutoTransferFlows();
+      if (result.isSuccess) {
+        taskDetail.transferFee = result.transferFee || 0;
+        await this.handleAutoMarkTaskSuccess(taskDetail);
       } else {
-        this.handleTransferFail();
+        this.handleTransferFail(taskDetail);
       }
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
+    } finally {
+      screenRecorder.stop();
     }
   }
-  async handleAutoMarkTaskSuccess(taskDetail: TaskDetailModel) {
-    var isSuccess = await TaskModule.MarkTaskSuccess({
-      task: taskDetail,
-      note: "Auto process by tool"
+  async checkIfBalanceEqual(selectedTask: TaskModel) {
+    let boBalance = this.currentAccount.balance;
+    let realBalance = this.getRealBalance(boBalance, selectedTask);
+
+    // Compare in cache
+    if (realBalance === this.currentAccount.balanceInBank) return true;
+
+    // Compare in system
+    let [detail, result] = await Promise.all([
+      AccountModule.GetAccountDetail(this.currentAccount.id),
+      WorkerModule.RunFlow<WorkerBalanceResponseModel>({
+        name: WorkflowEnum.GET_BALANCE
+      })
+    ]);
+
+    if (detail) AccountModule.SET_BANK_BO_BALANCE(detail.balance);
+    if (result) AccountModule.SET_BANK_BALANCE(result.balance);
+
+    realBalance = this.getRealBalance(boBalance, selectedTask);
+    if (realBalance === this.currentAccount.balanceInBank) return true;
+
+    LogModule.SetLog({
+      level: "warn",
+      message: `Bo(${realBalance}) and bank balance(${this.currentAccount.balanceInBank}) are not same`
     });
+    return false;
+  }
+  getRealBalance(boBalance: number, selectedTask: TaskModel): number {
+    TaskModule.list.forEach(task => {
+      if (task.remitterAccountCode === selectedTask.remitterAccountCode) {
+        if (task.workflow === TaskTypeEnum.PARTIAL_WITHDRAW) boBalance += task.amount;
+      }
+    });
+    return boBalance;
+  }
+  async handleAutoMarkTaskSuccess(taskDetail: TaskDetailModel) {
+    let isSuccess = await TaskModule.MarkTaskSuccess({ task: taskDetail, note: "Auto process by tool" });
     if (isSuccess) {
+      LogModule.SetLog({
+        level: "info",
+        message: `Mark task success, amount ${taskDetail.amount}, charge: ${taskDetail.transferFee}`
+      });
       TaskModule.MoveCurrentTaskToLast({
         ...taskDetail,
         status: TaskStatusEnum.SUCCESS
       });
-      await TaskModule.GetAll();
       AppModule.HANDLE_TASK_PROCESSING(false);
+      await TaskModule.GetAll();
     }
   }
   private beforeExecuteTask(taskDetail: TaskDetailModel) {
     TaskModule.SET_SELECTED_DETAIL(taskDetail);
-    TaskModule.GetAll();
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-    TaskCheckHelper.updateStatus(
-      TaskModule.selectedDetail.id,
-      TaskStatusEnum.PROCESSING,
-      UserModule.name
-    );
+    TaskModule.GetAll();
+    TaskCheckHelper.updateStatus(TaskModule.selectedDetail.id, TaskStatusEnum.PROCESSING, UserModule.name);
   }
-  private async runAutoTransferFlows() {
+  private async runAutoTransferFlows(): Promise<{ isSuccess: boolean; transferFee?: number }> {
     try {
       await WorkerModule.RunFlow({
-        name: WorkflowEnum.SET_TASK,
-        args: TaskModule.selectedDetail
+        name: WorkflowEnum.SET_ACCOUNT_BO_BALANCE,
+        args: { balance: this.currentAccount.balance }
       });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.SET_TASK, args: TaskModule.selectedDetail });
       await WorkerModule.RunFlow({ name: WorkflowEnum.GO_TRANSFER_PAGE });
-      await WorkerModule.RunFlow({
-        name: WorkflowEnum.FILL_TRANSFER_INFORMATION
-      });
+      await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_TRANSFER_INFORMATION });
       await WorkerModule.RunFlow({ name: WorkflowEnum.FILL_NOTE });
       await WorkerModule.RunFlow({ name: WorkflowEnum.CONFIRM_TRANSACTION });
-      await WorkerModule.RunFlow({ name: WorkflowEnum.CHECK_IF_SUCCESS });
-      return true;
+
+      let flowResult = await WorkerModule.RunFlow<WorkerTransferFeeResponseModel>({
+        name: WorkflowEnum.CHECK_IF_SUCCESS
+      });
+      return { isSuccess: true, transferFee: flowResult.transferFee || 0 };
     } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
-      return false;
+      LogModule.SetLog({ level: "error", message: `Transfer fail, error: ${error}` });
+      return { isSuccess: false };
     }
   }
-  public async handleTransferFail() {
+  public async handleTransferFail(taskDetail: TaskDetailModel) {
+    let checkToolResult = await TaskCheckHelper.get(taskDetail.id);
+    TaskCheckHelper.createExecuteRecord(
+      checkToolResult.id,
+      "execute",
+      UserModule.name,
+      `Task executed error, Type: ${TaskModule.selectedDetail.type} Machine name: ${os.hostname()}`
+    );
     TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
   }
@@ -290,11 +417,7 @@ export default class TaskOperationMixin extends Vue {
     AppModule.HANDLE_TASK_PROCESSING(true);
     TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
     try {
-      await TaskCheckHelper.updateStatus(
-        taskDetail.id,
-        TaskStatusEnum.TO_CONFIRM,
-        UserModule.name
-      );
+      await TaskCheckHelper.updateStatus(taskDetail.id, TaskStatusEnum.TO_CONFIRM, UserModule.name);
       TaskModule.MoveCurrentTaskToLast({
         ...taskDetail,
         status: TaskStatusEnum.TO_CONFIRM

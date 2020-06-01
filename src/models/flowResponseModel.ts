@@ -1,4 +1,4 @@
 export default class FlowResponseModel {
-  isFlowExecutedSuccess = false;
+  success = false;
   message?: string;
 }

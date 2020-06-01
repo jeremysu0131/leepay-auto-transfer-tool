@@ -14,10 +14,7 @@ export function getAll() {
   });
 }
 
-export function getFundTransferDetail(data: {
-  taskId: number;
-  ref: string;
-}) {
+export function getFundTransferDetail(data: { taskId: number; ref: string }) {
   return request({
     url: "/adminWF!loadTrans.do",
     method: "POST",
@@ -28,11 +25,7 @@ export function getFundTransferDetail(data: {
   });
 }
 
-export function getPartialWithdrawDetail(data: {
-  taskId: number;
-  ref: string;
-  bankId: number;
-}) {
+export function getPartialWithdrawDetail(data: { taskId: number; ref: string; bankId: number }) {
   return request({
     url: "/adminWF!loadPartialWithdrawPayment.do",
     method: "POST",
@@ -65,15 +58,12 @@ export function unlockTask(taskId: number) {
   });
 }
 
-export function markFundTransferTaskSuccess(
-  task: TaskDetailModel,
-  remark?: string
-) {
+export function markFundTransferTaskSuccess(task: TaskDetailModel, remark?: string) {
   return request({
     url: "/adminWF!updateTask.do",
     method: "POST",
     data: {
-      "task.field2": task.bankCharge,
+      "task.field2": task.transferFee,
       "task.id": task.id,
       "task.ref": task.ref,
       "task.state.state": "A",
@@ -83,10 +73,7 @@ export function markFundTransferTaskSuccess(
   });
 }
 
-export function markFundTransferTaskFail(
-  task: TaskDetailModel,
-  reason: string
-) {
+export function markFundTransferTaskFail(task: TaskDetailModel, reason: string) {
   return request({
     url: "/adminWF!updateTask.do",
     method: "POST",
@@ -112,16 +99,12 @@ export function updateInputFields(task: TaskDetailModel, remark: string) {
       "task.id": task.id,
       // Processed By
       "task.field2": remark,
-      "task.field8": task.bankCharge
+      "task.field8": task.transferFee
     }
   });
 }
 
-export function markPartialWithdrawTaskSuccess(
-  task: TaskDetailModel,
-  remitterAccountId: number,
-  remark?: string
-) {
+export function markPartialWithdrawTaskSuccess(task: TaskDetailModel, remitterAccountId: number, remark?: string) {
   return request({
     url: "/adminWF!updateTask.do",
     method: "POST",
@@ -129,8 +112,8 @@ export function markPartialWithdrawTaskSuccess(
       "task.field3": remitterAccountId,
       "task.field4": "N",
       "task.field7": task.amount,
-      "task.additionalInfo0": task.bankCharge,
-      "task.field8": task.bankCharge,
+      "task.additionalInfo0": task.transferFee,
+      "task.field8": task.transferFee,
       "task.id": task.id,
       "task.ref": task.ref,
       "task.state.state": "Y",

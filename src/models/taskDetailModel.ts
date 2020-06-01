@@ -8,7 +8,7 @@ export default class TaskDetailModel {
   id = 0;
   amount = 0;
   ref = "";
-  bankCharge=0;
+  transferFee = 0;
   type = TaskTypeEnum.FUND_TRANSFER;
   payeeAccount = new PayeeAccountModel();
   // remitterAccount = new RemitterAccountModel();

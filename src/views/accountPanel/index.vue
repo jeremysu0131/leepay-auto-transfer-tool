@@ -77,7 +77,7 @@ export default class extends Vue {
   private async handleFetch() {
     try {
       AppModule.HANDLE_ACCOUNT_IS_FETCHING(true);
-      var accounts = await AccountModule.GetAvailableAccount();
+      let accounts = await AccountModule.GetAvailableAccount();
       AccountModule.SET_LIST(accounts);
     } finally {
       AppModule.HANDLE_ACCOUNT_IS_FETCHING(false);

@@ -2,12 +2,10 @@ import dayjs from "dayjs";
 import { screen, desktopCapturer } from "electron";
 import logger from "./logger";
 
-const electron = require("electron");
-
 const fs = require("fs");
 const path = require("path");
 const folderName = "screenshots";
-const folderPath = path.join(".", folderName);
+const folderPath = path.join(process.env.VUE_APP_LOG_LOCATION as string, folderName);
 
 const getScreenSize = () => {
   return screen.getPrimaryDisplay().workAreaSize;
@@ -18,26 +16,23 @@ const capture = (filename: string) => {
     fs.mkdirSync(folderPath);
   }
 
-  desktopCapturer.getSources(
-    { types: ["screen"], thumbnailSize: getScreenSize() },
-    (error, sources) => {
-      if (error) logger.log({ level: "error", message: error.toString() });
+  desktopCapturer.getSources({ types: ["screen"], thumbnailSize: getScreenSize() }, (error, sources) => {
+    if (error) logger.log({ level: "error", message: error.toString() });
 
-      sources.forEach(function (source) {
-        if (source.name === "Entire screen" || source.name === "Screen 1") {
-          fs.writeFile(
-            `${folderPath}/${dayjs().format("YYYYMMDDHHmmss")}-${filename}.png`,
-            source.thumbnail.toPNG(),
-            (error: { toString: () => any }) => {
-              if (error) {
-                logger.log({ level: "error", message: error.toString() });
-              }
+    sources.forEach(function(source) {
+      if (source.name === "Entire screen" || source.name === "Screen 1") {
+        fs.writeFile(
+          `${folderPath}/${dayjs().format("YYYYMMDDHHmmss")}-${filename}.png`,
+          source.thumbnail.toPNG(),
+          (error: { toString: () => any }) => {
+            if (error) {
+              logger.log({ level: "error", message: error.toString() });
             }
-          );
-        }
-      });
-    }
-  );
+          }
+        );
+      }
+    });
+  });
 };
 
 /**

@@ -1,10 +1,4 @@
-import {
-  VuexModule,
-  Module,
-  Mutation,
-  Action,
-  getModule
-} from "vuex-module-decorators";
+import { VuexModule, Module, Mutation, Action, getModule } from "vuex-module-decorators";
 import store from "@/store";
 import * as TaskApi from "@/api/task";
 import { asyncForEach } from "@/utils/asyncForEach";
@@ -19,6 +13,7 @@ import { AccountModule } from "./account";
 import TaskCheckToolModel from "@/models/taskCheckToolModel";
 import LastSelectedTaskDetailModel from "@/models/lastSelectedTaskDetailModel";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
+import dayjs from "dayjs";
 
 export interface ITaskState {
   list: TaskModel[];
@@ -51,19 +46,18 @@ class Task extends VuexModule implements ITaskState {
     this.selectedForOperation = taskDetail;
   }
   @Mutation
-  public SET_BANK_CHARGE_FOR_OPERATION(bankCharge: number) {
-    this.selectedForOperation.bankCharge = bankCharge;
+  public SET_BANK_CHARGE_FOR_OPERATION(transferFee: number) {
+    this.selectedForOperation.transferFee = transferFee;
   }
   @Action
   public async GetAll() {
     AppModule.HANDLE_TASK_FETCHING(true);
     try {
-      var { data } = await TaskApi.getAll();
-      var tasks = await Promise.all(
+      AccountModule.SET_LIST(await AccountModule.GetAvailableAccount());
+      let { data } = await TaskApi.getAll();
+      let tasks = await Promise.all(
         (data.data as [])
-          .filter(
-            (task: any) => task.workflow !== TaskTypeEnum.WITHDRAW_DISTRIBUTION
-          )
+          .filter((task: any) => task.workflow !== TaskTypeEnum.WITHDRAW_DISTRIBUTION)
           .map((task: any) => {
             switch (task.workflow) {
               case TaskTypeEnum.PARTIAL_WITHDRAW:
@@ -75,10 +69,18 @@ class Task extends VuexModule implements ITaskState {
             }
           })
           .filter(
-            task => task.remitterAccountCode === AccountModule.current.code
+            task => AccountModule.list.filter(account => account.code.includes(task.remitterAccountCode)).length !== 0
           )
+          .sort((task, nextTask) => nextTask.priority - task.priority)
+          // .filter(
+          //   task => task.remitterAccountCode === AccountModule.current.code
+          // )
+          .map(task => {
+            task.createdAt = dayjs(task.createdAt).format("hh:mm:ss");
+            return task;
+          })
           .map(async task => {
-            var data = await TaskCheckHelper.get(task);
+            let data = await TaskCheckHelper.get(task.id);
             if (data !== null) {
               task.checkTool.id = data.id;
               task.checkTool.status = data.status;
@@ -100,7 +102,7 @@ class Task extends VuexModule implements ITaskState {
     accountId: number // selected account id
   ): Promise<TaskDetailModel | null> {
     try {
-      var data;
+      let data;
       switch (task.workflow) {
         case TaskTypeEnum.FUND_TRANSFER:
           data = (
@@ -127,7 +129,7 @@ class Task extends VuexModule implements ITaskState {
         // Task id and ref will shown error in get detail api
         id: task.id,
         ref: task.ref,
-        amount: data.amount,
+        amount: +data.amount,
         type: task.workflow,
         payeeAccount: {
           bank: {
@@ -149,7 +151,7 @@ class Task extends VuexModule implements ITaskState {
   @Action
   public async Lock(taskId: number): Promise<boolean> {
     try {
-      var { data } = await TaskApi.lock(taskId);
+      let { data } = await TaskApi.lock(taskId);
       return data.code === 1;
     } catch (error) {
       LogModule.SetLog({ message: error, level: "error" });
@@ -158,47 +160,22 @@ class Task extends VuexModule implements ITaskState {
   }
 
   @Action
-  async MarkTaskSuccess({
-    task,
-    note
-  }: {
-    task: TaskDetailModel;
-    note?: string;
-  }): Promise<boolean> {
-    LogModule.SetLog({
-      level: "debug",
-      message: `Mark task success parameters: charge: ${task.bankCharge}`
-    });
+  async MarkTaskSuccess({ task, note }: { task: TaskDetailModel; note?: string }): Promise<boolean> {
     try {
-      var remitterAccountId = AccountModule.current.id;
+      let remitterAccountId = AccountModule.current.id;
       switch (task.type) {
-        case TaskTypeEnum.FUND_TRANSFER:
-          var { data } = await TaskApi.markFundTransferTaskSuccess(task, note);
-          if (data.code === 1) {
-            await TaskApi.updateInputFields(
-              task,
-              `Processed by ${UserModule.name}`
-            );
-          }
-          break;
-        case TaskTypeEnum.PARTIAL_WITHDRAW:
-          var response = await TaskApi.markPartialWithdrawTaskSuccess(
-            task,
-            remitterAccountId,
-            note
-          );
-          if (response.data.code === 1) {
-            await TaskApi.updateInputFields(
-              task,
-              `Processed by ${UserModule.name}`
-            );
-          }
-          break;
-
-        default:
-          break;
+        case TaskTypeEnum.FUND_TRANSFER: {
+          let { data } = await TaskApi.markFundTransferTaskSuccess(task, note);
+          if (data.code === 1) await TaskApi.updateInputFields(task, `Processed by ${UserModule.name}`);
+          return true;
+        }
+        case TaskTypeEnum.PARTIAL_WITHDRAW: {
+          let { data } = await TaskApi.markPartialWithdrawTaskSuccess(task, remitterAccountId, note);
+          if (data.code === 1) await TaskApi.updateInputFields(task, `Processed by ${UserModule.name}`);
+          return true;
+        }
       }
-      return true;
+      return false;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
       LogModule.SetConsole({
@@ -209,13 +186,7 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
-  async MarkTaskFail({
-    task,
-    reason
-  }: {
-    task: TaskDetailModel;
-    reason: string;
-  }) {
+  async MarkTaskFail({ task, reason }: { task: TaskDetailModel; reason: string }) {
     reason += ` Processed by ${UserModule.name}`;
     LogModule.SetLog({
       level: "debug",
@@ -223,23 +194,20 @@ class Task extends VuexModule implements ITaskState {
     });
     try {
       switch (task.type) {
-        case TaskTypeEnum.FUND_TRANSFER:
-          var { data } = await TaskApi.markFundTransferTaskFail(task, reason);
+        case TaskTypeEnum.FUND_TRANSFER: {
+          let { data } = await TaskApi.markFundTransferTaskFail(task, reason);
           if (data.code === 1) {
             await TaskApi.updateInputFields(task, reason);
           }
           break;
-        case TaskTypeEnum.PARTIAL_WITHDRAW:
-          var response = await TaskApi.markPartialWithdrawTaskFail(
-            task,
-            AccountModule.current.id,
-            0,
-            reason
-          );
+        }
+        case TaskTypeEnum.PARTIAL_WITHDRAW: {
+          let response = await TaskApi.markPartialWithdrawTaskFail(task, AccountModule.current.id, 0, reason);
           if (response.data.code === 1) {
             await TaskApi.updateInputFields(task, reason);
           }
           break;
+        }
 
         default:
           break;
@@ -269,7 +237,7 @@ class Task extends VuexModule implements ITaskState {
 function mappingPartialWithdraw(task: any) {
   return {
     id: task.id,
-    amount: task.field5,
+    amount: +task.field5,
     assignee: task.asignee,
     assigneeId: task.asigneeId,
     assignedAt: task.asigneeAt,
@@ -278,10 +246,12 @@ function mappingPartialWithdraw(task: any) {
       code: "",
       chineseName: ""
     },
+    customer: task.customer,
+    merchant: task.merchantName,
     checkTool: new TaskCheckToolModel(),
     status: "",
     remitterAccountCode: task.field4,
-    payeeAccountCode: "",
+    payeeAccountCode: "-",
     pendingTime: task.pendingTime,
     priority: task.priority,
     ref: task.ref,
@@ -297,7 +267,7 @@ function mappingPartialWithdraw(task: any) {
 function mappingFundTransfer(task: any) {
   return {
     id: task.id,
-    amount: task.field5,
+    amount: +task.field5,
     assignee: task.asignee,
     assigneeId: task.asigneeId,
     assignedAt: task.asigneeAt,
@@ -307,6 +277,8 @@ function mappingFundTransfer(task: any) {
       chineseName: ""
     },
     checkTool: new TaskCheckToolModel(),
+    customer: task.customer,
+    merchant: "-",
     status: "",
     remitterAccountCode: task.field7,
     payeeAccountCode: task.toAcct,

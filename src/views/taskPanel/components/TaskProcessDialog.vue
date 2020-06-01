@@ -49,7 +49,7 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   @Watch("app.task.isShowCheckProcessDialog")
   onProcessDialogChange() {
-    var audio = new Audio(require("@/assets/sounds/alarm.mp3"));
+    let audio = new Audio(require("@/assets/sounds/alarm.mp3"));
     if (this.app.task.isShowCheckProcessDialog) {
       audio.play();
     }

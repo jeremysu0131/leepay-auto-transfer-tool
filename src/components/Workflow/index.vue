@@ -40,7 +40,7 @@ export default class extends Vue {
   private async handleRowClick(row: any) {
     try {
       if (process.env.NODE_ENV === "development") {
-        var result = await WorkerModule.RunFlow({
+        let result = await WorkerModule.RunFlow({
           name: row.name,
           args: { width: 800, height: 600 }
         });

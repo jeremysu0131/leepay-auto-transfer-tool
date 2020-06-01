@@ -18,56 +18,58 @@ class CreateTaskRiskModel {
 }
 
 export const create = async (
-  task: TaskDetailModel,
+  task: TaskModel,
+  taskDetail: TaskDetailModel,
   remitterAccountCode: string,
   operator: string
 ) => {
-  var data = new CreateTaskRiskModel();
-  data.taskID = task.id;
+  let data = new CreateTaskRiskModel();
+  data.taskID = taskDetail.id;
   data.platform = "skypay";
-  data.merchant = "";
+  data.merchant = task.merchant;
   data.cardCode = remitterAccountCode;
-  data.payee = task.payeeAccount.holderName;
-  data.payeeAccount = task.payeeAccount.cardNumber;
-  data.payeeBank = task.payeeAccount.bank.chineseName || "";
-  data.amount = task.amount;
+  data.payee = taskDetail.payeeAccount.holderName;
+  data.payeeAccount = taskDetail.payeeAccount.cardNumber;
+  data.payeeBank = taskDetail.payeeAccount.bank.chineseName || "";
+  data.amount = taskDetail.amount;
   data.operator = operator;
   data.status = TaskStatusEnum.PROCESSING;
-  var response = await requestRisk({
+  data.remark = JSON.stringify({
+    workflow: task.workflow,
+    version: process.env.VUE_APP_VERSION
+  });
+  let response = await requestRisk({
     url: "/task",
     method: "POST",
     data
   });
   return response.status === 201;
 };
-export const updateStatus = async (
-  taskId: number,
-  status: TaskStatusEnum,
-  operator: string
-) => {
-  var response = await requestRisk({
+export const updateStatus = async (taskId: number, status: TaskStatusEnum, operator: string, note?: string) => {
+  let response = await requestRisk({
     url: `/task/${taskId}/status`,
     method: "PATCH",
     data: {
       platform: "skypay",
       status,
-      operator
+      operator,
+      note
     }
   });
   return response.data.status === status;
 };
-export const get = async (task: TaskModel) => {
-  var response = await requestRisk({
-    url: `/task/${task.id}`,
+export const get = async (taskId: number): Promise<{ id: number; status: string }> => {
+  let response = await requestRisk({
+    url: `/task/${taskId}`,
     method: "GET",
     params: {
       platformName: "skypay"
     }
   });
-  return response.data || null;
+  return response.data.id ? response.data : null;
 };
 export const getExecutedResult = async (toolID: number) => {
-  var response = await requestRisk({
+  let response = await requestRisk({
     url: `/task/${toolID}/executed`,
     method: "GET"
   });
@@ -80,12 +82,7 @@ export const getExecutedResult = async (toolID: number) => {
     note: string;
   }>;
 };
-export const createExecuteRecord = async (
-  toolID: number,
-  operateType: string,
-  operator: string,
-  note: string
-) => {
+export const createExecuteRecord = async (toolID: number, operateType: string, operator: string, note: string) => {
   return requestRisk({
     url: `/task/${toolID}/detail`,
     method: "POST",

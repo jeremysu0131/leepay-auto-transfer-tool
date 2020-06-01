@@ -164,7 +164,7 @@ export default class extends Mixins(TaskOperationMixin) {
 
   @Watch("currentAccount")
   onCurrentAccountChange() {
-    var accountCode = this.currentAccount.code;
+    let accountCode = this.currentAccount.code;
     if (accountCode) WorkerModule.SET_TRANSFER_WORKFLOW(accountCode);
   }
 

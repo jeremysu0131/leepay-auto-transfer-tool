@@ -7,11 +7,13 @@ import TaskCheckToolModel from "./taskCheckToolModel";
 export default class TaskModel {
   id = 0;
   amount = 0;
-  checkTool=new TaskCheckToolModel();
+  checkTool = new TaskCheckToolModel();
   assignee = "";
   assigneeId = 0;
-  assignedAt = Date;
+  assignedAt = new Date();
   bank = new BankModel();
+  customer = "";
+  merchant = "";
   transferFee = 0;
   remitterAccountCode = "";
   payeeAccountCode = "";
@@ -19,9 +21,9 @@ export default class TaskModel {
   priority = 0;
   remark = "";
   ref = "";
-  createdAt = Date;
+  createdAt = "";
   createdBy = 0;
-  updatedAt = Date;
+  updatedAt = new Date();
   updatedBy = 0;
   workflow: string = TaskTypeEnum.FUND_TRANSFER;
 }

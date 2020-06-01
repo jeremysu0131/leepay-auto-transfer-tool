@@ -62,7 +62,7 @@ export default {
   watch: {
     "log.console"() {
       this.$nextTick(() => {
-        var consoleBox = this.$refs["console-box"];
+        let consoleBox = this.$refs["console-box"];
         consoleBox.scrollTop = consoleBox.scrollHeight;
       });
     }

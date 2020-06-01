@@ -1,10 +1,4 @@
-import {
-  VuexModule,
-  Module,
-  Mutation,
-  Action,
-  getModule
-} from "vuex-module-decorators";
+import { VuexModule, Module, Mutation, Action, getModule } from "vuex-module-decorators";
 import { getSidebarStatus, setSidebarStatus } from "@/utils/cookies";
 import store from "@/store";
 
@@ -22,12 +16,11 @@ export interface IAppState {
   };
   tabs: {
     showing: string;
-    isTaskVisible: boolean;
+    isTaskEnable: boolean;
   };
   task: {
-    isFetchable: boolean;
+    isAbleFetch: boolean;
     isFetching: boolean;
-    fetchTimer: number;
     isAutoProcess: boolean;
     isProcessing: boolean;
     isShowMarkAsSuccessDialog: boolean;
@@ -36,8 +29,7 @@ export interface IAppState {
   };
   account: {
     isFetching: boolean;
-    signInSuccessAt: Date;
-    isSignInSuccess: boolean;
+    isSignInToBank: boolean;
     isProcessingSignIn: boolean;
   };
 }
@@ -53,29 +45,28 @@ class App extends VuexModule implements IAppState {
   public isManualLogin = true;
   public isProxySet = false;
   public tabs = {
-    isTaskVisible: false,
-    showing: "accounts"
+    isTaskEnable: true,
+    isAccountEnable: false,
+    showing: "tasks"
   };
   public task = {
-    isFetchable: true,
+    isAbleFetch: true,
     isFetching: false,
     isShowMarkAsFailDialog: false,
     isShowMarkAsSuccessDialog: false,
     isShowCheckProcessDialog: false,
-    fetchTimer: 9,
     isAutoProcess: false,
     isProcessing: false
   };
   public account = {
     isFetching: false,
     showingPage: "account-search",
-    signInSuccessAt: new Date(),
-    isSignInSuccess: false,
+    isSignInToBank: false,
     isProcessingSignIn: false
   };
 
   @Mutation
-  public HANDLE_SHOWING_TAB(tabName: string) {
+  public HANDLE_SHOWING_TAB(tabName: string | "accounts" | "tasks") {
     this.tabs.showing = tabName;
   }
   @Mutation
@@ -99,8 +90,8 @@ class App extends VuexModule implements IAppState {
     this.task.isShowCheckProcessDialog = status;
   }
   @Mutation
- public HANDLE_TASK_TAB_VISIBLE(status: boolean) {
-    this.tabs.isTaskVisible = status;
+  public HANDLE_TASK_TAB_VISIBLE(status: boolean) {
+    this.tabs.isTaskEnable = status;
   }
   @Mutation
   public HANDLE_TASK_AUTO_PROCESS(status: boolean) {
@@ -111,25 +102,17 @@ class App extends VuexModule implements IAppState {
     this.task.isProcessing = status;
   }
   @Mutation
-  public HANDLE_TASK_FETCHABLE(status: boolean) {
-    this.task.isFetchable = status;
+  public HANDLE_TASK_ABLE_FETCH(status: boolean) {
+    this.task.isAbleFetch = status;
   }
   @Mutation
   public HANDLE_TASK_FETCHING(status: boolean) {
     this.task.isFetching = status;
   }
-  @Mutation public MINUS_TASK_FETCH_TIMER() {
-    this.task.fetchTimer--;
-  }
-  @Mutation
-  public RESET_TASK_FETCH_TIMER(time = 9) {
-    this.task.fetchTimer = time;
-  }
 
   @Mutation
   // Account
-  // account-search, select-sign-in-type, sign-in-to-bank
-  public HANDLE_ACCOUNT_SHOWING_PAGE(status = "account-search") {
+  public HANDLE_ACCOUNT_SHOWING_PAGE(status: "account-search" | "select-sign-in-type" | "sign-in-to-bank") {
     this.account.showingPage = status;
   }
   @Mutation
@@ -142,36 +125,31 @@ class App extends VuexModule implements IAppState {
     this.account.isFetching = status;
   }
   @Mutation
-  public HANDLE_ACCOUNT_SIGN_IN_SUCCESS(status: boolean) {
-    this.account.isSignInSuccess = status;
-  }
-  @Mutation
-  public SET_SIGN_IN_SUCCESS_TIME(time: Date) {
-    this.account.signInSuccessAt = time;
+  public HANDLE_ACCOUNT_SIGN_IN_TO_BANK(status: boolean) {
+    this.account.isSignInToBank = status;
   }
   @Mutation public RESET_APP_STATE() {
     this.platform = "leepay";
     this.isManualLogin = true;
     this.isProxySet = false;
     this.tabs = {
-      showing: "accounts",
-      isTaskVisible: false
+      showing: "tasks",
+      isTaskEnable: true,
+      isAccountEnable: false
     };
     this.task = {
-      isFetchable: false,
+      isAbleFetch: true,
       isFetching: false,
       isShowMarkAsFailDialog: false,
       isShowMarkAsSuccessDialog: false,
       isShowCheckProcessDialog: false,
-      fetchTimer: 9,
       isAutoProcess: false,
       isProcessing: false
     };
     this.account = {
       isFetching: false,
       showingPage: "account-search",
-      signInSuccessAt: new Date(),
-      isSignInSuccess: false,
+      isSignInToBank: false,
       isProcessingSignIn: false
     };
   }

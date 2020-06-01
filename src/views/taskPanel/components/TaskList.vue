@@ -268,17 +268,17 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private async markTaskAsSuccess(task: TaskModel) {
     await this.lockTask(task);
-    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+    let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     if (taskDetail) this.markAsSuccess(taskDetail);
   }
   private async markTaskAsFail(task: TaskModel) {
     await this.lockTask(task);
-    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+    let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     if (taskDetail) this.markAsFail(taskDetail);
   }
   private async markTaskAsToConfirm(task: TaskModel) {
     await this.lockTask(task);
-    var taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+    let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
     if (taskDetail) this.markAsToConfirm(taskDetail);
   }
   private selectedRowClass({ row, rowIndex }: any) {

@@ -76,6 +76,7 @@ class User extends VuexModule implements IUserState {
       const userData: IUserData = data.data.admin;
       this.SET_ID(userData.id);
       this.SET_NAME(userData.username);
+      TaskModule.GetAll();
       return { isSignIn: true, message: undefined };
     } catch (error) {
       const message = error.response.data.message || error;
@@ -126,7 +127,7 @@ class User extends VuexModule implements IUserState {
     AppModule.UnsetApp();
     AccountModule.UnsetAccount();
     TaskModule.UnsetTask();
-    WorkerModule.UNSET_WORKFLOW();
+    WorkerModule.UnsetWorker();
     LogModule.UnsetLog();
   }
 }

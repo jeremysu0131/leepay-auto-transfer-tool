@@ -1,13 +1,11 @@
 const path = require("path");
 const { version } = require("./package.json");
 const name = `Bank Auto Transfer (Version ${version})`;
+process.env.VUE_APP_VERSION = version;
 
 module.exports = {
   // TODO: Remember to change this to fit your need
-  publicPath:
-    process.env.NODE_ENV === "production"
-      ? "/vue-typescript-admin-template/"
-      : "/",
+  publicPath: process.env.NODE_ENV === "production" ? "/vue-typescript-admin-template/" : "/",
   lintOnSave: process.env.NODE_ENV === "development",
   pluginOptions: {
     // exposeEnv: ["PATH"],
@@ -38,10 +36,10 @@ module.exports = {
       chainWebpackRendererProcess: config => {
         // Chain webpack config for electron renderer process only
         // The following example will set IS_ELECTRON to true in your app
-        // config.plugin("define").tap(args => {
-        //   args[0]["IS_ELECTRON"] = true;
-        //   return args;
-        // });
+        config.plugin("define").tap(args => {
+          args[0]["process.env.FLUENTFFMPEG_COV"] = false;
+          return args;
+        });
       },
       // Provide an array of files that, when changed, will recompile the main process and restart Electron
       // Your main process file will be added by default

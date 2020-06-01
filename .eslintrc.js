@@ -14,6 +14,7 @@ module.exports = {
     "no-console": process.env.NODE_ENV === "production" ? "error" : "off",
     "no-debugger": process.env.NODE_ENV === "production" ? "error" : "off",
     "no-trailing-spaces": "off",
+    "no-var": "error",
     indent: "off",
     quotes: [2, "double", { avoidEscape: true }],
     semi: "off",
@@ -21,7 +22,7 @@ module.exports = {
     "space-before-function-paren": [
       "error",
       {
-        anonymous: "always",
+        anonymous: "never",
         named: "never",
         asyncArrow: "always"
       }

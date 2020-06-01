@@ -1,11 +1,5 @@
 import * as AccountApi from "@/api/account";
-import {
-  VuexModule,
-  Module,
-  Mutation,
-  Action,
-  getModule
-} from "vuex-module-decorators";
+import { VuexModule, Module, Mutation, Action, getModule } from "vuex-module-decorators";
 import store from "@/store";
 import RemitterAccountModel from "../../models/remitterAccountModel";
 import { LogModule } from "./log";
@@ -33,6 +27,10 @@ class Account extends VuexModule implements IAccountState {
     this.list = accounts;
   }
   @Mutation
+  SET_SIGN_IN_SUCCESS_TIME(time: Date) {
+    this.selected.signInSuccessAt = time;
+  }
+  @Mutation
   SET_BANK_BALANCE(balance: number) {
     this.current.balanceInBank = balance;
   }
@@ -42,19 +40,17 @@ class Account extends VuexModule implements IAccountState {
   }
   @Mutation
   SET_SELECTED(account: RemitterAccountModel) {
-    this.selected = account;
+    this.selected = { ...account };
   }
   @Mutation
   SET_CURRENT(account: RemitterAccountModel) {
-    this.current = account;
+    this.current = { ...account };
   }
   @Action
-  async GetAvailableAccount(): Promise<
-    Array<{ id: number; code: string; balance: number }>
-  > {
-    var { data } = await AccountApi.getAvailableAccount();
+  async GetAvailableAccount(): Promise<Array<{ id: number; code: string; balance: number }>> {
+    let { data } = await AccountApi.getAvailableAccount();
     return (data.data as Array<{ id: number; name: string }>).map(account => {
-      const [code, balance] = account.name.split("-");
+      const [code, balance] = account.name.split(" - ");
       return {
         id: account.id,
         code: code.trim(),
@@ -63,10 +59,8 @@ class Account extends VuexModule implements IAccountState {
     });
   }
   @Action
-  async Search(
-    accountCode: string
-  ): Promise<{ id: number; code: string; balance: number }[]> {
-    var { data } = await AccountApi.getList();
+  async Search(accountCode: string): Promise<{ id: number; code: string; balance: number }[]> {
+    let { data } = await AccountApi.getList();
     return (data.data as Array<{ key: number; value: string }>)
       .filter(account => account.value.indexOf(accountCode) !== -1)
       .map(account => {
@@ -80,8 +74,8 @@ class Account extends VuexModule implements IAccountState {
   }
   @Action
   async GetId(accountCode: string): Promise<number> {
-    var { data } = await AccountApi.getList();
-    var account = (data.data as Array<{ key: number; value: string }>).find(
+    let { data } = await AccountApi.getList();
+    let account = (data.data as Array<{ key: number; value: string }>).find(
       account => account.value.indexOf(accountCode) !== -1
     );
 
@@ -90,15 +84,13 @@ class Account extends VuexModule implements IAccountState {
   }
 
   @Action
-  async GetAccountDetail(
-    accountId: number
-  ): Promise<RemitterAccountModel | null> {
+  async GetAccountDetail(accountId: number): Promise<RemitterAccountModel | null> {
     try {
-      var response = await AccountApi.getDetailById(accountId);
+      let response = await AccountApi.getDetailById(accountId);
       const detail = response.data.data;
 
       if (!detail) throw new Error("Get account detail fail");
-      var account = new RemitterAccountModel();
+      let account = new RemitterAccountModel();
       account.id = accountId;
       account.balance = detail.balance;
       account.code = detail.acctCode;
@@ -116,8 +108,8 @@ class Account extends VuexModule implements IAccountState {
 
   @Action({ rawError: true })
   async GetProxy(accountId: number): Promise<string> {
-    var response = await AccountApi.getAssignedProxy(accountId);
-    var data = response.data.data;
+    let response = await AccountApi.getAssignedProxy(accountId);
+    let data = response.data.data;
     if (data.length === 0) {
       LogModule.SetConsole({
         level: "error",
@@ -125,7 +117,7 @@ class Account extends VuexModule implements IAccountState {
       });
       return "";
     } else {
-      var proxy = data[0].value.split("http://")[1];
+      let proxy = data[0].value.split("http://")[1];
       return proxy;
     }
   }

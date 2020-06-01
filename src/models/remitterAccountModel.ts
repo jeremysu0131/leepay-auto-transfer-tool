@@ -10,4 +10,5 @@ export default class RemitterAccountModel extends AccountModel {
   usbPassword = "";
   queryPassword? = "";
   proxy = "";
+  signInSuccessAt?: Date;
 }

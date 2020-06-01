@@ -1,14 +1,7 @@
-import {
-  createLogger,
-  format as _format,
-  transports as _transports
-} from "winston";
+import { createLogger, format as _format, transports as _transports } from "winston";
 import "winston-daily-rotate-file";
 import { join } from "path";
-const logFolderLocation =
-  process.env.NODE_ENV === "production"
-    ? "/var/logs/bank-internal-fund-transfer"
-    : "./logs";
+const logFolderLocation = process.env.VUE_APP_LOG_LOCATION as string;
 
 const errorStackTracerFormat = _format(info => {
   if (info.meta && info.meta instanceof Error) {
