@@ -47,7 +47,7 @@ class App extends VuexModule implements IAppState {
   public tabs = {
     isTaskEnable: true,
     isAccountEnable: false,
-    showing: "tasks"
+    showing: "accounts"
   };
   public task = {
     isAbleFetch: true,
@@ -133,7 +133,7 @@ class App extends VuexModule implements IAppState {
     this.isManualLogin = true;
     this.isProxySet = false;
     this.tabs = {
-      showing: "tasks",
+      showing: "accounts",
       isTaskEnable: true,
       isAccountEnable: false
     };

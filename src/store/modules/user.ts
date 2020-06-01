@@ -1,10 +1,4 @@
-import {
-  VuexModule,
-  Module,
-  Action,
-  Mutation,
-  getModule
-} from "vuex-module-decorators";
+import { VuexModule, Module, Action, Mutation, getModule } from "vuex-module-decorators";
 import { login, logout, getUserInfo } from "@/api/users";
 import { getToken, setToken, removeToken } from "@/utils/cookies";
 import { IUserData } from "@/api/types";
@@ -76,7 +70,6 @@ class User extends VuexModule implements IUserState {
       const userData: IUserData = data.data.admin;
       this.SET_ID(userData.id);
       this.SET_NAME(userData.username);
-      TaskModule.GetAll();
       return { isSignIn: true, message: undefined };
     } catch (error) {
       const message = error.response.data.message || error;

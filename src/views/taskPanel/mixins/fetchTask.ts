@@ -126,6 +126,7 @@ export default class FetchTaskMixin extends Mixins(TaskOperationMixin) {
     }
   }
   private async getBoBalance() {
+    console.log(this.currentAccount);
     if (this.currentAccount.id) {
       let detail = await AccountModule.GetAccountDetail(this.currentAccount.id);
       if (detail) AccountModule.SET_BANK_BO_BALANCE(detail.balance);

@@ -53,7 +53,6 @@ class Task extends VuexModule implements ITaskState {
   public async GetAll() {
     AppModule.HANDLE_TASK_FETCHING(true);
     try {
-      AccountModule.SET_LIST(await AccountModule.GetAvailableAccount());
       let { data } = await TaskApi.getAll();
       let tasks = await Promise.all(
         (data.data as [])
