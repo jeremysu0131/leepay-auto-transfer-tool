@@ -47,16 +47,20 @@ class Account extends VuexModule implements IAccountState {
     this.current = { ...account };
   }
   @Action
-  async GetAvailableAccount(): Promise<Array<{ id: number; code: string; balance: number }>> {
-    let { data } = await AccountApi.getAvailableAccount();
-    return (data.data as Array<{ id: number; name: string }>).map(account => {
-      const [code, balance] = account.name.split(" - ");
-      return {
-        id: account.id,
-        code: code.trim(),
-        balance: parseFloat(balance.trim())
-      };
-    });
+  async GetAccountList(): Promise<Array<{ id: number; accountCode: string; bankCode: string }>> {
+    try {
+      let { data } = await AccountApi.getList();
+      return data.value.map((card: any) => {
+        return {
+          id: +card.id,
+          accountCode: card.bankAcctCode,
+          bankCode: card.bank.bankCode
+        };
+      });
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      return [];
+    }
   }
   @Action
   async Search(accountCode: string): Promise<{ id: number; code: string; balance: number }[]> {

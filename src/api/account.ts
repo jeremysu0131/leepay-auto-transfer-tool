@@ -2,19 +2,15 @@ import request from "@/utils/request";
 
 export function getList() {
   return request({
-    url: "/adminAcct!listAllCompanyAcct.do",
-    method: "GET"
-  });
-}
-
-export function getAvailableAccount() {
-  return request({
-    url: "/adminAcct!listWithdraw.do",
+    url: "/ps-ops-console/api/bank/account/search",
     method: "GET",
     params: {
-      page: 1,
-      start: 0,
-      limit: 50
+      id: null,
+      status: null,
+      bankType: null,
+      "bank.bankId": null,
+      currentPage: "1",
+      pageSize: "10000"
     }
   });
 }

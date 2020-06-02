@@ -4,13 +4,38 @@
       <div class="account-search__prompt">
         Please select the account to use
       </div>
+      <el-form
+        :model="form"
+        :inline="true"
+        class="account-search__form"
+        label-position="left"
+        @submit.native.prevent
+      >
+        <el-form-item
+          label="Account Code"
+          label-width="100px"
+        >
+          <el-input
+            v-model="form.accountCode"
+            size="small"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button
+            :loading="isSearchingAccount"
+            size="small"
+            @click="searchAccountByBankCode"
+          >
+            Search
+          </el-button>
+        </el-form-item>
+      </el-form>
     </div>
     <div>
       <el-table
         ref="acctCodeTable"
-        v-loading="app.account.isFetching"
         size="mini"
-        :data="accountList"
+        :data="tableData"
         style="width: 100%"
         :height="tableHeight"
         highlight-current-row
@@ -18,19 +43,17 @@
         @current-change="handleSelectedRow"
       >
         <el-table-column
-          prop="code"
-          label="Account Code"
+          prop="accountCode"
+          label="Account"
         />
         <el-table-column
           prop="balance"
           label="Balance"
-        >
-          <template
-            slot-scope="scope"
-          >
-            {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.balance) }}
-          </template>
-        </el-table-column>
+        />
+        <el-table-column
+          prop="bank.bankName"
+          label="Channel Group"
+        />
       </el-table>
     </div>
     <div class="account-search__footer">
@@ -38,7 +61,7 @@
         v-if="!currentAccount.accountCode"
         class="account-search__footer-button"
         :loading="isSigningInBank"
-        :disabled="!selectedBankCard.id"
+        :disabled="!selectedAccount.id"
         @click="handleAccountSelect"
       >
         Select
@@ -47,12 +70,12 @@
         v-if="currentAccount.accountCode"
         class="account-search__footer-button"
         :loading="isSigningInBank"
-        :disabled="!selectedBankCard"
+        :disabled="!selectedAccount"
         @click="handleBankCardChange"
       >
-        <span v-if="!selectedBankCard">Change</span>
-        <span v-if="selectedBankCard && currentAccount.accountCode !== selectedBankCard.accountCode">Change</span>
-        <span v-if="selectedBankCard && currentAccount.accountCode === selectedBankCard.accountCode">Reselect</span>
+        <span v-if="!selectedAccount">Change</span>
+        <span v-if="selectedAccount && currentAccount.accountCode !== selectedAccount.accountCode">Change</span>
+        <span v-if="selectedAccount && currentAccount.accountCode === selectedAccount.accountCode">Reselect</span>
       </el-button>
     </div>
   </div>
@@ -64,20 +87,18 @@ import { AppModule } from "@/store/modules/app";
 import { AccountModule } from "../../../store/modules/account";
 import RemitterAccountModel from "../../../models/remitterAccountModel";
 import { WorkerModule } from "../../../store/modules/worker";
+import { LogModule } from "../../../store/modules/log";
 
 @Component({ name: "AccountSearch" })
 export default class extends Vue {
-  private isSearchingCard = false;
+  private tableData = [] as any[];
+  private isSearchingAccount = false;
   private isSigningInBank = false;
-  private selectedBankCard = {} as any;
+  private selectedAccount = {} as any;
   private form = {
-    accountCode: process.env.NODE_ENV === "development" ? "PSS_ICBC_003" : ""
+    accountCode: process.env.NODE_ENV === "development" ? "ABC" : ""
   };
 
-  async mounted() {
-    let accountList = await AccountModule.GetAvailableAccount();
-    AccountModule.SET_LIST(accountList);
-  }
   get app() {
     return AppModule;
   }
@@ -91,12 +112,21 @@ export default class extends Vue {
     // top header, tab margin, tab content, info header, bank search prompt, search, footer, others
     return window.innerHeight - 50 - 16 - 30 - 65 - 74 - 57 - 56 - 30;
   }
+  async searchAccountByBankCode() {
+    try {
+      this.isSearchingAccount = true;
+      let accountList = await AccountModule.GetAccountList();
+      this.tableData = accountList.filter(card => card.accountCode.indexOf(this.form.accountCode) !== -1);
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+    } finally {
+      this.isSearchingAccount = false;
+    }
+  }
   private async handleAccountSelect() {
-    let account = await AccountModule.GetAccountDetail(
-      this.selectedBankCard.id
-    );
+    let account = await AccountModule.GetAccountDetail(this.selectedAccount.id);
     if (account) {
-      account.proxy = await AccountModule.GetProxy(this.selectedBankCard.id);
+      account.proxy = await AccountModule.GetProxy(this.selectedAccount.id);
       AccountModule.SET_SELECTED(account);
 
       await WorkerModule.SetWorker(account);
@@ -104,7 +134,7 @@ export default class extends Vue {
     }
   }
   private handleSelectedRow(val: any) {
-    this.selectedBankCard = val;
+    this.selectedAccount = val;
   }
 }
 </script>
