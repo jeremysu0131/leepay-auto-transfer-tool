@@ -235,7 +235,7 @@ class Worker extends VuexModule implements IWorkerState {
     WorkerModule.UNSET_WORKFLOW();
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
 
-    await Promise.all([TaskModule.GetAll()]);
+    await Promise.all([TaskModule.GetAll(AccountModule.current.id)]);
   }
   @Action
   HandleSignInFail() {

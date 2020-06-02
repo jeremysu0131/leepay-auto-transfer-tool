@@ -1,16 +1,38 @@
 import request from "@/utils/request";
 import TaskDetailModel from "../models/taskDetailModel";
+import dayjs from "dayjs";
+import logger from "@/utils/logger";
 
-export function getAll() {
+export function getAll(accountId: number) {
+  const params = {
+    pageSize: 50,
+    pageNo: 1,
+    sortOrder: ""
+  };
+  const data = {
+    bankAcctId: accountId,
+    dateType: "requestDate",
+    dateFrom: +dayjs()
+      .startOf("day")
+      .subtract(1, "hour"),
+    dateTo: +dayjs().endOf("day"),
+    durationFrom: null,
+    durationTo: null,
+    remarks: "",
+    payeeName: "",
+    processBy: "",
+    requestAmtFrom: null,
+    requestAmtTo: null,
+    status: "I"
+  };
+
+  logger.info("getAllTasks | Params:" + JSON.stringify(params) + " | " + JSON.stringify(data));
+
   return request({
-    url: "/adminWF!listPaymentTask.do",
-    method: "GET",
-    params: {
-      "wfs[]": "WP",
-      page: 1,
-      start: 0,
-      limit: 500
-    }
+    url: "/ps-ops-console/api/withdraw/searchWithdrawForVendorView",
+    method: "POST",
+    params,
+    data
   });
 }
 

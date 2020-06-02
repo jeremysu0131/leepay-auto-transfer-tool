@@ -50,44 +50,25 @@ class Task extends VuexModule implements ITaskState {
     this.selectedForOperation.transferFee = transferFee;
   }
   @Action
-  public async GetAll() {
+  public async GetAll(accountId: number) {
     AppModule.HANDLE_TASK_FETCHING(true);
     try {
-      let { data } = await TaskApi.getAll();
-      let tasks = await Promise.all(
-        (data.data as [])
-          .filter((task: any) => task.workflow !== TaskTypeEnum.WITHDRAW_DISTRIBUTION)
-          .map((task: any) => {
-            switch (task.workflow) {
-              case TaskTypeEnum.PARTIAL_WITHDRAW:
-                return mappingPartialWithdraw(task);
-              case TaskTypeEnum.FUND_TRANSFER:
-                return mappingFundTransfer(task);
-              default:
-                throw new Error("No such task type");
-            }
-          })
-          .filter(
-            task => AccountModule.list.filter(account => account.code.includes(task.remitterAccountCode)).length !== 0
-          )
-          .sort((task, nextTask) => nextTask.priority - task.priority)
-          // .filter(
-          //   task => task.remitterAccountCode === AccountModule.current.code
-          // )
-          .map(task => {
-            task.createdAt = dayjs(task.createdAt).format("hh:mm:ss");
-            return task;
-          })
-          .map(async task => {
-            let data = await TaskCheckHelper.get(task.id);
-            if (data !== null) {
-              task.checkTool.id = data.id;
-              task.checkTool.status = data.status;
-            }
-            return task;
-          })
-      );
-      TaskModule.SET_TASK_LIST(tasks);
+      let { data } = await TaskApi.getAll(accountId);
+      console.log(data);
+      (data.value as [])
+        .map(task => {
+          // task.createdAt = dayjs(task.createdAt).format("hh:mm:ss");
+          return task;
+        })
+        .map(async task => {
+          // let data = await TaskCheckHelper.get(task.id);
+          // if (data !== null) {
+          // task.checkTool.id = data.id;
+          // task.checkTool.status = data.status;
+          // }
+          // return task;
+        });
+      // TaskModule.SET_TASK_LIST(tasks);
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       return [];
@@ -100,51 +81,51 @@ class Task extends VuexModule implements ITaskState {
     task: TaskModel,
     accountId: number // selected account id
   ): Promise<TaskDetailModel | null> {
-    try {
-      let data;
-      switch (task.workflow) {
-        case TaskTypeEnum.FUND_TRANSFER:
-          data = (
-            await TaskApi.getFundTransferDetail({
-              taskId: task.id,
-              ref: task.ref
-            })
-          ).data.data;
-          break;
-        case TaskTypeEnum.PARTIAL_WITHDRAW:
-          data = (
-            await TaskApi.getPartialWithdrawDetail({
-              taskId: task.id,
-              bankId: accountId,
-              ref: task.ref
-            })
-          ).data.data;
-          break;
-
-        default:
-          throw new Error("No such task type");
-      }
-      return new TaskDetailModel({
-        // Task id and ref will shown error in get detail api
-        id: task.id,
-        ref: task.ref,
-        amount: +data.amount,
-        type: task.workflow,
-        payeeAccount: {
-          bank: {
-            branch: data.memberBankBranch,
-            city: data.memberBankCity,
-            province: data.memberBankProvince,
-            chineseName: data.bank
-          },
-          holderName: data.accountHolderName,
-          cardNumber: data.accountNo
-        }
-      });
-    } catch (error) {
-      LogModule.SetLog({ level: "error", message: error });
-      return null;
-    }
+    return null;
+    /// / y {
+    // let data;
+    /// / switch (task.workflow) {
+    //   case TaskTypeEnum.FUND_TRANSFER:
+    //     data = (
+    /// /       await TaskApi.getFundTransferDetail({
+    /// /         taskId: task.id,
+    /// /         r f: task.ref
+    //       })
+    /// /     ).data.data;
+    /// /     break;
+    //   case TaskTypeEnum.PARTIAL_WITHDRAW:
+    //     data = (
+    /// /       await TaskApi.getPartialWithdrawDetail({
+    /// /         taskId: task.id,
+    /// /         b nkId: accountId,
+    //         ref: task.ref
+    /// /       })
+    /// /     ).data.data;
+    /// /     break;
+    /// /   default:
+    //     throw new Error("No such task type");
+    // }
+    /// / return new TaskDetailModel({
+    //   // Task id and ref will shown error in get detail api
+    /// /   i : task.id,
+    //   ref: task.ref,
+    /// /   amount: +data.amount,
+    /// /   type: task.workflow,
+    /// /   p yeeAccount: {
+    //     bank: {
+    /// /       branch: data.memberBankBranch,
+    /// /       city: data.memberBankCity,
+    /// /       p ovince: data.memberBankProvince,
+    //       chineseName: data.bank
+    /// /     },
+    /// /     holderName: data.accountHolderName,
+    /// /     cardNumber: data.accountNo
+    //   }
+    /// / });
+    // catch (error) {
+    /// / L gModule.SetLog({ level: "error", message: error });
+    /// / return null;
+    //
   }
 
   @Action

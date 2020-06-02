@@ -90,6 +90,17 @@ class Account extends VuexModule implements IAccountState {
   }
 
   @Action
+  async GetBoBalance(accountId: number): Promise<number> {
+    try {
+      let { data } = await getBoBalance(accountId);
+      console.log(data);
+      return data.value[0].availableBalance;
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      return 0;
+    }
+  }
+  @Action
   async GetAccountDetail(account: AccountModel): Promise<RemitterAccountModel | null> {
     try {
       let [getDetailResult, getBoBalanceResult, getGroupResult, signInInfo] = await Promise.all([
@@ -102,7 +113,7 @@ class Account extends VuexModule implements IAccountState {
       if (!detail) throw new Error("Get account detail fail");
       let remitterAccount = new RemitterAccountModel();
       remitterAccount.id = account.id;
-      remitterAccount.balance = getBoBalanceResult.data.value[0].availableBalance;
+      remitterAccount.balance = await this.GetBoBalance(account.id);
       remitterAccount.code = account.code;
       remitterAccount.group = getGroupResult.data.value[0].accountGroup.groupName;
       remitterAccount.proxy = `${detail.proxy}:8800`;

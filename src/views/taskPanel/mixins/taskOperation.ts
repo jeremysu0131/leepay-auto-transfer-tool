@@ -30,37 +30,9 @@ export default class TaskOperationMixin extends Vue {
   }
   public async getTasks() {
     // let scrollTop = (this.$refs.taskTable as any).bodyWrapper.scrollTop;
-    await TaskModule.GetAll();
+    await TaskModule.GetAll(this.currentAccount.id);
 
     // (this.$refs.taskTable as any).bodyWrapper.scrollTop = scrollTop;
-  }
-  private checkIfAccountSignedInToBank(remitterAccountCode: string): boolean {
-    return this.currentAccount.code === remitterAccountCode;
-  }
-  private async handleAccountSignInToBank(remitterAccountCode: string): Promise<boolean> {
-    AccountModule.SET_CURRENT(new RemitterAccountModel());
-    let availableAccounts = await AccountModule.GetAvailableAccount();
-    let selectedAccount = availableAccounts.filter(account => account.code === remitterAccountCode)[0];
-
-    let account = await AccountModule.GetAccountDetail(selectedAccount.id);
-    if (account) {
-      account.proxy = await AccountModule.GetProxy(selectedAccount.id);
-      AccountModule.SET_SELECTED(account);
-
-      AppModule.HANDLE_MANUAL_LOGIN(false);
-
-      if (remitterAccountCode.indexOf("PSBC") !== -1) {
-        AppModule.HANDLE_MANUAL_LOGIN(true);
-      }
-
-      await WorkerModule.SetWorker(account);
-      AppModule.HANDLE_SHOWING_TAB("accounts");
-      AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
-
-      let isSignInSuccess = await this.accountSignInFinish();
-      return isSignInSuccess;
-    }
-    return false;
   }
   private accountSignInFinish(): Promise<boolean> {
     return new Promise(resolve => {
@@ -259,7 +231,7 @@ export default class TaskOperationMixin extends Vue {
 
     // Compare in system
     let [detail, result] = await Promise.all([
-      AccountModule.GetAccountDetail(this.currentAccount.id),
+      AccountModule.GetAccountDetail(this.currentAccount),
       WorkerModule.RunFlow<WorkerBalanceResponseModel>({
         name: WorkflowEnum.GET_BALANCE
       })
@@ -297,13 +269,13 @@ export default class TaskOperationMixin extends Vue {
         status: TaskStatusEnum.SUCCESS
       });
       AppModule.HANDLE_TASK_PROCESSING(false);
-      await TaskModule.GetAll();
+      TaskModule.GetAll(this.currentAccount.id);
     }
   }
   private beforeExecuteTask(taskDetail: TaskDetailModel) {
     TaskModule.SET_SELECTED_DETAIL(taskDetail);
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
-    TaskModule.GetAll();
+    TaskModule.GetAll(this.currentAccount.id);
     TaskCheckHelper.updateStatus(TaskModule.selectedDetail.id, TaskStatusEnum.PROCESSING, UserModule.name);
   }
   private async runAutoTransferFlows(): Promise<{ isSuccess: boolean; transferFee?: number }> {
@@ -425,8 +397,7 @@ export default class TaskOperationMixin extends Vue {
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     } finally {
-      await TaskModule.GetAll();
-      TaskModule.GetAll();
+      TaskModule.GetAll(this.currentAccount.id);
       AppModule.HANDLE_TASK_PROCESSING(false);
     }
   }

@@ -51,6 +51,7 @@ import { TaskModule } from "../../../store/modules/task";
 import TaskDetailModel from "@/models/taskDetailModel";
 import { AppModule } from "../../../store/modules/app";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
+import { AccountModule } from "../../../store/modules/account";
 
 @Component({
   name: "TaskFailDialog"
@@ -97,7 +98,7 @@ export default class extends Vue {
         ...this.taskDetail,
         status: TaskStatusEnum.SUCCESS
       });
-      await TaskModule.GetAll();
+      await TaskModule.GetAll(AccountModule.current.id);
       this.$message.success("Task has been mark as fail");
       this.closeDialog();
     } catch (error) {
