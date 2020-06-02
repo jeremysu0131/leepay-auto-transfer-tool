@@ -18,46 +18,22 @@
         width="80"
         align="center"
       />
-      <!-- <el-table-column
-        prop="createdAt"
-        label="Request Time"
-        width="150"
-        align="center"
-      />-->
-      <!-- <el-table-column
+      <el-table-column
         label="Account Group"
-        width="120"
+        width="110"
         align="center"
       >
-        eslint-disable-next-line
-        <template slot-scope="scope">{{ card.currentDetail.channelGroup || " - " }}</template>
-      </el-table-column> -->
+        <template>{{ currentAccount.group || " - " }}</template>
+      </el-table-column>
       <el-table-column
-        prop="checkTool.status"
-        label="Status"
-        align="center"
-        width="120"
-      />
-      <el-table-column
-        prop="workflow"
-        label="Workflow"
-        align="center"
-        width="120"
-      />
-      <el-table-column
-        prop="merchantNameString"
+        prop="merchant"
         label="Merchant"
         align="center"
       />
-      <!-- <el-table-column
-          prop="receiver"
-          label="Receiver"
-          align="center"
-        />-->
       <el-table-column
         prop="amount"
         label="Amount"
-        width="100"
+        width="80"
         header-align="center"
         align="right"
       >
@@ -70,18 +46,16 @@
       <el-table-column
         label="Leepay Status"
         align="center"
+        width="100"
       >
         <template slot-scope="scope">
           <div style="color:#C0C4CC;">
-            <span v-if="scope.row.status === 'I'">processing</span>
-            <span v-if="scope.row.status === 'P'">paid</span>
-            <span v-if="scope.row.status === 'FC'">failed confirmation</span>
-            <span v-if="scope.row.status === 'F'">failed</span>
+            <span>{{ scope.row.status }}</span>
           </div>
         </template>
       </el-table-column>
       <el-table-column
-        prop="toolStatus"
+        prop="checkTool.status"
         label="FT Status"
         align="center"
       />
@@ -90,7 +64,10 @@
         align="center"
       >
         <template slot-scope="scope">
-          <span style="margin-left: 10px">{{ scope.row.requestTimeStr.split(" ")[1] }}</span>
+          <span
+            style="margin-left: 10px"
+            v-text="formatDate(scope.row.assignedAt)"
+          />
         </template>
       </el-table-column>
       <el-table-column
@@ -250,8 +227,8 @@ export default class extends Mixins(TaskOperationMixin) {
   get app() {
     return AppModule;
   }
-  get card() {
-    return AccountModule;
+  get currentAccount() {
+    return AccountModule.current;
   }
   get task() {
     return TaskModule;
@@ -269,6 +246,9 @@ export default class extends Mixins(TaskOperationMixin) {
     // top header, tab margin, tab content, info header, task detail, others
     return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 100;
     // return window.innerHeight - 300;
+  }
+  private formatDate(date:Date) {
+    return dayjs(date).format("HH:mm:ss");
   }
   private async markTaskAsSuccess(task: TaskModel) {
     await this.lockTask(task);

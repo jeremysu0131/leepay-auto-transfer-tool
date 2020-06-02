@@ -16,6 +16,20 @@ import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import dayjs from "dayjs";
 import LeepayTaskStatusEnum from "@/enums/leepayTaskStatusEnum";
 
+let getStatus = (status: string): LeepayTaskStatusEnum => {
+  switch (status) {
+    case "I":
+      return LeepayTaskStatusEnum.I;
+    case "F":
+      return LeepayTaskStatusEnum.F;
+    case "FC":
+      return LeepayTaskStatusEnum.FC;
+    case "P":
+      return LeepayTaskStatusEnum.P;
+    default:
+      throw new Error("No such status");
+  }
+};
 export interface ITaskState {
   list: TaskModel[];
   lastSelected: LastSelectedTaskDetailModel;
@@ -29,22 +43,6 @@ class Task extends VuexModule implements ITaskState {
   public lastSelected = new LastSelectedTaskDetailModel();
   public selectedDetail = new TaskDetailModel();
   public selectedForOperation = new TaskDetailModel();
-
-  @Action
-  private getStatus(status: string): LeepayTaskStatusEnum {
-    switch (status) {
-      case "I":
-        return LeepayTaskStatusEnum.I;
-      case "F":
-        return LeepayTaskStatusEnum.F;
-      case "FC":
-        return LeepayTaskStatusEnum.FC;
-      case "P":
-        return LeepayTaskStatusEnum.P;
-      default:
-        throw new Error("No such status");
-    }
-  }
 
   @Mutation
   public SET_TASK_LIST(tasks: TaskModel[]) {
@@ -78,7 +76,9 @@ class Task extends VuexModule implements ITaskState {
             task.id = t.id;
             task.amount = t.amount;
             task.merchant = t.merchantNameString;
-            task.status = this.getStatus(t.status);
+            console.log(t);
+            console.log(t.merchantNameString);
+            task.status = getStatus(t.status);
             task.assignedAt = dayjs(t.requestTimeStr).toDate();
             // task.createdAt = dayjs(task.createdAt).format("hh:mm:ss");
             return task;

@@ -55,7 +55,7 @@ import TaskStatusEnum from "../../../enums/taskStatusEnum";
 })
 export default class extends Mixins(FetchTaskMixin, TaskOperationMixin) {
   beforeMount() {
-    this.initFetchInterval();
+    // this.initFetchInterval();
   }
   beforeDestroy() {
     this.disposeFetchInterval();
