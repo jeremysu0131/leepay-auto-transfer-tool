@@ -1,162 +1,161 @@
 <template>
-  <div class="task-list__container-body">
-    <el-table
-      ref="taskTable"
-      v-loading="app.task.isFetching"
-      :data="taskList"
-      style="width: 100%"
-      :height="tableHeight"
-      size="mini"
-      :stripe="true"
-      :border="true"
-      :row-class-name="selectedRowClass"
-      :default-sort="{prop: 'priority', order: 'descending'}"
+  <el-table
+    ref="taskTable"
+    v-loading="app.task.isFetching"
+    :data="taskList"
+    style="width: 100%"
+    :height="tableHeight"
+    size="mini"
+    :stripe="true"
+    :border="true"
+    :row-class-name="selectedRowClass"
+    :default-sort="{prop: 'priority', order: 'descending'}"
+  >
+    <el-table-column
+      prop="id"
+      label="ID"
+      width="80"
+      align="center"
+    />
+    <el-table-column
+      label="Account Group"
+      width="110"
+      align="center"
     >
-      <el-table-column
-        prop="id"
-        label="ID"
-        width="80"
-        align="center"
-      />
-      <el-table-column
-        label="Account Group"
-        width="110"
-        align="center"
+      <template>{{ currentAccount.group || " - " }}</template>
+    </el-table-column>
+    <el-table-column
+      prop="merchant"
+      label="Merchant"
+      align="center"
+    />
+    <el-table-column
+      prop="amount"
+      label="Amount"
+      width="80"
+      header-align="center"
+      align="right"
+    >
+      <template
+        slot-scope="scope"
       >
-        <template>{{ currentAccount.group || " - " }}</template>
-      </el-table-column>
-      <el-table-column
-        prop="merchant"
-        label="Merchant"
-        align="center"
-      />
-      <el-table-column
-        prop="amount"
-        label="Amount"
-        width="80"
-        header-align="center"
-        align="right"
-      >
-        <template
-          slot-scope="scope"
-        >
-          {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format( scope.row.amount) }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="Leepay Status"
-        align="center"
-        width="100"
-      >
-        <template slot-scope="scope">
-          <div style="color:#C0C4CC;">
-            <span>{{ scope.row.status }}</span>
+        {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format( scope.row.amount) }}
+      </template>
+    </el-table-column>
+    <el-table-column
+      label="Leepay Status"
+      align="center"
+      width="100"
+    >
+      <template slot-scope="scope">
+        <div style="color:#C0C4CC;">
+          <span>{{ scope.row.status }}</span>
+        </div>
+      </template>
+    </el-table-column>
+    <el-table-column
+      prop="checkTool.status"
+      label="FT Status"
+      align="center"
+    />
+    <el-table-column
+      label="Assigned Time"
+      align="center"
+    >
+      <template slot-scope="scope">
+        <span
+          style="margin-left: 10px"
+          v-text="formatDate(scope.row.assignedAt)"
+        />
+      </template>
+    </el-table-column>
+    <el-table-column
+      label="Actions"
+      align="center"
+      width="140"
+      fixed="right"
+    >
+      <template slot-scope="scope">
+        <div style="display: flex; justify-content: space-around">
+          <div>
+            <el-button
+              v-if="isProcessButtonShow(scope.row)"
+              class="task-operator__button"
+              style="width:80px"
+              size="mini"
+              :disabled="isProcessButtonDisabled(scope.row)"
+              @click="handleRowSelect(scope.row)"
+            >
+              {{ scope.row.checkTool.status === "processing" ? "Reprocess" : "Process" }}
+            </el-button>
+            <el-button
+              v-if="!isProcessButtonShow(scope.row)"
+              class="task-operator__button"
+              style="width:80px"
+              size="mini"
+              type="success"
+              :disabled="isSuccessButtonDisabled(scope.row)"
+              @click="markTaskAsSuccess(scope.row)"
+            >
+              Success
+            </el-button>
           </div>
-        </template>
-      </el-table-column>
-      <el-table-column
-        prop="checkTool.status"
-        label="FT Status"
-        align="center"
-      />
-      <el-table-column
-        label="Assigned Time"
-        align="center"
-      >
-        <template slot-scope="scope">
-          <span
-            style="margin-left: 10px"
-            v-text="formatDate(scope.row.assignedAt)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="Actions"
-        align="center"
-        width="140"
-        fixed="right"
-      >
-        <template slot-scope="scope">
-          <div style="display: flex; justify-content: space-around">
-            <div>
-              <el-button
-                v-if="isProcessButtonShow(scope.row)"
-                class="task-operator__button"
-                style="width:80px"
-                size="mini"
-                :disabled="isProcessButtonDisabled(scope.row)"
-                @click="handleRowSelect(scope.row)"
-              >
-                {{ scope.row.checkTool.status === "processing" ? "Reprocess" : "Process" }}
-              </el-button>
-              <el-button
-                v-if="!isProcessButtonShow(scope.row)"
-                class="task-operator__button"
-                style="width:80px"
-                size="mini"
-                type="success"
-                :disabled="isSuccessButtonDisabled(scope.row)"
-                @click="markTaskAsSuccess(scope.row)"
-              >
-                Success
-              </el-button>
-            </div>
-            <div>
-              <el-popover
-                :disabled="isMoreButtonDisabled(scope.row)"
-                trigger="click"
-                placement="left"
-                width="180"
-              >
-                <el-row class="el-row--popover">
-                  <el-col
-                    v-if="isSuccessButtonVisible(scope.row)"
-                    :span="24"
-                    class="el-row--popover__el-col"
+          <div>
+            <el-popover
+              :disabled="isMoreButtonDisabled(scope.row)"
+              trigger="click"
+              placement="left"
+              width="180"
+            >
+              <el-row class="el-row--popover">
+                <el-col
+                  v-if="isSuccessButtonVisible(scope.row)"
+                  :span="24"
+                  class="el-row--popover__el-col"
+                >
+                  <el-button
+                    class="el-row--popover__el-button"
+                    type="success"
+                    @click="markTaskAsSuccess(scope.row)"
                   >
-                    <el-button
-                      class="el-row--popover__el-button"
-                      type="success"
-                      @click="markTaskAsSuccess(scope.row)"
-                    >
-                      <svg-icon
-                        name="check"
-                        class="el-row--popover__el-button--icon"
-                      />Success
-                    </el-button>
-                  </el-col>
-                  <el-col
-                    v-if="isFailButtonVisible(scope.row)"
-                    :span="24"
-                    class="el-row--popover__el-col"
+                    <svg-icon
+                      name="check"
+                      class="el-row--popover__el-button--icon"
+                    />Success
+                  </el-button>
+                </el-col>
+                <el-col
+                  v-if="isFailButtonVisible(scope.row)"
+                  :span="24"
+                  class="el-row--popover__el-col"
+                >
+                  <el-button
+                    class="el-row--popover__el-button"
+                    type="danger"
+                    @click="markTaskAsFail(scope.row)"
                   >
-                    <el-button
-                      class="el-row--popover__el-button"
-                      type="danger"
-                      @click="markTaskAsFail(scope.row)"
-                    >
-                      <svg-icon
-                        name="error"
-                        class="el-row--popover__el-button--icon"
-                      />Fail
-                    </el-button>
-                  </el-col>
-                  <el-col
-                    v-show="isToConfirmButtonVisible(scope.row)"
-                    :span="24"
-                    class="el-row--popover__el-col"
+                    <svg-icon
+                      name="error"
+                      class="el-row--popover__el-button--icon"
+                    />Fail
+                  </el-button>
+                </el-col>
+                <el-col
+                  v-show="isToConfirmButtonVisible(scope.row)"
+                  :span="24"
+                  class="el-row--popover__el-col"
+                >
+                  <el-button
+                    class="el-row--popover__el-button"
+                    @click="markTaskAsToConfirm(scope.row)"
                   >
-                    <el-button
-                      class="el-row--popover__el-button"
-                      @click="markTaskAsToConfirm(scope.row)"
-                    >
-                      <svg-icon
-                        name="check-circle"
-                        class="el-row--popover__el-button--icon"
-                      />To Confirm
-                    </el-button>
-                  </el-col>
-                  <!-- <el-col
+                    <svg-icon
+                      name="check-circle"
+                      class="el-row--popover__el-button--icon"
+                    />To Confirm
+                  </el-button>
+                </el-col>
+                <!-- <el-col
                     v-if="isReassignButtonVisible(scope.row)"
                     :span="24"
                     class="el-row--popover__el-col"
@@ -171,22 +170,21 @@
                       />Re-assign
                     </el-button>
                   </el-col>-->
-                </el-row>
-                <el-button
-                  slot="reference"
-                  :disabled="isMoreButtonDisabled(scope.row)"
-                  class="task-operator__button"
-                  size="mini"
-                >
-                  More
-                </el-button>
-              </el-popover>
-            </div>
+              </el-row>
+              <el-button
+                slot="reference"
+                :disabled="isMoreButtonDisabled(scope.row)"
+                class="task-operator__button"
+                size="mini"
+              >
+                More
+              </el-button>
+            </el-popover>
           </div>
-        </template>
-      </el-table-column>
-    </el-table>
-  </div>
+        </div>
+      </template>
+    </el-table-column>
+  </el-table>
 </template>
 
 <script lang="ts">
@@ -244,7 +242,7 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   get tableHeight() {
     // top header, tab margin, tab content, info header, task detail, others
-    return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 40;
+    return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 70;
     // return window.innerHeight - 300;
   }
   private formatDate(date:Date) {
