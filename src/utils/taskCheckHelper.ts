@@ -35,7 +35,7 @@ export const create = async (
   data.operator = operator;
   data.status = TaskStatusEnum.PROCESSING;
   data.remark = JSON.stringify({
-    workflow: task.workflow,
+    // workflow: task.workflow,
     version: process.env.VUE_APP_VERSION
   });
   let response = await requestRisk({

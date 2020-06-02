@@ -3,6 +3,7 @@ import BankModel from "./bankModel";
 import TaskTypeEnum from "@/enums/taskTypeEnum";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import TaskCheckToolModel from "./taskCheckToolModel";
+import LeepayTaskStatusEnum from "@/enums/leepayTaskStatusEnum";
 
 export default class TaskModel {
   id = 0;
@@ -25,5 +26,5 @@ export default class TaskModel {
   createdBy = 0;
   updatedAt = new Date();
   updatedBy = 0;
-  workflow: string = TaskTypeEnum.FUND_TRANSFER;
+  status = LeepayTaskStatusEnum.I;
 }

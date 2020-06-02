@@ -7,11 +7,8 @@ import TaskTypeEnum from "../enums/taskTypeEnum";
 export default class TaskDetailModel {
   id = 0;
   amount = 0;
-  ref = "";
   transferFee = 0;
-  type = TaskTypeEnum.FUND_TRANSFER;
   payeeAccount = new PayeeAccountModel();
-  // remitterAccount = new RemitterAccountModel();
 
   public constructor(init?: Partial<TaskDetailModel>) {
     Object.assign(this, init);

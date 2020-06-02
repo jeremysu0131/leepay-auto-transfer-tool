@@ -93,7 +93,6 @@ class Account extends VuexModule implements IAccountState {
   async GetBoBalance(accountId: number): Promise<number> {
     try {
       let { data } = await getBoBalance(accountId);
-      console.log(data);
       return data.value[0].availableBalance;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });

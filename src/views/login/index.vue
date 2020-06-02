@@ -76,6 +76,7 @@ import { Dictionary } from "vue-router/types/router";
 import { Form as ElForm, Input, Message, MessageBox } from "element-ui";
 import { UserModule } from "@/store/modules/user";
 import { isValidUsername } from "@/utils/validate";
+import { LogModule } from "../../store/modules/log";
 
 @Component({
   name: "Login"
@@ -145,10 +146,9 @@ export default class extends Vue {
         this.loading = true;
         try {
           const [isSignIn, isSignInSkypay] = await Promise.all([this.SignIn(), this.SignInSkypay()]);
-          console.log(isSignIn, isSignInSkypay);
           if (isSignIn && isSignInSkypay) await this.sendOTP();
         } catch (error) {
-          console.log(error);
+          LogModule.SetLog({ level: "error", message: error });
         } finally {
           this.loading = false;
         }

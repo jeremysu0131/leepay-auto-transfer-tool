@@ -126,7 +126,6 @@ export default class extends Vue {
   }
   private async handleAccountSelect() {
     let account = await AccountModule.GetAccountDetail(this.selectedAccount);
-    console.log(account);
     if (account) {
       AccountModule.SET_SELECTED(account);
       await WorkerModule.SetWorker(account);

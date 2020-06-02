@@ -14,6 +14,7 @@ import TaskCheckToolModel from "@/models/taskCheckToolModel";
 import LastSelectedTaskDetailModel from "@/models/lastSelectedTaskDetailModel";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import dayjs from "dayjs";
+import LeepayTaskStatusEnum from "@/enums/leepayTaskStatusEnum";
 
 export interface ITaskState {
   list: TaskModel[];
@@ -28,6 +29,22 @@ class Task extends VuexModule implements ITaskState {
   public lastSelected = new LastSelectedTaskDetailModel();
   public selectedDetail = new TaskDetailModel();
   public selectedForOperation = new TaskDetailModel();
+
+  @Action
+  private getStatus(status: string): LeepayTaskStatusEnum {
+    switch (status) {
+      case "I":
+        return LeepayTaskStatusEnum.I;
+      case "F":
+        return LeepayTaskStatusEnum.F;
+      case "FC":
+        return LeepayTaskStatusEnum.FC;
+      case "P":
+        return LeepayTaskStatusEnum.P;
+      default:
+        throw new Error("No such status");
+    }
+  }
 
   @Mutation
   public SET_TASK_LIST(tasks: TaskModel[]) {
@@ -54,21 +71,28 @@ class Task extends VuexModule implements ITaskState {
     AppModule.HANDLE_TASK_FETCHING(true);
     try {
       let { data } = await TaskApi.getAll(accountId);
-      console.log(data);
-      (data.value as [])
-        .map(task => {
-          // task.createdAt = dayjs(task.createdAt).format("hh:mm:ss");
-          return task;
-        })
-        .map(async task => {
-          // let data = await TaskCheckHelper.get(task.id);
-          // if (data !== null) {
-          // task.checkTool.id = data.id;
-          // task.checkTool.status = data.status;
-          // }
-          // return task;
-        });
-      // TaskModule.SET_TASK_LIST(tasks);
+      let tasks: TaskModel[] = await Promise.all(
+        (data.value as [])
+          .map((t: any) => {
+            let task = new TaskModel();
+            task.id = t.id;
+            task.amount = t.amount;
+            task.merchant = t.merchantNameString;
+            task.status = this.getStatus(t.status);
+            task.assignedAt = dayjs(t.requestTimeStr).toDate();
+            // task.createdAt = dayjs(task.createdAt).format("hh:mm:ss");
+            return task;
+          })
+          .map(async task => {
+            let data = await TaskCheckHelper.get(task.id);
+            if (data !== null) {
+              task.checkTool.id = data.id;
+              task.checkTool.status = data.status;
+            }
+            return task;
+          })
+      );
+      TaskModule.SET_TASK_LIST(tasks);
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       return [];
@@ -143,18 +167,18 @@ class Task extends VuexModule implements ITaskState {
   async MarkTaskSuccess({ task, note }: { task: TaskDetailModel; note?: string }): Promise<boolean> {
     try {
       let remitterAccountId = AccountModule.current.id;
-      switch (task.type) {
-        case TaskTypeEnum.FUND_TRANSFER: {
-          let { data } = await TaskApi.markFundTransferTaskSuccess(task, note);
-          if (data.code === 1) await TaskApi.updateInputFields(task, `Processed by ${UserModule.name}`);
-          return true;
-        }
-        case TaskTypeEnum.PARTIAL_WITHDRAW: {
-          let { data } = await TaskApi.markPartialWithdrawTaskSuccess(task, remitterAccountId, note);
-          if (data.code === 1) await TaskApi.updateInputFields(task, `Processed by ${UserModule.name}`);
-          return true;
-        }
-      }
+      // switch (task.type) {
+      //   case TaskTypeEnum.FUND_TRANSFER: {
+      //     let { data } = await TaskApi.markFundTransferTaskSuccess(task, note);
+      //     if (data.code === 1) await TaskApi.updateInputFields(task, `Processed by ${UserModule.name}`);
+      //     return true;
+      //   }
+      //   case TaskTypeEnum.PARTIAL_WITHDRAW: {
+      //     let { data } = await TaskApi.markPartialWithdrawTaskSuccess(task, remitterAccountId, note);
+      //     if (data.code === 1) await TaskApi.updateInputFields(task, `Processed by ${UserModule.name}`);
+      //     return true;
+      //   }
+      // }
       return false;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
@@ -173,25 +197,24 @@ class Task extends VuexModule implements ITaskState {
       message: `Mark task fail parameters: reason: ${reason}`
     });
     try {
-      switch (task.type) {
-        case TaskTypeEnum.FUND_TRANSFER: {
-          let { data } = await TaskApi.markFundTransferTaskFail(task, reason);
-          if (data.code === 1) {
-            await TaskApi.updateInputFields(task, reason);
-          }
-          break;
-        }
-        case TaskTypeEnum.PARTIAL_WITHDRAW: {
-          let response = await TaskApi.markPartialWithdrawTaskFail(task, AccountModule.current.id, 0, reason);
-          if (response.data.code === 1) {
-            await TaskApi.updateInputFields(task, reason);
-          }
-          break;
-        }
-
-        default:
-          break;
-      }
+      // switch (task.type) {
+      //   case TaskTypeEnum.FUND_TRANSFER: {
+      //     let { data } = await TaskApi.markFundTransferTaskFail(task, reason);
+      //     if (data.code === 1) {
+      //       await TaskApi.updateInputFields(task, reason);
+      //     }
+      //     break;
+      //   }
+      //   case TaskTypeEnum.PARTIAL_WITHDRAW: {
+      //     let response = await TaskApi.markPartialWithdrawTaskFail(task, AccountModule.current.id, 0, reason);
+      //     if (response.data.code === 1) {
+      //       await TaskApi.updateInputFields(task, reason);
+      //     }
+      //     break;
+      //   }
+      //   default:
+      //     break;
+      // }
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       // throw new Error("Mark task as fail error, please contact admin");
@@ -214,64 +237,4 @@ class Task extends VuexModule implements ITaskState {
   }
 }
 
-function mappingPartialWithdraw(task: any) {
-  return {
-    id: task.id,
-    amount: +task.field5,
-    assignee: task.asignee,
-    assigneeId: task.asigneeId,
-    assignedAt: task.asigneeAt,
-    bank: {
-      id: 0,
-      code: "",
-      chineseName: ""
-    },
-    customer: task.customer,
-    merchant: task.merchantName,
-    checkTool: new TaskCheckToolModel(),
-    status: "",
-    remitterAccountCode: task.field4,
-    payeeAccountCode: "-",
-    pendingTime: task.pendingTime,
-    priority: task.priority,
-    ref: task.ref,
-    remark: task.remarks,
-    createdAt: task.createdAt,
-    createdBy: task.createdBy,
-    transferFee: isNaN(task.field8) ? 0 : task.field8,
-    updatedAt: task.updatedAt,
-    updatedBy: task.updatedBy,
-    workflow: task.workflow
-  } as TaskModel;
-}
-function mappingFundTransfer(task: any) {
-  return {
-    id: task.id,
-    amount: +task.field5,
-    assignee: task.asignee,
-    assigneeId: task.asigneeId,
-    assignedAt: task.asigneeAt,
-    bank: {
-      id: 0,
-      code: "",
-      chineseName: ""
-    },
-    checkTool: new TaskCheckToolModel(),
-    customer: task.customer,
-    merchant: "-",
-    status: "",
-    remitterAccountCode: task.field7,
-    payeeAccountCode: task.toAcct,
-    pendingTime: task.pendingTime,
-    priority: task.priority,
-    ref: task.ref,
-    remark: task.remarks,
-    createdAt: task.createdAt,
-    createdBy: task.createdBy,
-    transferFee: isNaN(task.field6) ? 0 : task.field6,
-    updatedAt: task.updatedAt,
-    updatedBy: task.updatedBy,
-    workflow: task.workflow
-  } as TaskModel;
-}
 export const TaskModule = getModule(Task);

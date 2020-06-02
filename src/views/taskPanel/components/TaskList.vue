@@ -24,20 +24,14 @@
         width="150"
         align="center"
       />-->
-      <el-table-column
-        prop="pendingTime"
-        label="Pending(min.)"
+      <!-- <el-table-column
+        label="Account Group"
+        width="120"
         align="center"
-        width="130"
-        sortable
-      />
-      <el-table-column
-        prop="priority"
-        label="Priority"
-        align="center"
-        width="90"
-        sortable
-      />
+      >
+        eslint-disable-next-line
+        <template slot-scope="scope">{{ card.currentDetail.channelGroup || " - " }}</template>
+      </el-table-column> -->
       <el-table-column
         prop="checkTool.status"
         label="Status"
@@ -50,30 +44,19 @@
         align="center"
         width="120"
       />
-      <!-- FIXME to check if this field correctlly -->
-      <!-- <el-table-column
-        prop="remitterAccountCode"
-        label="From Account"
+      <el-table-column
+        prop="merchantNameString"
+        label="Merchant"
         align="center"
-        width="120"
-      />-->
-      <!-- FIXME to check if this field correctlly -->
+      />
+      <!-- <el-table-column
+          prop="receiver"
+          label="Receiver"
+          align="center"
+        />-->
       <el-table-column
         prop="amount"
         label="Amount"
-        header-align="center"
-        align="right"
-      >
-        <template
-          slot-scope="scope"
-        >
-          {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.amount) }}
-        </template>
-      </el-table-column>
-      <!-- FIXME to check if this field correctlly -->
-      <el-table-column
-        prop="transferFee"
-        label="Bank Charge"
         width="100"
         header-align="center"
         align="right"
@@ -81,14 +64,35 @@
         <template
           slot-scope="scope"
         >
-          {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format(scope.row.transferFee) }}
+          {{ new Intl.NumberFormat("zh-CN", {style: "currency", currency: "CNY"}).format( scope.row.amount) }}
         </template>
       </el-table-column>
-      <!-- <el-table-column
-        prop="asignee"
-        label="Asignee"
+      <el-table-column
+        label="Leepay Status"
         align="center"
-      />-->
+      >
+        <template slot-scope="scope">
+          <div style="color:#C0C4CC;">
+            <span v-if="scope.row.status === 'I'">processing</span>
+            <span v-if="scope.row.status === 'P'">paid</span>
+            <span v-if="scope.row.status === 'FC'">failed confirmation</span>
+            <span v-if="scope.row.status === 'F'">failed</span>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="toolStatus"
+        label="FT Status"
+        align="center"
+      />
+      <el-table-column
+        label="Assigned Time"
+        align="center"
+      >
+        <template slot-scope="scope">
+          <span style="margin-left: 10px">{{ scope.row.requestTimeStr.split(" ")[1] }}</span>
+        </template>
+      </el-table-column>
       <el-table-column
         label="Actions"
         align="center"

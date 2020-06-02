@@ -252,7 +252,7 @@ export default class TaskOperationMixin extends Vue {
   getRealBalance(boBalance: number, selectedTask: TaskModel): number {
     TaskModule.list.forEach(task => {
       if (task.remitterAccountCode === selectedTask.remitterAccountCode) {
-        if (task.workflow === TaskTypeEnum.PARTIAL_WITHDRAW) boBalance += task.amount;
+        // if (task.workflow === TaskTypeEnum.PARTIAL_WITHDRAW) boBalance += task.amount;
       }
     });
     return boBalance;
@@ -305,7 +305,7 @@ export default class TaskOperationMixin extends Vue {
       checkToolResult.id,
       "execute",
       UserModule.name,
-      `Task executed error, Type: ${TaskModule.selectedDetail.type} Machine name: ${os.hostname()}`
+      `Task executed error, Id: ${TaskModule.selectedDetail.id} Machine name: ${os.hostname()}`
     );
     TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
