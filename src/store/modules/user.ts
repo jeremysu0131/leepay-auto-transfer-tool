@@ -106,20 +106,17 @@ class User extends VuexModule implements IUserState {
   }
   @Action
   async SignInSkypay(userInfo: { username: string; password: string }) {
+    let { username, password } = userInfo;
+    username = username.trim();
     removeToken("SKYPAY");
     this.SET_SKYPAY_TOKEN("");
-    const username = userInfo.username.trim();
 
     try {
-      let response = await signInSkypay(username, userInfo.password);
-      let data = response.data;
-      if (data.code !== 1) {
-        if (data.message) throw new Error(data.message);
-        throw new Error("Login to Skypay fail");
-      }
-      const token = response.headers["set-cookie"][0];
-      setToken("SKYPAY", token);
+      let { data } = await signInSkypay({ username, password });
+      const token = data.data.token;
       this.SET_SKYPAY_TOKEN(token);
+      setToken("SKYPAY", token);
+
       return { isSignIn: true, message: undefined };
     } catch (error) {
       LogModule.SetLog({ level: "warn", message: error });

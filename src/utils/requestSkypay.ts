@@ -3,6 +3,7 @@ import qs from "qs";
 import store from "../store";
 import logger from "./logger";
 import { MessageBox } from "element-ui";
+import { UserModule } from "@/store/modules/user";
 
 // 创建axios实例
 const service = axios.create({
@@ -32,8 +33,9 @@ function getUrl(config: AxiosRequestConfig) {
 // request拦截器
 service.interceptors.request.use(
   config => {
-    if (store.getters.skypayToken) {
-      config.headers["Cookie"] = store.getters.skypayToken; // 让每个请求携带自定义token 请根据实际情况自行修改
+    // Add X-Access-Token header to every request, you can add other custom headers here
+    if (UserModule.skypayToken) {
+      config.headers["Set-Cookie"] = UserModule.skypayToken;
     }
     if (config.method) {
       logger.log({

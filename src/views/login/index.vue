@@ -10,7 +10,7 @@
     >
       <div class="title-container">
         <h3 class="title">
-          Bank Transfer Tool (Skypay)
+          Bank Transfer Tool (Leepay)
         </h3>
       </div>
 
@@ -145,20 +145,13 @@ export default class extends Vue {
         this.loading = true;
         try {
           const [isSignIn, isSignInSkypay] = await Promise.all([this.SignIn(), this.SignInSkypay()]);
+          console.log(isSignIn, isSignInSkypay);
           if (isSignIn && isSignInSkypay) await this.sendOTP();
-          this.$router.push({
-            path: this.redirect || "/",
-            query: this.otherQuery
-          });
         } catch (error) {
           console.log(error);
         } finally {
           this.loading = false;
         }
-        // Just to simulate the time of the request
-        // setTimeout(() => {
-        //   this.loading = false
-        // }, 0.5 * 1000)
       } else {
         return false;
       }

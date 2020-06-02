@@ -11,7 +11,7 @@ export function login({ username, password }: { username: string; password: stri
   });
 }
 
-export function signInSkypay(username: string, password: string) {
+export function signInSkypay({ username, password }: { username: string; password: string }) {
   return requestSkypay({
     url: "/aLogin!login.do",
     method: "POST",
