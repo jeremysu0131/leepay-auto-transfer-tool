@@ -1,3 +1,5 @@
-export default class AccountModel {
-  id? = 0;
+export default class AccountDetailModel {
+  id = 0;
+  code = "";
+  bankCode = "";
 }

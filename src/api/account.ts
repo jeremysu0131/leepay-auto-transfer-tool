@@ -1,4 +1,5 @@
 import request from "@/utils/request";
+import requestSkypay from "@/utils/requestSkypay";
 
 export function getList() {
   return request({
@@ -41,10 +42,10 @@ export function getGroup(id: number) {
 
 export function getDetailById(id: number) {
   return request({
-    url: "/adminAcct!load.do",
-    method: "POST",
+    url: "/ps-ops-console/api/bank/account/loadBankAccountDetails",
+    method: "GET",
     params: {
-      "a.id": id
+      bankAccountId: id
     }
   });
 }
@@ -59,19 +60,19 @@ export function getAssignedProxy(accountId: number) {
   });
 }
 
-// export function getAccountCodeListInSkypay() {
-//   return requestSkypay({
-//     url: "/adminAcct!listAllCompanyAcct.do",
-//     method: "GET"
-//   });
-// }
+export function getAccountCodeListInSkypay() {
+  return requestSkypay({
+    url: "/adminAcct!listAllCompanyAcct.do",
+    method: "GET"
+  });
+}
 
-// export function getAccountDetailInSkypay(accountCodeID:number) {
-//   return requestSkypay({
-//     url: "/adminAcct!load.do",
-//     method: "POST",
-//     data: {
-//       "a.id": accountCodeID
-//     }
-//   });
-// }
+export function getAccountDetailInSkypay(accountCodeID: number) {
+  return requestSkypay({
+    url: "/adminAcct!load.do",
+    method: "POST",
+    data: {
+      "a.id": accountCodeID
+    }
+  });
+}

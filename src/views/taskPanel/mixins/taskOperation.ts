@@ -91,12 +91,12 @@ export default class TaskOperationMixin extends Vue {
       // Check if account is sign in to bank
       // true - execute task if sign in fail
       // false - Sign in to bank
-      if (!this.checkIfAccountSignedInToBank(accountCode)) {
-        if (!(await this.handleAccountSignInToBank(accountCode))) {
-          AppModule.HANDLE_TASK_PROCESSING(false);
-          return;
-        }
-      }
+      // if (!this.checkIfAccountSignedInToBank(accountCode)) {
+      //   if (!(await this.handleAccountSignInToBank(accountCode))) {
+      //     AppModule.HANDLE_TASK_PROCESSING(false);
+      //     return;
+      //   }
+      // }
 
       // true - start task
       let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);

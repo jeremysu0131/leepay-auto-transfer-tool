@@ -43,7 +43,7 @@
         @current-change="handleSelectedRow"
       >
         <el-table-column
-          prop="accountCode"
+          prop="code"
           label="Account"
         />
         <el-table-column
@@ -61,7 +61,7 @@
         v-if="!currentAccount.accountCode"
         class="account-search__footer-button"
         :loading="isSigningInBank"
-        :disabled="!selectedAccount.id"
+        :disabled="!selectedAccount || !selectedAccount.id"
         @click="handleAccountSelect"
       >
         Select
@@ -88,6 +88,7 @@ import { AccountModule } from "../../../store/modules/account";
 import RemitterAccountModel from "../../../models/remitterAccountModel";
 import { WorkerModule } from "../../../store/modules/worker";
 import { LogModule } from "../../../store/modules/log";
+import { MessageBox } from "element-ui";
 
 @Component({ name: "AccountSearch" })
 export default class extends Vue {
@@ -96,7 +97,7 @@ export default class extends Vue {
   private isSigningInBank = false;
   private selectedAccount = {} as any;
   private form = {
-    accountCode: process.env.NODE_ENV === "development" ? "ABC" : ""
+    accountCode: process.env.NODE_ENV === "development" ? "5.ICBC.379" : ""
   };
 
   get app() {
@@ -116,7 +117,7 @@ export default class extends Vue {
     try {
       this.isSearchingAccount = true;
       let accountList = await AccountModule.GetAccountList();
-      this.tableData = accountList.filter(card => card.accountCode.indexOf(this.form.accountCode) !== -1);
+      this.tableData = accountList.filter(account => account.code.indexOf(this.form.accountCode) !== -1);
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
     } finally {
@@ -124,13 +125,16 @@ export default class extends Vue {
     }
   }
   private async handleAccountSelect() {
-    let account = await AccountModule.GetAccountDetail(this.selectedAccount.id);
+    let account = await AccountModule.GetAccountDetail(this.selectedAccount);
+    console.log(account);
     if (account) {
-      account.proxy = await AccountModule.GetProxy(this.selectedAccount.id);
       AccountModule.SET_SELECTED(account);
-
       await WorkerModule.SetWorker(account);
       AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("select-sign-in-type");
+    } else {
+      MessageBox.alert("Get account detail fail", {
+        type: "error"
+      });
     }
   }
   private handleSelectedRow(val: any) {

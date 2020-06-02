@@ -3,6 +3,8 @@ import { VuexModule, Module, Mutation, Action, getModule } from "vuex-module-dec
 import store from "@/store";
 import RemitterAccountModel from "../../models/remitterAccountModel";
 import { LogModule } from "./log";
+import { getBoBalance, getGroup } from "@/api/account";
+import AccountModel from "@/models/accountModel";
 
 class AccountListModel {
   id: number = 0;
@@ -47,15 +49,15 @@ class Account extends VuexModule implements IAccountState {
     this.current = { ...account };
   }
   @Action
-  async GetAccountList(): Promise<Array<{ id: number; accountCode: string; bankCode: string }>> {
+  async GetAccountList(): Promise<Array<AccountModel>> {
     try {
       let { data } = await AccountApi.getList();
       return data.value.map((card: any) => {
         return {
           id: +card.id,
-          accountCode: card.bankAcctCode,
+          code: card.bankAcctCode,
           bankCode: card.bank.bankCode
-        };
+        } as AccountModel;
       });
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
@@ -88,25 +90,63 @@ class Account extends VuexModule implements IAccountState {
   }
 
   @Action
-  async GetAccountDetail(accountId: number): Promise<RemitterAccountModel | null> {
+  async GetAccountDetail(account: AccountModel): Promise<RemitterAccountModel | null> {
     try {
-      let response = await AccountApi.getDetailById(accountId);
-      const detail = response.data.data;
-
+      let [getDetailResult, getBoBalanceResult, getGroupResult, signInInfo] = await Promise.all([
+        AccountApi.getDetailById(account.id),
+        getBoBalance(account.id),
+        getGroup(account.id),
+        this.GetAccountSignInInfo(account.code)
+      ]);
+      const detail = getDetailResult.data.value.virtualAcct;
       if (!detail) throw new Error("Get account detail fail");
-      let account = new RemitterAccountModel();
-      account.id = accountId;
-      account.balance = detail.balance;
-      account.code = detail.acctCode;
-      account.loginName = detail.acctUsername;
-      account.loginPassword = detail.acctPassword;
-      account.usbPassword = detail.acctUSBPass;
-      account.queryPassword = detail.acctQueryPass;
+      let remitterAccount = new RemitterAccountModel();
+      remitterAccount.id = account.id;
+      remitterAccount.balance = getBoBalanceResult.data.value[0].availableBalance;
+      remitterAccount.code = account.code;
+      remitterAccount.group = getGroupResult.data.value[0].accountGroup.groupName;
+      remitterAccount.proxy = `${detail.proxy}:8800`;
+      remitterAccount.loginName = signInInfo.username;
+      remitterAccount.loginPassword = signInInfo.password;
+      remitterAccount.usbPassword = signInInfo.usbPassword;
+      remitterAccount.queryPassword = signInInfo.queryPassword;
 
-      return account;
+      return remitterAccount;
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       return null;
+    }
+  }
+  @Action
+  private async GetAccountSignInInfo(
+    accountCode: string
+  ): Promise<{
+    username: string;
+    password: string;
+    usbPassword: string;
+    queryPassword: string;
+  }> {
+    try {
+      let accountId;
+      let result = await AccountApi.getAccountCodeListInSkypay();
+      const accountCodeList = result.data.data;
+      for (let index = 0; index < accountCodeList.length; index++) {
+        const account = accountCodeList[index];
+        if (account.value.indexOf(accountCode) !== -1) {
+          accountId = account.key;
+          break;
+        }
+      }
+      let accountDetail = await AccountApi.getAccountDetailInSkypay(accountId);
+      let data = accountDetail.data.data;
+      return {
+        username: data.acctUsername,
+        password: data.acctPassword,
+        usbPassword: data.acctUSBPass,
+        queryPassword: data.acctQueryPass
+      };
+    } catch (error) {
+      throw new Error("Get account sign in info fail. Error: " + error);
     }
   }
 
