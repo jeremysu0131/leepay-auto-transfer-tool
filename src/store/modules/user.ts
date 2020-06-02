@@ -72,9 +72,8 @@ class User extends VuexModule implements IUserState {
       const data = response.data;
       const token = data.token;
       this.SET_LEEPAY_TOKEN(token);
-
       // this.SET_ID(userData.id);
-      this.SET_NAME(data.username);
+      this.SET_NAME(data.userName);
       return { isSignIn: true, message: undefined };
     } catch (error) {
       const message = error.response.data.message || error;

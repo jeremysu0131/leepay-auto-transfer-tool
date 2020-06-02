@@ -1,5 +1,1 @@
-export default class AccountDetailModel {
-  id = 0;
-  code = "";
-  bankCode = "";
-}
+export default class AccountModel {}

@@ -244,7 +244,7 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   get tableHeight() {
     // top header, tab margin, tab content, info header, task detail, others
-    return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 100;
+    return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 40;
     // return window.innerHeight - 300;
   }
   private formatDate(date:Date) {
@@ -252,18 +252,18 @@ export default class extends Mixins(TaskOperationMixin) {
   }
   private async markTaskAsSuccess(task: TaskModel) {
     await this.lockTask(task);
-    let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    if (taskDetail) this.markAsSuccess(taskDetail);
+    // let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+    // if (taskDetail) this.markAsSuccess(taskDetail);
   }
   private async markTaskAsFail(task: TaskModel) {
     await this.lockTask(task);
-    let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    if (taskDetail) this.markAsFail(taskDetail);
+    // let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+    // if (taskDetail) this.markAsFail(taskDetail);
   }
   private async markTaskAsToConfirm(task: TaskModel) {
     await this.lockTask(task);
-    let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    if (taskDetail) this.markAsToConfirm(taskDetail);
+    // let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+    // if (taskDetail) this.markAsToConfirm(taskDetail);
   }
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {

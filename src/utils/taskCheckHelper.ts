@@ -23,6 +23,7 @@ export const create = async (
   remitterAccountCode: string,
   operator: string
 ) => {
+  console.log(task, taskDetail, remitterAccountCode, operator);
   let data = new CreateTaskRiskModel();
   data.taskID = taskDetail.id;
   data.platform = "skypay";

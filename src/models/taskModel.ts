@@ -27,4 +27,5 @@ export default class TaskModel {
   updatedAt = new Date();
   updatedBy = 0;
   status = LeepayTaskStatusEnum.I;
+  withdrawId = 0;
 }

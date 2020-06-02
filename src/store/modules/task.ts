@@ -76,10 +76,9 @@ class Task extends VuexModule implements ITaskState {
             task.id = t.id;
             task.amount = t.amount;
             task.merchant = t.merchantNameString;
-            console.log(t);
-            console.log(t.merchantNameString);
             task.status = getStatus(t.status);
             task.assignedAt = dayjs(t.requestTimeStr).toDate();
+            task.withdrawId = t.withdraw.id;
             // task.createdAt = dayjs(task.createdAt).format("hh:mm:ss");
             return task;
           })
@@ -101,55 +100,35 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
-  public async GetDetail(
-    task: TaskModel,
-    accountId: number // selected account id
-  ): Promise<TaskDetailModel | null> {
-    return null;
-    /// / y {
-    // let data;
-    /// / switch (task.workflow) {
-    //   case TaskTypeEnum.FUND_TRANSFER:
-    //     data = (
-    /// /       await TaskApi.getFundTransferDetail({
-    /// /         taskId: task.id,
-    /// /         r f: task.ref
-    //       })
-    /// /     ).data.data;
-    /// /     break;
-    //   case TaskTypeEnum.PARTIAL_WITHDRAW:
-    //     data = (
-    /// /       await TaskApi.getPartialWithdrawDetail({
-    /// /         taskId: task.id,
-    /// /         b nkId: accountId,
-    //         ref: task.ref
-    /// /       })
-    /// /     ).data.data;
-    /// /     break;
-    /// /   default:
-    //     throw new Error("No such task type");
-    // }
-    /// / return new TaskDetailModel({
-    //   // Task id and ref will shown error in get detail api
-    /// /   i : task.id,
-    //   ref: task.ref,
-    /// /   amount: +data.amount,
-    /// /   type: task.workflow,
-    /// /   p yeeAccount: {
-    //     bank: {
-    /// /       branch: data.memberBankBranch,
-    /// /       city: data.memberBankCity,
-    /// /       p ovince: data.memberBankProvince,
-    //       chineseName: data.bank
-    /// /     },
-    /// /     holderName: data.accountHolderName,
-    /// /     cardNumber: data.accountNo
-    //   }
-    /// / });
-    // catch (error) {
-    /// / L gModule.SetLog({ level: "error", message: error });
-    /// / return null;
-    //
+  public async GetDetail(task: TaskModel): Promise<TaskDetailModel | null> {
+    try {
+      let response = await TaskApi.getDetail(task.id, task.withdrawId);
+      const data = response.data.value;
+      const taskDetail: TaskDetailModel = {
+        id: task.id,
+        amount: task.amount,
+        payeeAccount: {
+          bank: {
+            chineseName: data.offeredBank.bankChName,
+            branch: data.cardBranch,
+            city: data.cardCity,
+            code: data.offeredBankName,
+            province: data.cardProvince
+          },
+          cardNumber: data.cardNum,
+          holderName: data.cardName
+        },
+        transferFee: 0
+      };
+
+      this.SET_SELECTED_DETAIL(taskDetail);
+
+      return taskDetail;
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: "Get task detail fail" });
+      LogModule.SetLog({ level: "error", message: error });
+      return null;
+    }
   }
 
   @Action

@@ -59,19 +59,7 @@ export default class TaskOperationMixin extends Vue {
         return;
       }
 
-      let accountCode = task.remitterAccountCode;
-      // Check if account is sign in to bank
-      // true - execute task if sign in fail
-      // false - Sign in to bank
-      // if (!this.checkIfAccountSignedInToBank(accountCode)) {
-      //   if (!(await this.handleAccountSignInToBank(accountCode))) {
-      //     AppModule.HANDLE_TASK_PROCESSING(false);
-      //     return;
-      //   }
-      // }
-
-      // true - start task
-      let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
+      let taskDetail = await TaskModule.GetDetail(task);
       if (!taskDetail) {
         AppModule.HANDLE_TASK_PROCESSING(false);
         return;
@@ -141,7 +129,7 @@ export default class TaskOperationMixin extends Vue {
           level: "error",
           message:
             "Can not claim the tasks. Task has been assigned.\r\n" +
-            "Please claim it manully in order to process it\r\n" +
+            "Please claim it manually in order to process it\r\n" +
             'Note: the "auto process task" has been turned off as the result.'
         });
         return false;

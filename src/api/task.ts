@@ -35,6 +35,16 @@ export function getAll(accountId: number) {
     data
   });
 }
+export function getDetail(taskId: number, withdrawId: number) {
+  return request({
+    url: "/ps-ops-console/api/withdraw/loadWithdrawInfo",
+    method: "GET",
+    params: {
+      withdrawId,
+      payDetailId: taskId
+    }
+  });
+}
 
 export function getFundTransferDetail(data: { taskId: number; ref: string }) {
   return request({
