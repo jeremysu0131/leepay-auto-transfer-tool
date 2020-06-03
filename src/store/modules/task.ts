@@ -180,34 +180,21 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
-  async MarkTaskFail({ task, reason }: { task: TaskModel; reason: string }) {
-    reason += ` Processed by ${UserModule.name}`;
+  async MarkTaskFail(task: TaskModel): Promise<boolean> {
     LogModule.SetLog({
       level: "debug",
-      message: `Mark task fail parameters: reason: ${reason}`
+      message: `Mark task fail parameters: reason: ${task.remark}. Processed by ${UserModule.name}`
     });
     try {
-      // switch (task.type) {
-      //   case TaskTypeEnum.FUND_TRANSFER: {
-      //     let { data } = await TaskApi.markFundTransferTaskFail(task, reason);
-      //     if (data.code === 1) {
-      //       await TaskApi.updateInputFields(task, reason);
-      //     }
-      //     break;
-      //   }
-      //   case TaskTypeEnum.PARTIAL_WITHDRAW: {
-      //     let response = await TaskApi.markPartialWithdrawTaskFail(task, AccountModule.current.id, 0, reason);
-      //     if (response.data.code === 1) {
-      //       await TaskApi.updateInputFields(task, reason);
-      //     }
-      //     break;
-      //   }
-      //   default:
-      //     break;
-      // }
+      let { data } = await TaskApi.markTaskFail(task);
+      return data.success;
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
-      // throw new Error("Mark task as fail error, please contact admin");
+      LogModule.SetConsole({
+        level: "error",
+        message: "Mark task as fail failed, please contact admin"
+      });
+      return false;
     }
   }
   @Action

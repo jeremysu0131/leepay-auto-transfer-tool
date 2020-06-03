@@ -362,9 +362,10 @@ export default class TaskOperationMixin extends Vue {
     await this.setTaskForOperation(taskId);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
-  public async markAsFail(taskDetail: TaskDetailViewModel) {
+  public async markAsFail(taskId: number) {
+    console.log("taskid", taskId);
     AppModule.HANDLE_TASK_PROCESSING(true);
-    await this.setTaskForOperation(taskDetail.id);
+    await this.setTaskForOperation(taskId);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
   public confirmMarkAsFail(isHandleCurrentTask: any) {

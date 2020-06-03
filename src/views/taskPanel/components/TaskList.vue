@@ -252,9 +252,7 @@ export default class extends Mixins(TaskOperationMixin) {
     if (await this.lockTask(task)) this.markAsSuccess(task.id);
   }
   private async markTaskAsFail(task: TaskViewModel) {
-    await this.lockTask(task);
-    let taskDetail = await TaskModule.GetDetail(task);
-    if (taskDetail) this.markAsFail(taskDetail);
+    if (await this.lockTask(task)) this.markAsFail(task.id);
   }
   private async markTaskAsToConfirm(task: TaskViewModel) {
     await this.lockTask(task);

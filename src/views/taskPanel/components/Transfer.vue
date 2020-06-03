@@ -106,7 +106,7 @@
             type="success"
             :loading="isHandlingSuccess"
             :disabled="isHandlingFail || isHandlingToConfirm"
-            @click="markAsSuccess(selectedTaskDetail)"
+            @click="markAsSuccess(selectedTaskDetail.id)"
           >
             Success
           </el-button>
@@ -114,7 +114,7 @@
             size="mini"
             type="danger"
             :loading="isHandlingFail"
-            @click="markAsFail(selectedTaskDetail)"
+            @click="markAsFail(selectedTaskDetail.id)"
           >
             Fail
           </el-button>

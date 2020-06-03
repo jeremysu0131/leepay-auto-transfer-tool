@@ -57,7 +57,6 @@
 
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from "vue-property-decorator";
-import TaskDetailViewModel from "@/models/TaskDetailViewModel";
 import { AppModule } from "../../../store/modules/app";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import { AccountModule } from "@/store/modules/account";

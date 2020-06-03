@@ -90,10 +90,9 @@ export default class extends Vue {
     try {
       this.isHandlingFail = true;
 
-      await TaskModule.MarkTaskFail({
-        task: this.taskForOperation,
-        reason: this.form.note
-      });
+      TaskModule.SET_BANK_REMARK_FOR_OPERATION(this.form.note);
+      console.log(this.taskForOperation);
+      await TaskModule.MarkTaskFail(this.taskForOperation);
       // TaskModule.MoveCurrentTaskToLast({
       //   ...this.taskForOperation,
       //   status: TaskStatusEnum.SUCCESS
