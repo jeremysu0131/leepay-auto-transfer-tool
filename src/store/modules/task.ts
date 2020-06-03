@@ -169,9 +169,8 @@ class Task extends VuexModule implements ITaskState {
   @Action
   async MarkTaskSuccess(task: TaskModel): Promise<boolean> {
     try {
-      let result = await TaskApi.markTaskSuccess(task);
-      console.log(result);
-      return false;
+      let { data } = await TaskApi.markTaskSuccess(task);
+      return data.success;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
       LogModule.SetConsole({
