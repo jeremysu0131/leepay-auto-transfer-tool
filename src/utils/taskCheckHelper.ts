@@ -1,7 +1,7 @@
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import TaskDetailModel from "@/models/taskDetailModel";
 import requestRisk from "@/utils/requestRisk";
-import TaskModel from "@/models/taskModel";
+import TaskModel from "@/models/taskViewModel";
 
 class CreateTaskRiskModel {
   taskID: number = 0;

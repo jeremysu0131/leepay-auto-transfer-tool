@@ -52,11 +52,15 @@ import TaskDetailModel from "@/models/taskDetailModel";
 import { AppModule } from "../../../store/modules/app";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import { AccountModule } from "../../../store/modules/account";
+import TaskModel from "@/models/taskModel";
 
 @Component({
   name: "TaskFailDialog"
 })
 export default class extends Vue {
+  mounted() {
+    AppModule.HANDLE_TASK_PROCESSING(true);
+  }
   private isHandlingFail = false;
   private form = {
     note: ""
@@ -65,7 +69,7 @@ export default class extends Vue {
     transferFee: [{ required: true, trigger: "blur" }]
   };
 
-  get taskDetail() {
+  get taskForOperation() {
     return TaskModule.selectedForOperation;
   }
 
@@ -91,13 +95,13 @@ export default class extends Vue {
       this.isHandlingFail = true;
 
       await TaskModule.MarkTaskFail({
-        task: this.taskDetail,
+        task: this.taskForOperation,
         reason: this.form.note
       });
-      TaskModule.MoveCurrentTaskToLast({
-        ...this.taskDetail,
-        status: TaskStatusEnum.SUCCESS
-      });
+      // TaskModule.MoveCurrentTaskToLast({
+      //   ...this.taskForOperation,
+      //   status: TaskStatusEnum.SUCCESS
+      // });
       await TaskModule.GetAll(AccountModule.current.id);
       this.$message.success("Task has been mark as fail");
       this.closeDialog();
@@ -109,7 +113,7 @@ export default class extends Vue {
     }
   }
   closeDialog() {
-    TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+    TaskModule.SET_SELECTED_FOR_OPERATION({} as TaskModel);
     AppModule.HANDLE_TASK_PROCESSING(false);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(false);
 

@@ -3,7 +3,7 @@ import store from "@/store";
 import * as TaskApi from "@/api/task";
 import { asyncForEach } from "@/utils/asyncForEach";
 import { AppModule } from "./app";
-import TaskModel from "../../models/taskModel";
+import TaskViewModel from "../../models/taskViewModel";
 import { LogModule } from "./log";
 import TaskDetailModel from "@/models/taskDetailModel";
 import TaskTypeEnum from "../../enums/taskTypeEnum";
@@ -15,6 +15,7 @@ import LastSelectedTaskDetailModel from "@/models/lastSelectedTaskDetailModel";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import dayjs from "dayjs";
 import LeepayTaskStatusEnum from "@/enums/leepayTaskStatusEnum";
+import TaskModel from "@/models/taskModel";
 
 let getStatus = (status: string): LeepayTaskStatusEnum => {
   switch (status) {
@@ -31,21 +32,21 @@ let getStatus = (status: string): LeepayTaskStatusEnum => {
   }
 };
 export interface ITaskState {
-  list: TaskModel[];
+  list: TaskViewModel[];
   lastSelected: LastSelectedTaskDetailModel;
   selectedDetail: TaskDetailModel;
-  selectedForOperation: TaskDetailModel;
+  selectedForOperation: TaskModel;
 }
 
 @Module({ dynamic: true, store, name: "task" })
 class Task extends VuexModule implements ITaskState {
-  public list = [] as TaskModel[];
+  public list = [] as TaskViewModel[];
   public lastSelected = new LastSelectedTaskDetailModel();
   public selectedDetail = new TaskDetailModel();
-  public selectedForOperation = new TaskDetailModel();
+  public selectedForOperation!: TaskModel;
 
   @Mutation
-  public SET_TASK_LIST(tasks: TaskModel[]) {
+  public SET_TASK_LIST(tasks: TaskViewModel[]) {
     this.list = tasks;
   }
   @Mutation
@@ -57,22 +58,26 @@ class Task extends VuexModule implements ITaskState {
     this.selectedDetail = taskDetail;
   }
   @Mutation
-  public SET_SELECTED_FOR_OPERATION(taskDetail: TaskDetailModel) {
-    this.selectedForOperation = taskDetail;
+  public SET_SELECTED_FOR_OPERATION(task: TaskModel) {
+    this.selectedForOperation = task;
   }
   @Mutation
   public SET_BANK_CHARGE_FOR_OPERATION(transferFee: number) {
-    this.selectedForOperation.transferFee = transferFee;
+    this.selectedForOperation.newCharge = transferFee;
+  }
+  @Mutation
+  public SET_BANK_REMARK_FOR_OPERATION(remark: string) {
+    this.selectedForOperation.remark = remark;
   }
   @Action
-  public async GetAll(accountId: number) {
+  public async GetAll(accountId: number): Promise<TaskViewModel[]> {
     AppModule.HANDLE_TASK_FETCHING(true);
     try {
       let { data } = await TaskApi.getAll(accountId);
-      let tasks: TaskModel[] = await Promise.all(
+      let tasks: TaskViewModel[] = await Promise.all(
         (data.value as [])
           .map((t: any) => {
-            let task = new TaskModel();
+            let task = new TaskViewModel();
             task.id = t.id;
             task.amount = t.amount;
             task.merchant = t.merchantNameString;
@@ -92,6 +97,7 @@ class Task extends VuexModule implements ITaskState {
           })
       );
       TaskModule.SET_TASK_LIST(tasks);
+      return tasks;
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
       return [];
@@ -100,7 +106,7 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
-  public async GetDetail(task: TaskModel): Promise<TaskDetailModel | null> {
+  public async GetDetail(task: TaskViewModel): Promise<TaskDetailModel | null> {
     try {
       let response = await TaskApi.getDetail(task.id, task.withdrawId);
       const data = response.data.value;
@@ -132,6 +138,23 @@ class Task extends VuexModule implements ITaskState {
   }
 
   @Action
+  public async GetSelectedTaskDataForApi({
+    accountId,
+    taskId
+  }: {
+    accountId: number;
+    taskId: number;
+  }): Promise<TaskModel> {
+    try {
+      let { data } = await TaskApi.getAll(accountId);
+      return (data.value as TaskModel[]).find(task => task.id === taskId) as TaskModel;
+    } catch (error) {
+      LogModule.SetLog({ level: "error", message: error });
+      throw error;
+    }
+  }
+
+  @Action
   public async Lock(taskId: number): Promise<boolean> {
     try {
       let { data } = await TaskApi.lock(taskId);
@@ -148,9 +171,6 @@ class Task extends VuexModule implements ITaskState {
       let remitterAccountId = AccountModule.current.id;
       // switch (task.type) {
       //   case TaskTypeEnum.FUND_TRANSFER: {
-      //     let { data } = await TaskApi.markFundTransferTaskSuccess(task, note);
-      //     if (data.code === 1) await TaskApi.updateInputFields(task, `Processed by ${UserModule.name}`);
-      //     return true;
       //   }
       //   case TaskTypeEnum.PARTIAL_WITHDRAW: {
       //     let { data } = await TaskApi.markPartialWithdrawTaskSuccess(task, remitterAccountId, note);
@@ -169,7 +189,7 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
-  async MarkTaskFail({ task, reason }: { task: TaskDetailModel; reason: string }) {
+  async MarkTaskFail({ task, reason }: { task: TaskModel; reason: string }) {
     reason += ` Processed by ${UserModule.name}`;
     LogModule.SetLog({
       level: "debug",
@@ -204,7 +224,7 @@ class Task extends VuexModule implements ITaskState {
     // Clear selected task
     this.SET_LAST_SELECTED_DATA(task);
     this.SET_SELECTED_DETAIL(new TaskDetailModel());
-    this.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+    this.SET_SELECTED_FOR_OPERATION({} as TaskModel);
   }
 
   @Action
@@ -212,7 +232,7 @@ class Task extends VuexModule implements ITaskState {
     this.SET_TASK_LIST([]);
     this.SET_LAST_SELECTED_DATA(new LastSelectedTaskDetailModel());
     this.SET_SELECTED_DETAIL(new TaskDetailModel());
-    this.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+    this.SET_SELECTED_FOR_OPERATION({} as TaskModel);
   }
 }
 

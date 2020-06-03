@@ -2,6 +2,7 @@ import request from "@/utils/request";
 import TaskDetailModel from "../models/taskDetailModel";
 import dayjs from "dayjs";
 import logger from "@/utils/logger";
+import TaskModel from "@/workers/models/taskModel";
 
 export function getAll(accountId: number) {
   const params = {
@@ -14,7 +15,7 @@ export function getAll(accountId: number) {
     dateType: "requestDate",
     dateFrom: +dayjs()
       .startOf("day")
-      .subtract(1, "hour"),
+      .subtract(1, "M"),
     dateTo: +dayjs().endOf("day"),
     durationFrom: null,
     durationTo: null,
@@ -89,19 +90,18 @@ export function unlockTask(taskId: number) {
     }
   });
 }
-
-/**
- * Don't know what to do
- */
-export function updateInputFields(task: TaskDetailModel, remark: string) {
+export function markTaskSuccess(data: TaskModel) {
   return request({
-    url: "/adminWF!updateInputFields.do",
+    url: "/ps-ops-console/api/withdraw/markAsSuccessPaymentDetail",
     method: "POST",
-    data: {
-      "task.id": task.id,
-      // Processed By
-      "task.field2": remark,
-      "task.field8": task.transferFee
-    }
+    data
+  });
+}
+
+export function markTaskFail(data: TaskModel) {
+  return request({
+    url: "/ps-ops-console/api/withdraw/markAsFailPaymentDetail",
+    method: "POST",
+    data
   });
 }

@@ -20,6 +20,7 @@ import WorkerTransferFeeResponseModel from "@/workers/models/workerTransferFeeRe
 import WorkerBalanceResponseModel from "@/workers/models/workerBalanceResponseModel";
 import TaskTypeEnum from "@/enums/taskTypeEnum";
 import ScreenRecorder from "@/utils/ScreenRecorder";
+import TaskViewModel from "@/models/taskViewModel";
 @Component
 export default class TaskOperationMixin extends Vue {
   public taskExecutedResult = [] as any[];
@@ -49,7 +50,7 @@ export default class TaskOperationMixin extends Vue {
       }, 500);
     });
   }
-  public async handleRowSelect(task: TaskModel) {
+  public async handleRowSelect(task: TaskViewModel) {
     try {
       AppModule.HANDLE_TASK_PROCESSING(true);
 
@@ -120,7 +121,7 @@ export default class TaskOperationMixin extends Vue {
       AppModule.HANDLE_TASK_PROCESSING(false);
     }
   }
-  public async lockTask(task: TaskModel) {
+  public async lockTask(task: TaskViewModel) {
     // check if locked
     if (+task.assigneeId !== +UserModule.id) {
       if (!(await TaskModule.Lock(task.id))) {
@@ -137,7 +138,7 @@ export default class TaskOperationMixin extends Vue {
     }
     return true;
   }
-  private async checkIfTaskExecuted(task: TaskModel, taskDetail: TaskDetailModel) {
+  private async checkIfTaskExecuted(task: TaskViewModel, taskDetail: TaskDetailModel) {
     // check tool id was 0 means not execute
     if (task.checkTool.id === 0) {
       await TaskCheckHelper.create(task, taskDetail, AccountModule.current.code, UserModule.name);
@@ -210,7 +211,7 @@ export default class TaskOperationMixin extends Vue {
       screenRecorder.stop();
     }
   }
-  async checkIfBalanceEqual(selectedTask: TaskModel) {
+  async checkIfBalanceEqual(selectedTask: TaskViewModel) {
     let boBalance = this.currentAccount.balance;
     let realBalance = this.getRealBalance(boBalance, selectedTask);
 
@@ -237,7 +238,7 @@ export default class TaskOperationMixin extends Vue {
     });
     return false;
   }
-  getRealBalance(boBalance: number, selectedTask: TaskModel): number {
+  getRealBalance(boBalance: number, selectedTask: TaskViewModel): number {
     TaskModule.list.forEach(task => {
       if (task.remitterAccountCode === selectedTask.remitterAccountCode) {
         // if (task.workflow === TaskTypeEnum.PARTIAL_WITHDRAW) boBalance += task.amount;
@@ -295,7 +296,7 @@ export default class TaskOperationMixin extends Vue {
       UserModule.name,
       `Task executed error, Id: ${TaskModule.selectedDetail.id} Machine name: ${os.hostname()}`
     );
-    TaskModule.SET_SELECTED_FOR_OPERATION(TaskModule.selectedDetail);
+    this.setTaskForOperation(taskDetail.id);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
   }
   // private async loginToBankWebsite() {
@@ -345,14 +346,21 @@ export default class TaskOperationMixin extends Vue {
     //   });
     // }
   }
+  private async setTaskForOperation(taskId: number) {
+    const task = await TaskModule.GetSelectedTaskDataForApi({
+      accountId: AccountModule.current.id,
+      taskId
+    });
+    TaskModule.SET_SELECTED_FOR_OPERATION(task);
+  }
   public markAsSuccess(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_PROCESSING(true);
-    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
+    this.setTaskForOperation(taskDetail.id);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
   public markAsFail(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_PROCESSING(true);
-    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
+    this.setTaskForOperation(taskDetail.id);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
   public confirmMarkAsFail(isHandleCurrentTask: any) {
@@ -375,7 +383,7 @@ export default class TaskOperationMixin extends Vue {
   }
   public async markAsToConfirm(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_PROCESSING(true);
-    TaskModule.SET_SELECTED_FOR_OPERATION(taskDetail);
+    this.setTaskForOperation(taskDetail.id);
     try {
       await TaskCheckHelper.updateStatus(taskDetail.id, TaskStatusEnum.TO_CONFIRM, UserModule.name);
       TaskModule.MoveCurrentTaskToLast({

@@ -105,7 +105,7 @@
               :disabled="isMoreButtonDisabled(scope.row)"
               trigger="click"
               placement="left"
-              width="180"
+              width="200"
             >
               <el-row class="el-row--popover">
                 <el-col
@@ -205,6 +205,7 @@ import TaskDetailModel from "../../../models/taskDetailModel";
 import { WorkerModule } from "@/store/modules/worker";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import { WorkflowEnum } from "@/workers/utils/workflowHelper";
+import TaskViewModel from "../../../models/taskViewModel";
 
 @Component({
   name: "TaskList",
@@ -248,20 +249,20 @@ export default class extends Mixins(TaskOperationMixin) {
   private formatDate(date:Date) {
     return dayjs(date).format("HH:mm:ss");
   }
-  private async markTaskAsSuccess(task: TaskModel) {
+  private async markTaskAsSuccess(task: TaskViewModel) {
     await this.lockTask(task);
-    // let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    // if (taskDetail) this.markAsSuccess(taskDetail);
+    let taskDetail = await TaskModule.GetDetail(task);
+    if (taskDetail) this.markAsSuccess(taskDetail);
   }
-  private async markTaskAsFail(task: TaskModel) {
+  private async markTaskAsFail(task: TaskViewModel) {
     await this.lockTask(task);
-    // let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    // if (taskDetail) this.markAsFail(taskDetail);
+    let taskDetail = await TaskModule.GetDetail(task);
+    if (taskDetail) this.markAsFail(taskDetail);
   }
-  private async markTaskAsToConfirm(task: TaskModel) {
+  private async markTaskAsToConfirm(task: TaskViewModel) {
     await this.lockTask(task);
-    // let taskDetail = await TaskModule.GetDetail(task, AccountModule.current.id);
-    // if (taskDetail) this.markAsToConfirm(taskDetail);
+    let taskDetail = await TaskModule.GetDetail(task);
+    if (taskDetail) this.markAsToConfirm(taskDetail);
   }
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {
@@ -271,34 +272,34 @@ export default class extends Mixins(TaskOperationMixin) {
     }
     return "";
   }
-  private isMoreButtonDisabled(row: TaskModel) {
+  private isMoreButtonDisabled(row: TaskViewModel) {
     if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) return true;
     return false;
   }
-  private isProcessButtonShow(row: TaskModel) {
+  private isProcessButtonShow(row: TaskViewModel) {
     return row.checkTool.status !== "to-confirm";
   }
-  private isProcessButtonDisabled(row: TaskModel) {
+  private isProcessButtonDisabled(row: TaskViewModel) {
     if (this.app.task.isProcessing) return true;
     return false;
   }
-  private isSuccessButtonDisabled(row: TaskModel) {
+  private isSuccessButtonDisabled(row: TaskViewModel) {
     if (row.checkTool.status !== TaskStatusEnum.TO_CONFIRM) return true;
     return false;
   }
-  private isSuccessButtonVisible(row: TaskModel) {
+  private isSuccessButtonVisible(row: TaskViewModel) {
     if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) {
       return false;
     }
     return true;
   }
-  private isFailButtonVisible(row: TaskModel) {
+  private isFailButtonVisible(row: TaskViewModel) {
     if (row.checkTool.status === TaskStatusEnum.TO_PROCESS) {
       return false;
     }
     return true;
   }
-  private isToConfirmButtonVisible(row: TaskModel) {
+  private isToConfirmButtonVisible(row: TaskViewModel) {
     if (row.checkTool.status === TaskStatusEnum.PROCESSING) {
       return true;
     }

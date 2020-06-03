@@ -68,7 +68,11 @@ import { AccountModule } from "@/store/modules/account";
   name: "TaskSuccessDialog"
 })
 export default class extends Vue {
-  get taskDetail() {
+  mounted() {
+    AppModule.HANDLE_TASK_PROCESSING(true);
+  }
+
+  get selectedTaskForOperation() {
     return TaskModule.selectedForOperation;
   }
   get isShowMarkAsSuccessDialog() {
@@ -97,16 +101,21 @@ export default class extends Vue {
     try {
       this.isHandlingSuccess = true;
       TaskModule.SET_BANK_CHARGE_FOR_OPERATION(this.form.transferFee);
-
-      await TaskModule.MarkTaskSuccess({
-        task: this.taskDetail,
-        note: this.form.note
+      console.log(this.selectedTaskForOperation);
+     let selectedTaskForOperation = await TaskModule.GetSelectedTaskDataForApi({
+        accountId: AccountModule.current.id,
+        taskId: this.selectedTaskForOperation.id
       });
-      TaskModule.MoveCurrentTaskToLast({
-        ...this.taskDetail,
-        status: TaskStatusEnum.SUCCESS
-      });
-      await TaskModule.GetAll(AccountModule.current.id);
+      console.log(selectedTaskForOperation);
+      // await TaskModule.MarkTaskSuccess({
+      //   task: this.taskDetail,
+      //   note: this.form.note
+      // });
+      // TaskModule.MoveCurrentTaskToLast({
+      //   ...this.taskDetail,
+      //   status: TaskStatusEnum.SUCCESS
+      // });
+      // await TaskModule.GetAll(AccountModule.current.id);
 
       this.$message.success("Task has been mark as success");
       this.closeDialog();
@@ -118,7 +127,7 @@ export default class extends Vue {
     }
   }
   private closeDialog() {
-    TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+    // TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
     AppModule.HANDLE_TASK_PROCESSING(false);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(false);
 
