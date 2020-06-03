@@ -2,7 +2,7 @@ import request from "@/utils/request";
 import TaskDetailModel from "../models/taskDetailModel";
 import dayjs from "dayjs";
 import logger from "@/utils/logger";
-import TaskModel from "@/workers/models/taskModel";
+import TaskModel from "@/models/taskModel";
 
 export function getAll(accountId: number) {
   const params = {
@@ -72,16 +72,15 @@ export function getPartialWithdrawDetail(data: { taskId: number; ref: string; ba
 
 export function lock(taskId: number) {
   return request({
-    url: "/adminWF!claimTask.do",
+    url: "/ps-ops-console/api/task/lock",
     method: "GET",
     params: {
-      "task.id": taskId,
-      taskName: "FT-P"
+      taskId
     }
   });
 }
 
-export function unlockTask(taskId: number) {
+export function unlock(taskId: number) {
   return request({
     url: "/ps-ops-mgmt/api/subsystem/workflow/task/unlock",
     method: "POST",

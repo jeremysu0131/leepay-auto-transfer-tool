@@ -7,6 +7,7 @@ import LeepayTaskStatusEnum from "@/enums/leepayTaskStatusEnum";
 
 export default class TaskViewModel {
   id = 0;
+  taskId = 0;
   amount = 0;
   checkTool = new TaskCheckToolModel();
   assignee = "";

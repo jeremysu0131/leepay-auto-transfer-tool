@@ -122,19 +122,16 @@ export default class TaskOperationMixin extends Vue {
     }
   }
   public async lockTask(task: TaskViewModel) {
-    // check if locked
-    if (+task.assigneeId !== +UserModule.id) {
-      if (!(await TaskModule.Lock(task.id))) {
-        LogModule.SetConsole({
-          // title: "Automation Stopped",
-          level: "error",
-          message:
-            "Can not claim the tasks. Task has been assigned.\r\n" +
-            "Please claim it manually in order to process it\r\n" +
-            'Note: the "auto process task" has been turned off as the result.'
-        });
-        return false;
-      }
+    if (!(await TaskModule.Lock(task.taskId))) {
+      LogModule.SetConsole({
+        // title: "Automation Stopped",
+        level: "error",
+        message:
+          "Can not claim the tasks. Task has been assigned.\r\n" +
+          "Please claim it manually in order to process it\r\n" +
+          'Note: the "auto process task" has been turned off as the result.'
+      });
+      return false;
     }
     return true;
   }
@@ -296,7 +293,7 @@ export default class TaskOperationMixin extends Vue {
       UserModule.name,
       `Task executed error, Id: ${TaskModule.selectedDetail.id} Machine name: ${os.hostname()}`
     );
-    this.setTaskForOperation(taskDetail.id);
+    await this.setTaskForOperation(taskDetail.id);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
   }
   // private async loginToBankWebsite() {
@@ -351,16 +348,16 @@ export default class TaskOperationMixin extends Vue {
       accountId: AccountModule.current.id,
       taskId
     });
+    console.log(task);
     TaskModule.SET_SELECTED_FOR_OPERATION(task);
   }
-  public markAsSuccess(taskDetail: TaskDetailModel) {
-    AppModule.HANDLE_TASK_PROCESSING(true);
-    this.setTaskForOperation(taskDetail.id);
+  public async markAsSuccess(taskId: number) {
+    await this.setTaskForOperation(taskId);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
-  public markAsFail(taskDetail: TaskDetailModel) {
+  public async markAsFail(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_PROCESSING(true);
-    this.setTaskForOperation(taskDetail.id);
+    await this.setTaskForOperation(taskDetail.id);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
   public confirmMarkAsFail(isHandleCurrentTask: any) {
@@ -383,7 +380,7 @@ export default class TaskOperationMixin extends Vue {
   }
   public async markAsToConfirm(taskDetail: TaskDetailModel) {
     AppModule.HANDLE_TASK_PROCESSING(true);
-    this.setTaskForOperation(taskDetail.id);
+    await this.setTaskForOperation(taskDetail.id);
     try {
       await TaskCheckHelper.updateStatus(taskDetail.id, TaskStatusEnum.TO_CONFIRM, UserModule.name);
       TaskModule.MoveCurrentTaskToLast({

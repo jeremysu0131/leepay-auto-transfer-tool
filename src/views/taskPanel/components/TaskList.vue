@@ -169,7 +169,7 @@
                         class="el-row--popover__el-button--icon"
                       />Re-assign
                     </el-button>
-                  </el-col>-->
+                </el-col>-->
               </el-row>
               <el-button
                 slot="reference"
@@ -246,13 +246,11 @@ export default class extends Mixins(TaskOperationMixin) {
     return window.innerHeight - 50 - 16 - 30 - 65 - 198 - 73 - 70;
     // return window.innerHeight - 300;
   }
-  private formatDate(date:Date) {
+  private formatDate(date: Date) {
     return dayjs(date).format("HH:mm:ss");
   }
   private async markTaskAsSuccess(task: TaskViewModel) {
-    await this.lockTask(task);
-    let taskDetail = await TaskModule.GetDetail(task);
-    if (taskDetail) this.markAsSuccess(taskDetail);
+    if (await this.lockTask(task)) this.markAsSuccess(task.id);
   }
   private async markTaskAsFail(task: TaskViewModel) {
     await this.lockTask(task);

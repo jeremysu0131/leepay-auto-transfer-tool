@@ -57,12 +57,12 @@
 
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from "vue-property-decorator";
-import { TaskModule } from "../../../store/modules/task";
 import TaskDetailModel from "@/models/taskDetailModel";
 import { AppModule } from "../../../store/modules/app";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import LastSelectedTaskDetailModel from "../../../models/lastSelectedTaskDetailModel";
 import { AccountModule } from "@/store/modules/account";
+import { TaskModule } from "@/store/modules/task";
 
 @Component({
   name: "TaskSuccessDialog"
@@ -101,16 +101,9 @@ export default class extends Vue {
     try {
       this.isHandlingSuccess = true;
       TaskModule.SET_BANK_CHARGE_FOR_OPERATION(this.form.transferFee);
+      TaskModule.SET_BANK_REMARK_FOR_OPERATION(this.form.note);
       console.log(this.selectedTaskForOperation);
-     let selectedTaskForOperation = await TaskModule.GetSelectedTaskDataForApi({
-        accountId: AccountModule.current.id,
-        taskId: this.selectedTaskForOperation.id
-      });
-      console.log(selectedTaskForOperation);
-      // await TaskModule.MarkTaskSuccess({
-      //   task: this.taskDetail,
-      //   note: this.form.note
-      // });
+      await TaskModule.MarkTaskSuccess(this.selectedTaskForOperation);
       // TaskModule.MoveCurrentTaskToLast({
       //   ...this.taskDetail,
       //   status: TaskStatusEnum.SUCCESS
@@ -122,7 +115,7 @@ export default class extends Vue {
     } catch (error) {
       this.$message.error(error.toString());
     } finally {
-      AppModule.HANDLE_TASK_PROCESSING(false);
+      // AppModule.HANDLE_TASK_PROCESSING(false);
       this.isHandlingSuccess = false;
     }
   }

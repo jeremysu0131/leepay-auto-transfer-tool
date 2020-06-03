@@ -43,7 +43,7 @@ class Task extends VuexModule implements ITaskState {
   public list = [] as TaskViewModel[];
   public lastSelected = new LastSelectedTaskDetailModel();
   public selectedDetail = new TaskDetailModel();
-  public selectedForOperation!: TaskModel;
+  public selectedForOperation = {} as TaskModel;
 
   @Mutation
   public SET_TASK_LIST(tasks: TaskViewModel[]) {
@@ -59,7 +59,7 @@ class Task extends VuexModule implements ITaskState {
   }
   @Mutation
   public SET_SELECTED_FOR_OPERATION(task: TaskModel) {
-    this.selectedForOperation = task;
+    this.selectedForOperation = { ...task };
   }
   @Mutation
   public SET_BANK_CHARGE_FOR_OPERATION(transferFee: number) {
@@ -79,6 +79,7 @@ class Task extends VuexModule implements ITaskState {
           .map((t: any) => {
             let task = new TaskViewModel();
             task.id = t.id;
+            task.taskId = t.taskId;
             task.amount = t.amount;
             task.merchant = t.merchantNameString;
             task.status = getStatus(t.status);
@@ -158,7 +159,7 @@ class Task extends VuexModule implements ITaskState {
   public async Lock(taskId: number): Promise<boolean> {
     try {
       let { data } = await TaskApi.lock(taskId);
-      return data.code === 1;
+      return data.success;
     } catch (error) {
       LogModule.SetLog({ message: error, level: "error" });
       return false;
@@ -166,18 +167,10 @@ class Task extends VuexModule implements ITaskState {
   }
 
   @Action
-  async MarkTaskSuccess({ task, note }: { task: TaskDetailModel; note?: string }): Promise<boolean> {
+  async MarkTaskSuccess(task: TaskModel): Promise<boolean> {
     try {
-      let remitterAccountId = AccountModule.current.id;
-      // switch (task.type) {
-      //   case TaskTypeEnum.FUND_TRANSFER: {
-      //   }
-      //   case TaskTypeEnum.PARTIAL_WITHDRAW: {
-      //     let { data } = await TaskApi.markPartialWithdrawTaskSuccess(task, remitterAccountId, note);
-      //     if (data.code === 1) await TaskApi.updateInputFields(task, `Processed by ${UserModule.name}`);
-      //     return true;
-      //   }
-      // }
+      let result = await TaskApi.markTaskSuccess(task);
+      console.log(result);
       return false;
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
