@@ -45,7 +45,7 @@ class App extends VuexModule implements IAppState {
   public isManualLogin = true;
   public isProxySet = false;
   public tabs = {
-    isTaskEnable: true,
+    isTaskEnable: false,
     isAccountEnable: false,
     showing: "accounts"
   };

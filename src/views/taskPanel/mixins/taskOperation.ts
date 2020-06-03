@@ -358,6 +358,7 @@ export default class TaskOperationMixin extends Vue {
     TaskModule.SET_SELECTED_FOR_OPERATION(task);
   }
   public async markAsSuccess(taskId: number) {
+    AppModule.HANDLE_TASK_PROCESSING(true);
     await this.setTaskForOperation(taskId);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }

@@ -57,9 +57,6 @@ import TaskModel from "@/models/taskModel";
   name: "TaskFailDialog"
 })
 export default class extends Vue {
-  mounted() {
-    AppModule.HANDLE_TASK_PROCESSING(true);
-  }
   private isHandlingFail = false;
   private form = {
     note: ""

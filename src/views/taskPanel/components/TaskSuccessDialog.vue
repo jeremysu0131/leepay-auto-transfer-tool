@@ -67,10 +67,6 @@ import { TaskModule } from "@/store/modules/task";
   name: "TaskSuccessDialog"
 })
 export default class extends Vue {
-  mounted() {
-    AppModule.HANDLE_TASK_PROCESSING(true);
-  }
-
   get selectedTaskForOperation() {
     return TaskModule.selectedForOperation;
   }
