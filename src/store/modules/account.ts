@@ -4,7 +4,7 @@ import store from "@/store";
 import RemitterAccountModel from "../../models/remitterAccountModel";
 import { LogModule } from "./log";
 import { getBoBalance, getGroup } from "@/api/account";
-import AccountModel from "@/models/accountModel";
+import AccountViewModel from "@/models/accountModel";
 
 class AccountListModel {
   id: number = 0;
@@ -49,7 +49,7 @@ class Account extends VuexModule implements IAccountState {
     this.current = { ...account };
   }
   @Action
-  async GetAccountList(): Promise<Array<AccountModel>> {
+  async GetAccountList(): Promise<AccountViewModel[]> {
     try {
       let { data } = await AccountApi.getList();
       return data.value.map((card: any) => {
@@ -57,7 +57,7 @@ class Account extends VuexModule implements IAccountState {
           id: +card.id,
           code: card.bankAcctCode,
           bankCode: card.bank.bankCode
-        } as AccountModel;
+        } as AccountViewModel;
       });
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
@@ -100,7 +100,7 @@ class Account extends VuexModule implements IAccountState {
     }
   }
   @Action
-  async GetAccountDetail(account: AccountModel): Promise<RemitterAccountModel | null> {
+  async GetAccountDetail(account: AccountViewModel): Promise<RemitterAccountModel | null> {
     try {
       let [getDetailResult, getBoBalanceResult, getGroupResult, signInInfo] = await Promise.all([
         AccountApi.getDetailById(account.id),
