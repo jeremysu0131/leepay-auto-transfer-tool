@@ -57,10 +57,9 @@
 
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from "vue-property-decorator";
-import TaskDetailModel from "@/models/taskDetailModel";
+import TaskDetailViewModel from "@/models/TaskDetailViewModel";
 import { AppModule } from "../../../store/modules/app";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
-import LastSelectedTaskDetailModel from "../../../models/lastSelectedTaskDetailModel";
 import { AccountModule } from "@/store/modules/account";
 import { TaskModule } from "@/store/modules/task";
 
@@ -120,7 +119,7 @@ export default class extends Vue {
     }
   }
   private closeDialog() {
-    // TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailModel());
+    // TaskModule.SET_SELECTED_FOR_OPERATION(new TaskDetailViewModel());
     AppModule.HANDLE_TASK_PROCESSING(false);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(false);
 

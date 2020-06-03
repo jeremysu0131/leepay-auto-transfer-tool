@@ -1,8 +1,8 @@
 import PayeeAccountModel from "./payeeAccountModel";
 import TaskTypeEnum from "../enums/taskTypeEnum";
-import TaskDetailModel from "./taskDetailModel";
+import TaskDetailViewModel from "./taskDetailViewModel";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 
-export default class LastSelectedTaskDetailModel extends TaskDetailModel {
+export default class LastSelectedTaskDetailViewModel extends TaskDetailViewModel {
   status: string = TaskStatusEnum.TO_PROCESS;
 }

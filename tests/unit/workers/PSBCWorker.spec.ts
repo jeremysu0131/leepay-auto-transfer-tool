@@ -1,5 +1,5 @@
 import BankWorker from "@/workers/BankWorker";
-import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
+import TaskDetailViewModel from "@/models/taskDetailViewModel";
 
 let worker: BankWorker;
 let remitterAccount = {
@@ -10,7 +10,7 @@ let remitterAccount = {
   usbPassword: "zz700414",
   proxy: "10.203.0.14:8800"
 };
-let task: TaskDetailModel = {
+let task: TaskDetailViewModel = {
   amount: 0.1,
   id: new Date().getTime(),
   transferFee: 0,

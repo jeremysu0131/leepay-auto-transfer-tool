@@ -1,5 +1,5 @@
 import TaskStatusEnum from "@/enums/taskStatusEnum";
-import TaskDetailModel from "@/models/taskDetailModel";
+import TaskDetailViewModel from "@/models/taskDetailViewModel";
 import requestRisk from "@/utils/requestRisk";
 import TaskModel from "@/models/taskViewModel";
 
@@ -19,7 +19,7 @@ class CreateTaskRiskModel {
 
 export const create = async (
   task: TaskModel,
-  taskDetail: TaskDetailModel,
+  taskDetail: TaskDetailViewModel,
   remitterAccountCode: string,
   operator: string
 ) => {

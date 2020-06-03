@@ -4,7 +4,7 @@ import { WorkerModule } from "../../../store/modules/worker";
 import { LogModule } from "../../../store/modules/log";
 import { AccountModule } from "../../../store/modules/account";
 import { AppModule } from "../../../store/modules/app";
-import TaskDetailModel from "@/models/taskDetailModel";
+import TaskDetailViewModel from "@/models/taskDetailViewModel";
 import { WorkflowEnum } from "@/workers/utils/workflowHelper";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
@@ -135,7 +135,7 @@ export default class TaskOperationMixin extends Vue {
     }
     return true;
   }
-  private async checkIfTaskExecuted(task: TaskViewModel, taskDetail: TaskDetailModel) {
+  private async checkIfTaskExecuted(task: TaskViewModel, taskDetail: TaskDetailViewModel) {
     // check tool id was 0 means not execute
     if (task.checkTool.id === 0) {
       await TaskCheckHelper.create(task, taskDetail, AccountModule.current.code, UserModule.name);
@@ -189,7 +189,7 @@ export default class TaskOperationMixin extends Vue {
         })
     );
   }
-  public async startTask(taskDetail: TaskDetailModel) {
+  public async startTask(taskDetail: TaskDetailViewModel) {
     this.beforeExecuteTask(taskDetail);
     const screenRecorder = new ScreenRecorder(this.currentAccount.code);
     try {
@@ -197,8 +197,14 @@ export default class TaskOperationMixin extends Vue {
       screenRecorder.start();
       let result = await this.runAutoTransferFlows();
       if (result.isSuccess) {
-        taskDetail.transferFee = result.transferFee || 0;
-        await this.handleAutoMarkTaskSuccess(taskDetail);
+        let task = await TaskModule.GetSelectedTaskDataForApi({
+          accountId: this.currentAccount.id,
+          taskId: taskDetail.id
+        });
+        TaskModule.SET_SELECTED_FOR_OPERATION(task);
+        TaskModule.SET_BANK_CHARGE_FOR_OPERATION(result.transferFee || 0);
+        TaskModule.SET_BANK_REMARK_FOR_OPERATION("Auto process by tool");
+        await this.handleAutoMarkTaskSuccess(task);
       } else {
         this.handleTransferFail(taskDetail);
       }
@@ -217,7 +223,7 @@ export default class TaskOperationMixin extends Vue {
 
     // Compare in system
     let [detail, result] = await Promise.all([
-      AccountModule.GetAccountDetail(this.currentAccount),
+      AccountModule.GetAccountDetail({ id: this.currentAccount.id, code: this.currentAccount.code }),
       WorkerModule.RunFlow<WorkerBalanceResponseModel>({
         name: WorkflowEnum.GET_BALANCE
       })
@@ -243,22 +249,22 @@ export default class TaskOperationMixin extends Vue {
     });
     return boBalance;
   }
-  async handleAutoMarkTaskSuccess(taskDetail: TaskDetailModel) {
-    let isSuccess = await TaskModule.MarkTaskSuccess({ task: taskDetail, note: "Auto process by tool" });
+  async handleAutoMarkTaskSuccess(task: TaskModel) {
+    let isSuccess = await TaskModule.MarkTaskSuccess(task);
     if (isSuccess) {
       LogModule.SetLog({
         level: "info",
-        message: `Mark task success, amount ${taskDetail.amount}, charge: ${taskDetail.transferFee}`
+        message: `Mark task success, amount ${task.amount}, charge: ${task.newCharge}`
       });
-      TaskModule.MoveCurrentTaskToLast({
-        ...taskDetail,
-        status: TaskStatusEnum.SUCCESS
-      });
+      let taskDetail = { ...TaskModule.selectedDetail };
+      // TODO
+      // taskDetail.status = TaskStatusEnum.SUCCESS;
+      TaskModule.MoveCurrentTaskToLast(taskDetail);
       AppModule.HANDLE_TASK_PROCESSING(false);
       TaskModule.GetAll(this.currentAccount.id);
     }
   }
-  private beforeExecuteTask(taskDetail: TaskDetailModel) {
+  private beforeExecuteTask(taskDetail: TaskDetailViewModel) {
     TaskModule.SET_SELECTED_DETAIL(taskDetail);
     WorkerModule.SET_TRANSFER_WORKFLOW(AccountModule.current.code);
     TaskModule.GetAll(this.currentAccount.id);
@@ -285,7 +291,7 @@ export default class TaskOperationMixin extends Vue {
       return { isSuccess: false };
     }
   }
-  public async handleTransferFail(taskDetail: TaskDetailModel) {
+  public async handleTransferFail(taskDetail: TaskDetailViewModel) {
     let checkToolResult = await TaskCheckHelper.get(taskDetail.id);
     TaskCheckHelper.createExecuteRecord(
       checkToolResult.id,
@@ -355,7 +361,7 @@ export default class TaskOperationMixin extends Vue {
     await this.setTaskForOperation(taskId);
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
-  public async markAsFail(taskDetail: TaskDetailModel) {
+  public async markAsFail(taskDetail: TaskDetailViewModel) {
     AppModule.HANDLE_TASK_PROCESSING(true);
     await this.setTaskForOperation(taskDetail.id);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
@@ -378,15 +384,15 @@ export default class TaskOperationMixin extends Vue {
     //     return false;
     //   });
   }
-  public async markAsToConfirm(taskDetail: TaskDetailModel) {
+  public async markAsToConfirm(taskDetail: TaskDetailViewModel) {
     AppModule.HANDLE_TASK_PROCESSING(true);
     await this.setTaskForOperation(taskDetail.id);
     try {
       await TaskCheckHelper.updateStatus(taskDetail.id, TaskStatusEnum.TO_CONFIRM, UserModule.name);
-      TaskModule.MoveCurrentTaskToLast({
-        ...taskDetail,
-        status: TaskStatusEnum.TO_CONFIRM
-      });
+
+      // TODO
+      // taskDetail.status = TaskStatusEnum.TO_CONFIRM;
+      TaskModule.MoveCurrentTaskToLast(taskDetail);
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     } finally {

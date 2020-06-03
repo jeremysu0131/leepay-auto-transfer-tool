@@ -1,5 +1,5 @@
 import request from "@/utils/request";
-import TaskDetailModel from "../models/taskDetailModel";
+import TaskDetailViewModel from "../models/taskDetailViewModel";
 import dayjs from "dayjs";
 import logger from "@/utils/logger";
 import TaskModel from "@/models/taskModel";

@@ -1,5 +1,5 @@
 import BankWorker from "@/workers/BankWorker";
-import TaskDetailModel from "../../../src/workers/models/taskDetailModel";
+import TaskDetailViewModel from "@/models/taskDetailViewModel";
 import LoggerService from "@/workers/utils/LoggerService";
 
 let logger = new LoggerService("BOCWorker.spec.ts");
@@ -14,7 +14,7 @@ const remitterAccount = {
   proxy: "10.203.0.14:8800"
 };
 // 內轉
-// const task: TaskDetailModel = {
+// const task: TaskDetailViewModel = {
 //   amount: 0.1,
 //   transferFee: 0,
 //   id: new Date().getTime(),
@@ -26,7 +26,7 @@ const remitterAccount = {
 // };
 
 // 外轉
-const task: TaskDetailModel = {
+const task: TaskDetailViewModel = {
   amount: 0.1,
   transferFee: 0,
   // id: new Date().getTime(),

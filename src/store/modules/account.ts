@@ -100,15 +100,15 @@ class Account extends VuexModule implements IAccountState {
     }
   }
   @Action
-  async GetAccountDetail(account: AccountViewModel): Promise<RemitterAccountModel | null> {
+  async GetAccountDetail(account: { id: number; code: string }): Promise<RemitterAccountModel | null> {
     try {
-      let [getDetailResult, getBoBalanceResult, getGroupResult, signInInfo] = await Promise.all([
+      let [getDetailResult, getGroupResult, signInInfo] = await Promise.all([
         AccountApi.getDetailById(account.id),
-        getBoBalance(account.id),
         getGroup(account.id),
         this.GetAccountSignInInfo(account.code)
       ]);
       const detail = getDetailResult.data.value.virtualAcct;
+      console.log("ddd", detail);
       if (!detail) throw new Error("Get account detail fail");
       let remitterAccount = new RemitterAccountModel();
       remitterAccount.id = account.id;

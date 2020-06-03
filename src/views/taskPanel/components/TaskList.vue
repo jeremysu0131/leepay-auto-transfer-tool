@@ -201,7 +201,6 @@ import TaskModel from "../../../models/taskModel";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import TaskOperateEnum from "../../../enums/taskOperateEnum";
 import { MessageBoxData } from "element-ui/types/message-box";
-import TaskDetailModel from "../../../models/taskDetailModel";
 import { WorkerModule } from "@/store/modules/worker";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import { WorkflowEnum } from "@/workers/utils/workflowHelper";

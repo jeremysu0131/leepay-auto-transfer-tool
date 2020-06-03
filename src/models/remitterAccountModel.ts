@@ -1,6 +1,6 @@
 import AccountModel from "./accountModel";
 
-export default class RemitterAccountModel extends AccountModel {
+export default class RemitterAccountModel {
   id = 0;
   balance = 0;
   balanceInBank? = 0;

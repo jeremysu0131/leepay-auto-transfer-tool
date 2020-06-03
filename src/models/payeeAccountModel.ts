@@ -1,7 +1,6 @@
-import AccountModel from "./accountModel";
 import BankModel from "./bankModel";
 
-export default class PayeeAccountModel extends AccountModel {
+export default class PayeeAccountModel {
   holderName = "";
   cardNumber = "";
   bank = new BankModel();

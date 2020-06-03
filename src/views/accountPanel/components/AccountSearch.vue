@@ -89,13 +89,14 @@ import RemitterAccountModel from "../../../models/remitterAccountModel";
 import { WorkerModule } from "../../../store/modules/worker";
 import { LogModule } from "../../../store/modules/log";
 import { MessageBox } from "element-ui";
+import AccountViewModel from "../../../models/accountModel";
 
 @Component({ name: "AccountSearch" })
 export default class extends Vue {
-  private tableData = [] as any[];
+  private tableData = [] as AccountViewModel[];
   private isSearchingAccount = false;
   private isSigningInBank = false;
-  private selectedAccount = {} as any;
+  private selectedAccount = {} as AccountViewModel;
   private form = {
     accountCode: process.env.NODE_ENV === "development" ? "5.ICBC.379" : ""
   };
@@ -125,7 +126,7 @@ export default class extends Vue {
     }
   }
   private async handleAccountSelect() {
-    let account = await AccountModule.GetAccountDetail(this.selectedAccount);
+    let account = await AccountModule.GetAccountDetail({ id: this.selectedAccount.id, code: this.selectedAccount.code });
     if (account) {
       AccountModule.SET_SELECTED(account);
       await WorkerModule.SetWorker(account);

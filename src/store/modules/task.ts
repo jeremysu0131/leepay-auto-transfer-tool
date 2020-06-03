@@ -5,17 +5,16 @@ import { asyncForEach } from "@/utils/asyncForEach";
 import { AppModule } from "./app";
 import TaskViewModel from "../../models/taskViewModel";
 import { LogModule } from "./log";
-import TaskDetailModel from "@/models/taskDetailModel";
 import TaskTypeEnum from "../../enums/taskTypeEnum";
 import { UserModule } from "./user";
 import TaskStatusEnum from "../../enums/taskStatusEnum";
 import { AccountModule } from "./account";
 import TaskCheckToolModel from "@/models/taskCheckToolModel";
-import LastSelectedTaskDetailModel from "@/models/lastSelectedTaskDetailModel";
 import * as TaskCheckHelper from "@/utils/taskCheckHelper";
 import dayjs from "dayjs";
 import LeepayTaskStatusEnum from "@/enums/leepayTaskStatusEnum";
 import TaskModel from "@/models/taskModel";
+import TaskDetailViewModel from "@/models/taskDetailViewModel";
 
 let getStatus = (status: string): LeepayTaskStatusEnum => {
   switch (status) {
@@ -33,16 +32,16 @@ let getStatus = (status: string): LeepayTaskStatusEnum => {
 };
 export interface ITaskState {
   list: TaskViewModel[];
-  lastSelected: LastSelectedTaskDetailModel;
-  selectedDetail: TaskDetailModel;
+  lastSelected: TaskDetailViewModel;
+  selectedDetail: TaskDetailViewModel;
   selectedForOperation: TaskModel;
 }
 
 @Module({ dynamic: true, store, name: "task" })
 class Task extends VuexModule implements ITaskState {
   public list = [] as TaskViewModel[];
-  public lastSelected = new LastSelectedTaskDetailModel();
-  public selectedDetail = new TaskDetailModel();
+  public lastSelected = new TaskDetailViewModel();
+  public selectedDetail = new TaskDetailViewModel();
   public selectedForOperation = {} as TaskModel;
 
   @Mutation
@@ -50,11 +49,11 @@ class Task extends VuexModule implements ITaskState {
     this.list = tasks;
   }
   @Mutation
-  public SET_LAST_SELECTED_DATA(taskDetail: LastSelectedTaskDetailModel) {
+  public SET_LAST_SELECTED_DATA(taskDetail: TaskDetailViewModel) {
     this.lastSelected = taskDetail;
   }
   @Mutation
-  public SET_SELECTED_DETAIL(taskDetail: TaskDetailModel) {
+  public SET_SELECTED_DETAIL(taskDetail: TaskDetailViewModel) {
     this.selectedDetail = taskDetail;
   }
   @Mutation
@@ -107,11 +106,11 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
-  public async GetDetail(task: TaskViewModel): Promise<TaskDetailModel | null> {
+  public async GetDetail(task: TaskViewModel): Promise<TaskDetailViewModel | null> {
     try {
       let response = await TaskApi.getDetail(task.id, task.withdrawId);
       const data = response.data.value;
-      const taskDetail: TaskDetailModel = {
+      const taskDetail: TaskDetailViewModel = {
         id: task.id,
         amount: task.amount,
         payeeAccount: {
@@ -212,18 +211,18 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
-  public async MoveCurrentTaskToLast(task: LastSelectedTaskDetailModel) {
+  public async MoveCurrentTaskToLast(task: TaskDetailViewModel) {
     // Clear selected task
     this.SET_LAST_SELECTED_DATA(task);
-    this.SET_SELECTED_DETAIL(new TaskDetailModel());
+    this.SET_SELECTED_DETAIL(new TaskDetailViewModel());
     this.SET_SELECTED_FOR_OPERATION({} as TaskModel);
   }
 
   @Action
   async UnsetTask() {
     this.SET_TASK_LIST([]);
-    this.SET_LAST_SELECTED_DATA(new LastSelectedTaskDetailModel());
-    this.SET_SELECTED_DETAIL(new TaskDetailModel());
+    this.SET_LAST_SELECTED_DATA(new TaskDetailViewModel());
+    this.SET_SELECTED_DETAIL(new TaskDetailViewModel());
     this.SET_SELECTED_FOR_OPERATION({} as TaskModel);
   }
 }
