@@ -366,32 +366,12 @@ export default class TaskOperationMixin extends Vue {
     await this.setTaskForOperation(taskId);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
-  public confirmMarkAsFail(isHandleCurrentTask: any) {
-    // return this.$prompt("Please enter the reason what you want to mark this task as fail.", "", {
-    //   inputPattern: /\S+/,
-    //   inputErrorMessage: "The reason can't be empty"
-    // })
-    //   .then(async({ value }) => {
-    //     await this.$store.dispatch("MarkTaskFail", { isHandleCurrentTask, reason: value });
-    //     this.$message({
-    //       showClose: true,
-    //       message: "Task has been marked as fail",
-    //       type: "success"
-    //     });
-    //     return true;
-    //   })
-    //   .catch(() => {
-    //     return false;
-    //   });
-  }
   public async markAsToConfirm(taskDetail: TaskDetailViewModel) {
     AppModule.HANDLE_TASK_PROCESSING(true);
     await this.setTaskForOperation(taskDetail.id);
     try {
       await TaskCheckHelper.updateStatus(taskDetail.id, TaskStatusEnum.TO_CONFIRM, UserModule.name);
-
-      // TODO
-      // taskDetail.status = TaskStatusEnum.TO_CONFIRM;
+      taskDetail.status = TaskStatusEnum.TO_CONFIRM;
       TaskModule.MoveCurrentTaskToLast(taskDetail);
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
