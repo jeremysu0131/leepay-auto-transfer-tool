@@ -354,7 +354,6 @@ export default class TaskOperationMixin extends Vue {
       accountId: AccountModule.current.id,
       taskId
     });
-    console.log(task);
     TaskModule.SET_SELECTED_FOR_OPERATION(task);
   }
   public async markAsSuccess(taskId: number) {
@@ -363,7 +362,6 @@ export default class TaskOperationMixin extends Vue {
     AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
   }
   public async markAsFail(taskId: number) {
-    console.log("taskid", taskId);
     AppModule.HANDLE_TASK_PROCESSING(true);
     await this.setTaskForOperation(taskId);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);

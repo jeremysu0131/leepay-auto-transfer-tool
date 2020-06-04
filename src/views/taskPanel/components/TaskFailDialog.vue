@@ -91,12 +91,14 @@ export default class extends Vue {
       this.isHandlingFail = true;
 
       TaskModule.SET_BANK_REMARK_FOR_OPERATION(this.form.note);
-      console.log(this.taskForOperation);
+      let taskDetailVM = await TaskModule.GetDetail({
+        id: this.taskForOperation.id,
+        withdrawId: this.taskForOperation.withdraw.id,
+        amount: this.taskForOperation.amount
+      });
+      taskDetailVM.status = TaskStatusEnum.FAIL;
       await TaskModule.MarkTaskFail(this.taskForOperation);
-      // TaskModule.MoveCurrentTaskToLast({
-      //   ...this.taskForOperation,
-      //   status: TaskStatusEnum.SUCCESS
-      // });
+      TaskModule.MoveCurrentTaskToLast(taskDetailVM);
       await TaskModule.GetAll(AccountModule.current.id);
       this.$message.success("Task has been mark as fail");
       this.closeDialog();
