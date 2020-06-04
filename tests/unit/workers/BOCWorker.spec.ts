@@ -1,6 +1,6 @@
 import BankWorker from "@/workers/BankWorker";
-import TaskDetailViewModel from "@/models/taskDetailViewModel";
 import LoggerService from "@/workers/utils/LoggerService";
+import TaskDetailModel from "@/workers/models/taskDetailModel";
 
 let logger = new LoggerService("BOCWorker.spec.ts");
 // 中国银行
@@ -26,7 +26,7 @@ const remitterAccount = {
 // };
 
 // 外轉
-const task: TaskDetailViewModel = {
+const task: TaskDetailModel = {
   amount: 0.1,
   transferFee: 0,
   // id: new Date().getTime(),

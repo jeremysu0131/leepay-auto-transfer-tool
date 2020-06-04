@@ -61,6 +61,7 @@ import { AppModule } from "../../../store/modules/app";
 import TaskStatusEnum from "@/enums/taskStatusEnum";
 import { AccountModule } from "@/store/modules/account";
 import { TaskModule } from "@/store/modules/task";
+import TaskDetailViewModel from "../../../models/taskDetailViewModel";
 
 @Component({
   name: "TaskSuccessDialog"
@@ -97,12 +98,15 @@ export default class extends Vue {
       TaskModule.SET_BANK_CHARGE_FOR_OPERATION(this.form.transferFee);
       TaskModule.SET_BANK_REMARK_FOR_OPERATION(this.form.note);
       console.log(this.selectedTaskForOperation);
+      const taskDetailVM = new TaskDetailViewModel({
+        id: this.selectedTaskForOperation.id,
+        amount: this.selectedTaskForOperation.amount,
+        transferFee: this.selectedTaskForOperation.newCharge,
+        status: TaskStatusEnum.SUCCESS
+      });
       await TaskModule.MarkTaskSuccess(this.selectedTaskForOperation);
-      // TaskModule.MoveCurrentTaskToLast({
-      //   ...this.taskDetail,
-      //   status: TaskStatusEnum.SUCCESS
-      // });
-      // await TaskModule.GetAll(AccountModule.current.id);
+      TaskModule.MoveCurrentTaskToLast(taskDetailVM);
+      await TaskModule.GetAll(AccountModule.current.id);
 
       this.$message.success("Task has been mark as success");
       this.closeDialog();

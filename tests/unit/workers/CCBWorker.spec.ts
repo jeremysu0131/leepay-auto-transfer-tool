@@ -1,8 +1,8 @@
 import BankWorker from "@/workers/BankWorker";
 import BankModel from "../../../src/workers/models/bankModel";
 import PayeeAccountModel from "../../../src/workers/models/payeeAccountModel";
-import TaskDetailViewModel from "@/models/taskDetailViewModel";
 import { CCBWorkerAdapter } from "@/workers/bankAdapters";
+import TaskDetailModel from "@/workers/models/taskDetailModel";
 
 let worker: BankWorker;
 let remitterAccount = {
@@ -49,7 +49,7 @@ describe("CCBWorker", () => {
       cardNumber: "6217993000391513895",
       bank
     } as PayeeAccountModel;
-    worker.setTask({ id: new Date().getTime(), amount: 0.1, payeeAccount: payAccount } as TaskDetailViewModel);
+    worker.setTask({ id: new Date().getTime(), amount: 0.1, payeeAccount: payAccount } as TaskDetailModel);
     const result = await worker.inputSignInInformation();
     expect(result.success).toEqual(true);
   });

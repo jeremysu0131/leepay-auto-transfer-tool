@@ -11,6 +11,7 @@ export default class TaskDetailViewModel {
   transferFee = 0;
   payeeAccount = new PayeeAccountModel();
 
+  status = "";
   public constructor(init?: Partial<TaskDetailViewModel>) {
     Object.assign(this, init);
   }

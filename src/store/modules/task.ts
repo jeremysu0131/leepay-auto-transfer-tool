@@ -106,6 +106,7 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
+  // taskId is the id in TaskViewModel
   public async GetDetail(task: TaskViewModel): Promise<TaskDetailViewModel | null> {
     try {
       let response = await TaskApi.getDetail(task.id, task.withdrawId);
@@ -124,7 +125,8 @@ class Task extends VuexModule implements ITaskState {
           cardNumber: data.cardNum,
           holderName: data.cardName
         },
-        transferFee: 0
+        transferFee: 0,
+        status: ""
       };
 
       this.SET_SELECTED_DETAIL(taskDetail);
