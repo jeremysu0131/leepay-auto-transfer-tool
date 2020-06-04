@@ -200,6 +200,20 @@ class Task extends VuexModule implements ITaskState {
     }
   }
   @Action
+  async MarkTaskReassign(task: TaskModel): Promise<boolean> {
+    try {
+      let { data } = await TaskApi.markTaskFail(task);
+      return data.success;
+    } catch (error) {
+      LogModule.SetConsole({ level: "error", message: error });
+      LogModule.SetConsole({
+        level: "error",
+        message: "Mark task as fail failed, please contact admin"
+      });
+      return false;
+    }
+  }
+  @Action
   public async MoveCurrentTaskToLast(task: TaskDetailViewModel) {
     // Clear selected task
     this.SET_LAST_SELECTED_DATA(task);

@@ -12,7 +12,7 @@ import { UserModule } from "@/store/modules/user";
 import TaskModel from "@/models/taskModel";
 import TaskOperateEnum from "@/enums/taskOperateEnum";
 import dayjs from "dayjs";
-import { MessageBox } from "element-ui";
+import { MessageBox, Message } from "element-ui";
 import soundHelper from "@/utils/soundHelper";
 import RemitterAccountModel from "@/models/remitterAccountModel";
 import os from "os";
@@ -366,13 +366,24 @@ export default class TaskOperationMixin extends Vue {
     await this.setTaskForOperation(taskId);
     AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
   }
-  public async markAsToConfirm(taskDetail: TaskDetailViewModel) {
+  public async markAsToConfirm(taskId: number) {
     AppModule.HANDLE_TASK_PROCESSING(true);
-    await this.setTaskForOperation(taskDetail.id);
+    await this.setTaskForOperation(taskId);
+    let taskModel = TaskModule.selectedForOperation;
     try {
-      await TaskCheckHelper.updateStatus(taskDetail.id, TaskStatusEnum.TO_CONFIRM, UserModule.name);
-      taskDetail.status = TaskStatusEnum.TO_CONFIRM;
-      TaskModule.MoveCurrentTaskToLast(taskDetail);
+      await TaskCheckHelper.updateStatus(taskId, TaskStatusEnum.TO_CONFIRM, UserModule.name);
+      let taskDetailVM = await TaskModule.GetDetail({
+        id: taskModel.id,
+        amount: taskModel.amount,
+        withdrawId: taskModel.withdraw.id
+      });
+      taskDetailVM.status = TaskStatusEnum.TO_CONFIRM;
+      TaskModule.MoveCurrentTaskToLast(taskDetailVM);
+      Message({
+        showClose: true,
+        message: "Task has been marked as to-confirm",
+        type: "success"
+      });
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: error });
     } finally {
@@ -380,41 +391,40 @@ export default class TaskOperationMixin extends Vue {
       AppModule.HANDLE_TASK_PROCESSING(false);
     }
   }
-  public async markAsReassign(isHandleCurrentTask: any, task: any) {
-    //   this.$store.commit("HANDLE_TASK_PROCESSING", true);
-    //   if (task) {
-    //     this.$store.commit("SET_DATA_FOR_API", task);
-    //   } else {
-    //     const selectedDataForAPI = this.$store.state.task.selectedDataForAPI;
-    //     this.$store.commit("SET_DATA_FOR_API", selectedDataForAPI);
-    //   }
-    //   this.$confirm("Are you sure you want to mark this task as re-assign", "", {
-    //     type: "warning"
-    //   })
-    //     .then(async() => {
-    //       try {
-    //         if (!isHandleCurrentTask) await this.lockTask(task);
-    //         await this.$store.dispatch("MarkTaskFail", {
-    //           isHandleCurrentTask,
-    //           reason: "re-assign"
-    //         });
-    //         this.$message({
-    //           showClose: true,
-    //           message: "Task has been marked as re-assign",
-    //           type: "success"
-    //         });
-    //       } catch (error) {
-    //         return this.$store.dispatch("SetConsole", {
-    //           message: error.toString(),
-    //           level: "error"
-    //         });
-    //       } finally {
-    //         this.$store.commit("HANDLE_TASK_PROCESSING", false);
-    //       }
-    //     })
-    //     .catch(() => {
-    //       this.$store.commit("HANDLE_TASK_PROCESSING", false);
-    //     });
-    // }
+  public async markAsReassign(taskId: number) {
+    AppModule.HANDLE_TASK_PROCESSING(true);
+    await this.setTaskForOperation(taskId);
+    TaskModule.SET_BANK_REMARK_FOR_OPERATION("re-assign");
+    let taskModel = TaskModule.selectedForOperation;
+    console.log(taskModel);
+    this.$confirm("Are you sure you want to mark this task as re-assign", "", {
+      type: "warning"
+    })
+      .then(async () => {
+        try {
+          let taskDetailVM = await TaskModule.GetDetail({
+            id: taskModel.id,
+            amount: taskModel.amount,
+            withdrawId: taskModel.withdraw.id
+          });
+          await TaskModule.MarkTaskReassign(taskModel);
+
+          TaskModule.MoveCurrentTaskToLast(taskDetailVM);
+          Message({
+            showClose: true,
+            message: "Task has been marked as re-assign",
+            type: "success"
+          });
+        } catch (error) {
+          LogModule.SetConsole({ level: "error", message: error });
+        } finally {
+          AppModule.HANDLE_TASK_PROCESSING(false);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        TaskModule.GetAll(this.currentAccount.id);
+        AppModule.HANDLE_TASK_PROCESSING(false);
+      });
   }
 }

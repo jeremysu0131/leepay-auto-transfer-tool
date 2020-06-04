@@ -121,15 +121,14 @@
           <el-button
             size="mini"
             :loading="isHandlingToConfirm"
-            @click="markAsToConfirm(selectedTaskDetail)"
+            @click="markAsToConfirm(selectedTaskDetail.id)"
           >
             To Confirm
           </el-button>
           <el-button
             size="mini"
-            :disabled="true"
             :loading="isHandlingReassign"
-            @click="markAsReassign(true)"
+            @click="markAsReassign(selectedTaskDetail.id)"
           >
             Re-assign
           </el-button>
