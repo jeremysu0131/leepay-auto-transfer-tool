@@ -76,6 +76,7 @@ export default class extends Vue {
   }
   signInAutomatically() {
     AppModule.HANDLE_MANUAL_LOGIN(false);
+    AppModule.HANDLE_TASK_AUTO_PROCESS(true);
     AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
   }
   signInManually() {

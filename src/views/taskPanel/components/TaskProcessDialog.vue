@@ -54,6 +54,7 @@ export default class extends Mixins(TaskOperationMixin) {
     let audio = new Audio(require("@/assets/sounds/alarm.mp3"));
     if (this.app.task.isShowCheckProcessDialog) {
       audio.play();
+      AppModule.HANDLE_TASK_AUTO_PROCESS(false);
     }
   }
   private async handleTaskSuccess() {

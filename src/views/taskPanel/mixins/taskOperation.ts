@@ -70,7 +70,7 @@ export default class TaskOperationMixin extends Vue {
       if (!(await this.checkIfBalanceEqual(task))) {
         new Audio(require("@/assets/sounds/alarm.mp3")).play();
         let isConfirmProcess = false;
-
+        AppModule.HANDLE_TASK_AUTO_PROCESS(false);
         await MessageBox.confirm(
           "BO and bank balance are different, please check before process task",
           "Balance incorrect",
@@ -257,8 +257,7 @@ export default class TaskOperationMixin extends Vue {
         message: `Mark task success, amount ${task.amount}, charge: ${task.newCharge}`
       });
       let taskDetail = { ...TaskModule.selectedDetail };
-      // TODO
-      // taskDetail.status = TaskStatusEnum.SUCCESS;
+      taskDetail.status = TaskStatusEnum.SUCCESS;
       TaskModule.MoveCurrentTaskToLast(taskDetail);
       AppModule.HANDLE_TASK_PROCESSING(false);
       TaskModule.GetAll(this.currentAccount.id);
@@ -302,53 +301,7 @@ export default class TaskOperationMixin extends Vue {
     await this.setTaskForOperation(taskDetail.id);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(true);
   }
-  // private async loginToBankWebsite() {
-  //   try {
-  //     var taskDetail = TaskModule.selectedDetail;
-  //     const { remitterAccount } = taskDetail;
-  //     await WorkerModule.SetWorker(remitterAccount);
-  //     if (
-  //       remitterAccount.code.indexOf("ABC") > 0 ||
-  //       remitterAccount.code.indexOf("ICBC") > 0
-  //     ) {
-  //       var isProcessSuccess = await WorkerModule.RunAutoLoginFlows();
-
-  //       if (isProcessSuccess) {
-  //         this.$store.commit("HANDLE_TASK_PROCESSING", false);
-  //       } else {
-  //         this.$store.commit("HANDLE_TASK_CHECK_PROCESS_DIALOG", true);
-  //       }
-  //       return isProcessSuccess;
-  //     } else {
-  //       await WorkerModule.RunManualLoginFlows();
-  //     }
-  //   } catch (error) {
-  //     LogModule.SetConsole({ message: error.message, level: "error" });
-  //     return false;
-  //   }
-  // }
-  public async unlockTask(task: any) {
-    // try {
-    //   await this.$store.dispatch("UnlockSelectedTask", task.taskId);
-    //   this.$message({
-    //     message: "Task has been unlocked",
-    //     type: "success"
-    //   });
-    //   this.$store.dispatch("SetConsole", {
-    //     message: "Task has been unlocked",
-    //     level: "info"
-    //   });
-    // } catch (error) {
-    //   this.$message({
-    //     message: error.message,
-    //     type: "error"
-    //   });
-    //   this.$store.dispatch("SetConsole", {
-    //     message: error.message,
-    //     level: "error"
-    //   });
-    // }
-  }
+  public async unlockTask(task: any) {}
   private async setTaskForOperation(taskId: number) {
     const task = await TaskModule.GetSelectedTaskDataForApi({
       accountId: AccountModule.current.id,
