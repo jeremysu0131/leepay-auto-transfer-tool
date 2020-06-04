@@ -97,13 +97,14 @@ export default class extends Vue {
       this.isHandlingSuccess = true;
       TaskModule.SET_BANK_CHARGE_FOR_OPERATION(this.form.transferFee);
       TaskModule.SET_BANK_REMARK_FOR_OPERATION(this.form.note);
-      console.log(this.selectedTaskForOperation);
-      const taskDetailVM = new TaskDetailViewModel({
+
+      let taskDetailVM = await TaskModule.GetDetail({
         id: this.selectedTaskForOperation.id,
-        amount: this.selectedTaskForOperation.amount,
-        transferFee: this.selectedTaskForOperation.newCharge,
-        status: TaskStatusEnum.SUCCESS
+        withdrawId: this.selectedTaskForOperation.withdraw.id,
+        amount: this.selectedTaskForOperation.amount
       });
+      taskDetailVM.status = TaskStatusEnum.SUCCESS;
+
       await TaskModule.MarkTaskSuccess(this.selectedTaskForOperation);
       TaskModule.MoveCurrentTaskToLast(taskDetailVM);
       await TaskModule.GetAll(AccountModule.current.id);

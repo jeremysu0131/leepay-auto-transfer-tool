@@ -107,7 +107,7 @@ class Task extends VuexModule implements ITaskState {
   }
   @Action
   // taskId is the id in TaskViewModel
-  public async GetDetail(task: TaskViewModel): Promise<TaskDetailViewModel | null> {
+  public async GetDetail(task: { id: number; withdrawId: number; amount: number }): Promise<TaskDetailViewModel> {
     try {
       let response = await TaskApi.getDetail(task.id, task.withdrawId);
       const data = response.data.value;
@@ -135,7 +135,7 @@ class Task extends VuexModule implements ITaskState {
     } catch (error) {
       LogModule.SetConsole({ level: "error", message: "Get task detail fail" });
       LogModule.SetLog({ level: "error", message: error });
-      return null;
+      throw error;
     }
   }
 
