@@ -26,7 +26,6 @@
       </el-button>
       <el-button
         size="small"
-        :disabled="true"
         @click="handleTaskToConfirm"
       >
         To Confirm
@@ -47,6 +46,9 @@ export default class extends Mixins(TaskOperationMixin) {
   get app() {
     return AppModule;
   }
+  get selectedTaskDetail() {
+    return TaskModule.selectedDetail;
+  }
   @Watch("app.task.isShowCheckProcessDialog")
   onProcessDialogChange() {
     let audio = new Audio(require("@/assets/sounds/alarm.mp3"));
@@ -55,15 +57,15 @@ export default class extends Mixins(TaskOperationMixin) {
     }
   }
   private async handleTaskSuccess() {
-    AppModule.HANDLE_MARK_AS_SUCCESS_DIALOG(true);
+    this.markAsSuccess(this.selectedTaskDetail.id);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(false);
   }
   private async handleTaskFail() {
-    AppModule.HANDLE_MARK_AS_FAIL_DIALOG(true);
+    this.markAsFail(this.selectedTaskDetail.id);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(false);
   }
   private async handleTaskToConfirm() {
-    await this.markAsToConfirm(TaskModule.selectedDetail);
+    await this.markAsToConfirm(TaskModule.selectedDetail.id);
     AppModule.HANDLE_TASK_CHECK_PROCESS_DIALOG(false);
   }
 }
