@@ -58,5 +58,5 @@ router.afterEach((to: Route) => {
   NProgress.done();
 
   // set page title
-  document.title = to.meta.title;
+  // document.title = to.meta.title;
 });

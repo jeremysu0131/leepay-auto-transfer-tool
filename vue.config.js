@@ -27,7 +27,7 @@ module.exports = {
         ],
         win: {
           requestedExecutionLevel: "highestAvailable",
-          extraFiles: ["IEDriverServer.exe"]
+          extraFiles: ["IEDriverServer.exe", "ffmpeg.exe"]
         }
       },
       chainWebpackMainProcess: config => {
