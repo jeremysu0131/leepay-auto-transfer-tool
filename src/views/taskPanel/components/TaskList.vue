@@ -257,7 +257,7 @@ export default class extends Mixins(TaskOperationMixin) {
   private async markTaskAsToConfirm(task: TaskViewModel) {
     await this.lockTask(task);
     let taskDetail = await TaskModule.GetDetail(task);
-    if (taskDetail) this.markAsToConfirm(taskDetail);
+    if (taskDetail) this.markAsToConfirm(taskDetail.id);
   }
   private selectedRowClass({ row, rowIndex }: any) {
     if (this.selectedTask) {
