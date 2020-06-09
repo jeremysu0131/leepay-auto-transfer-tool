@@ -77,8 +77,8 @@ export default class FetchTaskMixin extends Mixins(TaskOperationMixin) {
   }
   private async handleBankCookieExpired() {
     if (!this.appState.task.isProcessing) {
-      LogModule.SetLog({ level: "warn", message: `${this.handleBankCookieExpired.name} try closing web driver` });
-      await this.closeWebDriver();
+      LogModule.SetLog({ level: "warn", message: "handleBankCookieExpired try closing web driver" });
+      await WorkerModule.RunAutoReLoginFlows();
     }
   }
   private async closeWebDriver() {
