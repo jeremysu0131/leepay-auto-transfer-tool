@@ -72,12 +72,14 @@ export default class TaskOperationMixin extends Vue {
         let isConfirmProcess = false;
         AppModule.HANDLE_TASK_AUTO_PROCESS(false);
         await MessageBox.confirm(
-          "BO and bank balance are different, please check before process task",
+          "BO and bank balance are different, please check before process task<br>" +
+            '<span style="color:red">Note: as the result of this error, auto processing will be stopped. Please turn it on again, if needed.</span><br>',
           "Balance incorrect",
           {
             type: "warning",
             confirmButtonText: "OK",
-            cancelButtonText: "Cancel"
+            cancelButtonText: "Cancel",
+            dangerouslyUseHTMLString: true
           }
         )
           .then(() => {
@@ -164,6 +166,8 @@ export default class TaskOperationMixin extends Vue {
         `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
         "<br>";
     });
+    message +=
+      '<span style="color:red">Note: as the result of this error, auto processing will be stopped. Please turn it on again, if needed.</span><br>';
     soundHelper.play("danger");
     return (
       MessageBox.prompt(
