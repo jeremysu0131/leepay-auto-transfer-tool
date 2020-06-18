@@ -164,6 +164,8 @@ export default class TaskOperationMixin extends Vue {
         `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
         "<br>";
     });
+    message +=
+      '<span style="color:red">Note: as the result of this error, auto processing will be stopped. Please turn it on again, if needed.</span><br>';
     soundHelper.play("danger");
     return (
       MessageBox.prompt(
