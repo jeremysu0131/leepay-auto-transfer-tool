@@ -85,6 +85,10 @@ export default class FetchTaskMixin extends Mixins(TaskOperationMixin) {
     try {
       AppModule.HANDLE_ACCOUNT_SIGN_IN_TO_BANK(false);
       AccountModule.UnsetAccount();
+      TaskModule.UnsetTask();
+      AppModule.HANDLE_SHOWING_TAB("accounts");
+      AppModule.HANDLE_TASK_FETCHING(false);
+      AppModule.HANDLE_TASK_TAB_VISIBLE(false);
       await WorkerModule.RunFlow({ name: WorkflowEnum.UNSET_WORKER });
       LogModule.SetLog({ level: "info", message: "Close web driver successfully" });
     } catch (error) {
