@@ -273,7 +273,14 @@ export default class TaskOperationMixin extends Vue {
       taskDetail.status = TaskStatusEnum.SUCCESS;
       TaskModule.MoveCurrentTaskToLast(taskDetail);
       AppModule.HANDLE_TASK_PROCESSING(false);
-      TaskModule.GetAll(this.currentAccount.id);
+      let tasks = await TaskModule.GetAll(this.currentAccount.id);
+      let logTasks = tasks.map(task => {
+        return { id: task.id, status: task.status };
+      });
+      LogModule.SetLog({
+        level: "info",
+        message: `Get tasks after mark task success, tasks:${logTasks.toString()}`
+      });
     }
   }
   private beforeExecuteTask(taskDetail: TaskDetailViewModel) {
