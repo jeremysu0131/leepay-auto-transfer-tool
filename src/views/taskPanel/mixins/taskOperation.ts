@@ -72,12 +72,14 @@ export default class TaskOperationMixin extends Vue {
         let isConfirmProcess = false;
         AppModule.HANDLE_TASK_AUTO_PROCESS(false);
         await MessageBox.confirm(
-          "BO and bank balance are different, please check before process task",
+          "BO and bank balance are different, please check before process task<br>" +
+            '<span style="color:red">Note: as the result of this error, auto processing will be stopped. Please turn it on again, if needed.</span><br>',
           "Balance incorrect",
           {
             type: "warning",
             confirmButtonText: "OK",
-            cancelButtonText: "Cancel"
+            cancelButtonText: "Cancel",
+            dangerouslyUseHTMLString: true
           }
         )
           .then(() => {
@@ -164,6 +166,8 @@ export default class TaskOperationMixin extends Vue {
         `, Note: <span style="font-weight:bold">${executedTask.note}</span>` +
         "<br>";
     });
+    message +=
+      '<span style="color:red">Note: as the result of this error, auto processing will be stopped. Please turn it on again, if needed.</span><br>';
     soundHelper.play("danger");
     return (
       MessageBox.prompt(
@@ -215,38 +219,47 @@ export default class TaskOperationMixin extends Vue {
     }
   }
   async checkIfBalanceEqual(selectedTask: TaskViewModel) {
-    let boBalance = this.currentAccount.balance;
-    let realBalance = this.getRealBalance(boBalance, selectedTask);
+    let actualBoBalance = await this.getActualBoBalance();
+
+    let bankBalance = AccountModule.current.balanceInBank;
 
     // Compare in cache
-    if (realBalance === this.currentAccount.balanceInBank) return true;
+    if (bankBalance === actualBoBalance) return true;
 
     // Compare in system
-    let [detail, result] = await Promise.all([
-      AccountModule.GetAccountDetail({ id: this.currentAccount.id, code: this.currentAccount.code }),
-      WorkerModule.RunFlow<WorkerBalanceResponseModel>({
-        name: WorkflowEnum.GET_BALANCE
-      })
-    ]);
+    let result = await WorkerModule.RunFlow<WorkerBalanceResponseModel>({ name: WorkflowEnum.GET_BALANCE });
 
-    if (detail) AccountModule.SET_BANK_BO_BALANCE(detail.balance);
     if (result) AccountModule.SET_BANK_BALANCE(result.balance);
 
-    realBalance = this.getRealBalance(boBalance, selectedTask);
-    if (realBalance === this.currentAccount.balanceInBank) return true;
+    if (result.balance === actualBoBalance) return true;
 
     LogModule.SetLog({
       level: "warn",
-      message: `Bo(${realBalance}) and bank balance(${this.currentAccount.balanceInBank}) are not same`
+      message: `Bo(${actualBoBalance}) and bank balance(${result.balance}) are not same`
     });
     return false;
   }
-  getRealBalance(boBalance: number, selectedTask: TaskViewModel): number {
-    TaskModule.list.forEach(task => {
-      if (task.remitterAccountCode === selectedTask.remitterAccountCode) {
-        // if (task.workflow === TaskTypeEnum.PARTIAL_WITHDRAW) boBalance += task.amount;
-      }
+  async getActualBoBalance(): Promise<number> {
+    let boBalance =
+      (
+        await AccountModule.GetAccountDetail({
+          id: this.currentAccount.id,
+          code: this.currentAccount.code
+        })
+      )?.balance || 0;
+    let tasksAmount = 0;
+    let tasks = await TaskModule.GetAll(this.currentAccount.id);
+    tasks.forEach(task => {
+      tasksAmount += task.amount;
     });
+    return boBalance + tasksAmount;
+  }
+  getRealBalance(boBalance: number, selectedTask: TaskViewModel): number {
+    // TaskModule.list.forEach(task => {
+    //   if (task.remitterAccountCode === selectedTask.remitterAccountCode) {
+    // if (task.workflow === TaskTypeEnum.PARTIAL_WITHDRAW) boBalance += task.amount;
+    //   }
+    // });
     return boBalance;
   }
   async handleAutoMarkTaskSuccess(task: TaskModel) {
