@@ -304,6 +304,7 @@ export default class TaskOperationMixin extends Vue {
       let flowResult = await WorkerModule.RunFlow<WorkerTransferFeeResponseModel>({
         name: WorkflowEnum.CHECK_IF_SUCCESS
       });
+      LogModule.SetLog({ level: "info", message: `runAutoTransferFlows | ${flowResult.toString()}` });
       return { isSuccess: true, transferFee: flowResult.transferFee || 0 };
     } catch (error) {
       LogModule.SetLog({ level: "error", message: `Transfer fail, error: ${error}` });
