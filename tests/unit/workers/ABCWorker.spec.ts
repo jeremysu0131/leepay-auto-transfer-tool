@@ -6,14 +6,14 @@ let remitterAccount = {
   id: 63819,
   balance: 1,
   code: "TEST.ABC.237",
-  loginName: "kdjroufe",
-  loginPassword: "zz326598",
-  usbPassword: "zz326598",
-  queryPassword: "326598",
-  proxy: "52.175.31.129:8800"
+  loginName: "hducalsxmfj",
+  loginPassword: "pp656565",
+  usbPassword: "pp656565",
+  queryPassword: "656565",
+  proxy: "10.203.0.14:8800"
 };
 let task: TaskDetailModel = {
-  amount: 1,
+  amount: 0.1,
   id: 0,
   transferFee: 0,
   payeeAccount: {
@@ -39,10 +39,10 @@ describe("ABCWorker", () => {
     let isSuccess = await worker.setIEEnvironment();
     expect(isSuccess.success).toBe(true);
   });
-  // it("Set Proxy", async() => {
-  //     var isSuccess = await worker.setProxy();
-  //     expect(isSuccess).toBe(true);
-  //   });
+  it("Set Proxy", async () => {
+    let isSuccess = await worker.setProxy();
+    expect(isSuccess.success).toBe(true);
+  });
   it("Launch Selenium", async () => {
     let isSuccess = await worker.launchSelenium({
       width: 1920,
