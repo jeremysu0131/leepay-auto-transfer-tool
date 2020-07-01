@@ -109,9 +109,10 @@ export default class FetchTaskMixin extends Mixins(TaskOperationMixin) {
       }
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
+      LogModule.SetConsole({ level: "error", message: "Check IE status fail" });
       // Check ie state fail, so unset the worker to prevent error
-      LogModule.SetLog({ level: "warn", message: `${this.handleIeStatus.name} try closing web driver` });
-      await this.closeWebDriver();
+      // LogModule.SetLog({ level: "warn", message: "handleIeStatus try closing web driver" });
+      // await this.closeWebDriver();
     }
   }
   async disposeFetchInterval() {
@@ -151,8 +152,8 @@ export default class FetchTaskMixin extends Mixins(TaskOperationMixin) {
       AccountModule.SET_BANK_BALANCE(workerResponse.balance || 0);
     } catch (error) {
       LogModule.SetLog({ level: "error", message: error });
-      LogModule.SetLog({ level: "warn", message: `${this.getBankBalance.name} try closing web driver` });
-      await this.closeWebDriver();
+      LogModule.SetConsole({ level: "warn", message: "Get balance fail" });
+      // await this.closeWebDriver();
     } finally {
       AppModule.HANDLE_TASK_PROCESSING(false);
       this.refreshPageCounter = 0;
