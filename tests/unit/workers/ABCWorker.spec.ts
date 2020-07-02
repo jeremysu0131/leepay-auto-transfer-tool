@@ -13,7 +13,7 @@ let remitterAccount = {
   proxy: "10.203.0.14:8800"
 };
 let task: TaskDetailModel = {
-  amount: 0.1,
+  amount: 0.01,
   id: 0,
   transferFee: 0,
   payeeAccount: {
@@ -23,7 +23,7 @@ let task: TaskDetailModel = {
   }
 };
 
-jest.setTimeout(50 * 1000);
+jest.setTimeout(180 * 1000);
 
 beforeAll(() => {
   worker = new BankWorker(remitterAccount);
