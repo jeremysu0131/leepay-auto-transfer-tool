@@ -1,8 +1,10 @@
 import request from "@/utils/request";
 import TaskDetailViewModel from "../models/taskDetailViewModel";
 import dayjs from "dayjs";
-import logger from "@/utils/logger";
+import LoggerService from "@/utils/LoggerService";
 import TaskModel from "@/models/taskModel";
+
+const logger = new LoggerService("task api");
 
 export function getAll(accountId: number) {
   const params = {
@@ -90,6 +92,7 @@ export function unlock(taskId: number) {
   });
 }
 export function markTaskSuccess(data: TaskModel) {
+  logger.info("markTaskSuccess | Data:" + JSON.stringify(data));
   return request({
     url: "/ps-ops-console/api/withdraw/markAsSuccessPaymentDetail",
     method: "POST",

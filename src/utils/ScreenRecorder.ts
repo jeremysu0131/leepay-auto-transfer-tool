@@ -14,6 +14,7 @@ class ScreenRecorder {
     this.screenRecord = ffmpeg();
     this.logger = new LoggerService(ScreenRecorder.name);
     this.isFolderExists();
+    this.clearOldRecords(folderPath);
   }
 
   start() {
@@ -54,6 +55,24 @@ class ScreenRecorder {
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath);
     }
+  }
+
+  /**
+   * 查询保存时间超过指定天的文件
+   */
+  private clearOldRecords(folderPath: string, day: number = 7) {
+    const result: never[] = [];
+    const diffTime = day * 24 * 60 * 60 * 1000;
+    const files = fs.readdirSync(folderPath);
+    files.forEach((file: any) => {
+      const filePath = path.join(folderPath, file);
+      const fileStat = fs.statSync(filePath);
+
+      if (fileStat.isFile() && fileStat.birthtimeMs < Date.now() - diffTime) {
+        fs.unlinkSync(filePath);
+      }
+    });
+    return result;
   }
 }
 
