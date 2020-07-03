@@ -208,7 +208,8 @@ export default class TaskOperationMixin extends Vue {
         TaskModule.SET_SELECTED_FOR_OPERATION(task);
         TaskModule.SET_BANK_CHARGE_FOR_OPERATION(result.transferFee || 0);
         TaskModule.SET_BANK_REMARK_FOR_OPERATION("Auto process by tool");
-        await this.handleAutoMarkTaskSuccess(task);
+        let taskForOperation = TaskModule.selectedForOperation;
+        await this.handleAutoMarkTaskSuccess(taskForOperation);
       } else {
         this.handleTransferFail(taskDetail);
       }
