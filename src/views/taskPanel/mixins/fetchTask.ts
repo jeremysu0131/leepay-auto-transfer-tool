@@ -31,6 +31,7 @@ export default class FetchTaskMixin extends Mixins(TaskOperationMixin) {
   private isAbleRunInterval(): boolean {
     if (!this.appState.task.isAbleFetch) return false;
     if (this.isFetchingTask) return false;
+    if (!this.appState.account.isSignInToBank) return false;
     return true;
   }
   private isAbleProcessTask(): boolean {

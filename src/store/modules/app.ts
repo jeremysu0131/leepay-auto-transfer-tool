@@ -50,7 +50,7 @@ class App extends VuexModule implements IAppState {
     showing: "accounts"
   };
   public task = {
-    isAbleFetch: true,
+    isAbleFetch: false,
     isFetching: false,
     isShowMarkAsFailDialog: false,
     isShowMarkAsSuccessDialog: false,
