@@ -74,13 +74,12 @@ class Worker extends VuexModule implements IWorkerState {
 
   @Action
   async RunAutoReLoginFlows() {
+    await this.RunFlow({ name: WorkflowEnum.CLOSE_SELENIUM });
     AccountModule.SET_SELECTED(AccountModule.current);
-    WorkerModule.SET_AUTO_SIGN_IN_WORKFLOW();
     AppModule.HANDLE_SHOWING_TAB("accounts");
     AppModule.HANDLE_ACCOUNT_SHOWING_PAGE("sign-in-to-bank");
-    await this.RunFlow({ name: WorkflowEnum.CLOSE_SELENIUM });
-    let result = await this.RunAutoLoginFlows();
-    return result;
+    // let result = await this.RunAutoLoginFlows();
+    // return result;
   }
 
   @Action({ rawError: true })

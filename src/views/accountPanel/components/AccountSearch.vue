@@ -98,7 +98,7 @@ export default class extends Vue {
   private isSigningInBank = false;
   private selectedAccount = {} as AccountViewModel;
   private form = {
-    accountCode: process.env.NODE_ENV === "development" ? "5.ICBC.379" : ""
+    accountCode: process.env.NODE_ENV === "development" ? "5.ABC.301" : ""
   };
 
   get app() {

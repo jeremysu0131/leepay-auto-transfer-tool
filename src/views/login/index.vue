@@ -97,8 +97,8 @@ export default class extends Vue {
     }
   };
   private loginForm = {
-    username: process.env.NODE_ENV === "production" ? "" : "js",
-    password: process.env.NODE_ENV === "production" ? "" : "123456"
+    username: process.env.NODE_ENV === "production" ? "" : "jeremy",
+    password: process.env.NODE_ENV === "production" ? "" : ""
   };
   private loginRules = {
     username: [{ validator: this.validateUsername, trigger: "blur" }],
