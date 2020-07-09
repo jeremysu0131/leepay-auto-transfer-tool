@@ -5,7 +5,10 @@
       <span style="font-weight: bold;">{{ currentAccount.code || "" }}</span>
     </div>
 
-    <div class="bo-balance">
+    <div
+      class="bo-balance"
+      :style="{color: app.task.isBalanceCorrect?'':'red'}"
+    >
       <span>BO Balance:</span>
       <span style="font-weight: bold;">{{ balanceInSystem }}</span>
       <!-- <span
@@ -15,7 +18,10 @@
         <svg-icon icon-class="error" />Update Fail
       </span>-->
     </div>
-    <div class="bo-balance">
+    <div
+      class="bo-balance"
+      :style="{color: app.task.isBalanceCorrect?'':'red'}"
+    >
       <span>Bank Balance:</span>
       <span style="font-weight: bold;">{{ balanceInOnlineBank }}</span>
     </div>
