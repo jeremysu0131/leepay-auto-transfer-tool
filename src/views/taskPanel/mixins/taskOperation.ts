@@ -67,33 +67,7 @@ export default class TaskOperationMixin extends Vue {
       }
 
       // Check balance before run task
-      if (!(await this.checkIfBalanceEqual(task))) {
-        new Audio(require("@/assets/sounds/alarm.mp3")).play();
-        let isConfirmProcess = false;
-        AppModule.HANDLE_TASK_AUTO_PROCESS(false);
-        await MessageBox.confirm(
-          "BO and bank balance are different, please check before process task<br>" +
-            '<span style="color:red">Note: as the result of this error, auto processing will be stopped. Please turn it on again, if needed.</span><br>',
-          "Balance incorrect",
-          {
-            type: "warning",
-            confirmButtonText: "OK",
-            cancelButtonText: "Cancel",
-            dangerouslyUseHTMLString: true
-          }
-        )
-          .then(() => {
-            isConfirmProcess = true;
-          })
-          .catch(() => {
-            isConfirmProcess = false;
-            AppModule.HANDLE_TASK_PROCESSING(false);
-          });
-        if (!isConfirmProcess) {
-          AppModule.HANDLE_TASK_PROCESSING(false);
-          return;
-        }
-      }
+      AppModule.HANDLE_TASK_BALANCE_CORRECT(await this.checkIfBalanceEqual());
 
       if (await this.checkIfTaskExecuted(task, taskDetail)) {
         if (await this.confirmBeforeExecute(task.checkTool.id, this.taskExecutedResult)) {
@@ -219,7 +193,7 @@ export default class TaskOperationMixin extends Vue {
       screenRecorder.stop();
     }
   }
-  async checkIfBalanceEqual(selectedTask: TaskViewModel) {
+  async checkIfBalanceEqual() {
     let actualBoBalance = await this.getActualBoBalance();
 
     let bankBalance = AccountModule.current.balanceInBank;
