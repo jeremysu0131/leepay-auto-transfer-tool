@@ -26,6 +26,7 @@ export interface IAppState {
     isShowMarkAsSuccessDialog: boolean;
     isShowMarkAsFailDialog: boolean;
     isShowCheckProcessDialog: boolean;
+    isBalanceCorrect: boolean;
   };
   account: {
     isFetching: boolean;
@@ -56,7 +57,8 @@ class App extends VuexModule implements IAppState {
     isShowMarkAsSuccessDialog: false,
     isShowCheckProcessDialog: false,
     isAutoProcess: false,
-    isProcessing: false
+    isProcessing: false,
+    isBalanceCorrect: true
   };
   public account = {
     isFetching: false,
@@ -109,6 +111,10 @@ class App extends VuexModule implements IAppState {
   public HANDLE_TASK_FETCHING(status: boolean) {
     this.task.isFetching = status;
   }
+  @Mutation
+  public HANDLE_TASK_BALANCE_CORRECT(isCorrect: boolean) {
+    this.task.isBalanceCorrect = isCorrect;
+  }
 
   @Mutation
   // Account
@@ -144,7 +150,8 @@ class App extends VuexModule implements IAppState {
       isShowMarkAsSuccessDialog: false,
       isShowCheckProcessDialog: false,
       isAutoProcess: false,
-      isProcessing: false
+      isProcessing: false,
+      isBalanceCorrect: true
     };
     this.account = {
       isFetching: false,

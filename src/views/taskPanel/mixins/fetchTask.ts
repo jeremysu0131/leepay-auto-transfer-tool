@@ -122,6 +122,7 @@ export default class FetchTaskMixin extends Mixins(TaskOperationMixin) {
   async fetchTasks() {
     try {
       await Promise.all([this.getBoBalance(), this.getTasks()]);
+      // AppModule.HANDLE_TASK_BALANCE_CORRECT(await this.checkIfBalanceEqual());
       this.fetchButton.type = "success";
     } catch (error) {
       this.fetchButton.type = "danger";
