@@ -167,7 +167,7 @@ export default class FetchTaskMixin extends Mixins(TaskOperationMixin) {
 
     let tasks = this.task.list;
     if (tasks.length !== 0) {
-      for (let i = 0; i < tasks.length; i++) {
+      for (let i = tasks.length - 1; i >= 0; i--) {
         const task = tasks[i];
         if (
           task.checkTool.status === TaskStatusEnum.TO_PROCESS ||
